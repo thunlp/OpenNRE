@@ -16,7 +16,9 @@ To run our code, the dataset should be put in the folder origin_data/ using the 
 - relation2id.txt: all relations and corresponding ids, one per line.
 - vec.txt: the pre-train word embedding file
 
-Before you train your model, you should run the initial.py to transform the original data into .npy files for the input of the network. The .npy files will be saved in data/ directory.
+Before you train your model, you need to type the following command:
+`python initial.py`
+to transform the original data into .npy files for the input of the network. The .npy files will be saved in data/ directory.
 
 #Codes
 The source codes are in the current main directory.
