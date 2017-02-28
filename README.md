@@ -3,10 +3,12 @@ Neural relation extraction aims to extract relations from plain text with neural
 
 We come up with the idea from the paper "Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification" [Zhou et al.,2016] and the paper "Neural Relation Extraction with Selective Attention over Instances" [Lin et al.,2016]. And we compare our results with PCNN+ATT [Lin et al.,2016] on the same dataset.
 #Evaluation Results
-P@N comparison between PCNN+ATT and our method(BGRU+2ATT)
+P@N comparison between PCNN+ATT and our method (BGRU+2ATT):
+
 ![](./images/table.png)
 
-Precision/Recall curve of our method(BGRU+2ATT) compared to others'
+Precision/Recall curve of our method (BGRU+2ATT) compared to others':
+
 ![](./images/iter_11400.png)
 
 
