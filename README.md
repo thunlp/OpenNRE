@@ -54,6 +54,6 @@ The PR curve will be saved as .png in current directory. If you want to plot the
 
 [Zeng et al.,2015] Daojian Zeng,Kang Liu,Yubo Chen,and Jun Zhao. Distant supervision for relation extraction via piecewise convolutional neural networks. In Proceedings of EMNLP.  
 
-[Zhou et al.,2016]Zhou P, Shi W, Tian J, et al. Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification[C] Meeting of the Association for Computational Linguistics. 2016:207-212.  
+[Zhou et al.,2016] Zhou P, Shi W, Tian J, et al. Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification[C] Meeting of the Association for Computational Linguistics. 2016:207-212.  
 
 [Lin et al., 2016] Yankai Lin, Shiqi Shen, Zhiyuan Liu, Huanbo Luan, and Maosong Sun. Neural Relation Extraction with Selective Attention over Instances. In Proceedings of ACL.
