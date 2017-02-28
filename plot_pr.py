@@ -8,8 +8,8 @@ plt.clf()
 filename = ['CNN+ATT','Hoffmann','MIMLRE','Mintz','PCNN+ATT']
 color = ['red', 'turquoise', 'darkorange', 'cornflowerblue', 'teal']
 for i in range(len(filename)):
-	precision = np.load('./origin_data/'+filename[i]+'_precision.npy')
-	recall  = np.load('./origin_data/'filename[i]+'_recall.npy')
+	precision = np.load('./data/'+filename[i]+'_precision.npy')
+	recall  = np.load('./data/'filename[i]+'_recall.npy')
 	plt.plot(recall,precision,color = color[i],lw=2,label = filename[i])
 
 
@@ -17,7 +17,7 @@ for i in range(len(filename)):
 model_iter = [11400]
 for one_iter in model_iter:
 	y_true = np.load('./data/allans.npy')
-	y_scores = np.load('.sample_out/sample_allprob_iter_'+str(one_iter)+'.npy')
+	y_scores = np.load('./out/sample_allprob_iter_'+str(one_iter)+'.npy')
 
 	precision,recall,threshold = precision_recall_curve(y_true,y_scores)
 	average_precision = average_precision_score(y_true, y_scores)

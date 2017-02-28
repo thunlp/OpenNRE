@@ -134,7 +134,7 @@ class GRU:
 def main(_):
 
 	# ATTENTION: change pathname before you load your model
-	pathname = "./sample_model/ATT_GRU_model-"
+	pathname = "./model/ATT_GRU_model-"
 	
 
 	test_settings = Settings()
@@ -282,7 +282,7 @@ def main(_):
 				current_step = model_iter
 				
 				# ATTENTION: change the save path before you save your result !!
-				np.save('./sample_out/sample_allprob_iter_'+str(current_step)+'.npy',allprob)
+				np.save('./out/sample_allprob_iter_'+str(current_step)+'.npy',allprob)
 				allans = np.load('./data/allans.npy')
 				
 				#caculate the pr curve area
