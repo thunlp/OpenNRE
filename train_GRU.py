@@ -132,7 +132,7 @@ class GRU:
 
 def main(_):
 	# the path to save models
-	save_path = './sample_model/'
+	save_path = './model/'
 
 	print 'reading wordembedding'
 	wordembedding = np.load('./data/vec.npy')
