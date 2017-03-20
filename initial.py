@@ -9,6 +9,15 @@ def pos_embed(x):
 		return x+61
 	if x > 60:
 		return 122
+#find the index of x in y, if x not in y, return -1
+def find_index(x,y):
+	flag = -1
+	for i in range(len(y)):
+		if x != y[i]:
+			continue
+		else:
+			return i
+	return flag
 
 #reading data
 def init():
@@ -53,8 +62,8 @@ def init():
 	#max length of position embedding is 60 (-60~+60)
 	maxlen = 60
 
-	train_sen = {} #{entity pair:[[sentence 1],[sentence 2]...]}
-	train_ans = {} #{entity pair:label} the label is one-hot vector
+	train_sen = {} #{entity pair:[[[label1-sentence 1],[label1-sentence 2]...],[[label2-sentence 1],[label2-sentence 2]...]}
+	train_ans = {} #{entity pair:[label1,label2,...]} the label is one-hot vector
 
 
 	print 'reading train data...'
@@ -69,15 +78,37 @@ def init():
 		#get entity name
 		en1 = content[2] 
 		en2 = content[3]
-
+		relation = 0
+		if content[4] not in relation2id:
+			relation = relation2id['NA']
+		else:
+			relation = relation2id[content[4]]
 		#put the same entity pair sentences into a dict
 		tup = (en1,en2)
+		label_tag = 0
 		if tup not in train_sen:
 			train_sen[tup]=[]
-			y_id = relation2id[content[4]]
+			train_sen[tup].append([])
+			y_id = relation
+			label_tag = 0
 			label = [0 for i in range(len(relation2id))]
 			label[y_id] = 1
-			train_ans[tup] = label
+			train_ans[tup] = []
+			train_ans[tup].append(label)
+		else:
+			y_id = relation
+			label_tag = 0
+			label = [0 for i in range(len(relation2id))]
+			label[y_id] = 1
+			
+			temp = find_index(label,train_ans[tup])
+			if temp == -1:
+				train_ans[tup].append(label)
+				label_tag = len(train_ans[tup])-1
+				train_sen[tup].append([])
+			else:
+				label_tag = temp
+
 		sentence = content[5:-1]
 		
 		en1pos = 0
@@ -105,12 +136,12 @@ def init():
 			
 			output[i][0] = word
 
-		train_sen[tup].append(output)
+		train_sen[tup][label_tag].append(output)
 
 	print('reading test data ...')
 
-	test_sen = {}
-	test_ans = {}
+	test_sen = {} #{entity pair:[[sentence 1],[sentence 2]...]}
+	test_ans = {} #{entity pair:[labels,...]} the labels is N-hot vector (N is the number of multi-label)
 
 	f = open('./origin_data/test.txt','r')
 
@@ -121,14 +152,24 @@ def init():
 		
 		content = content.strip().split()
 		en1 = content[2]
-		en2 = content[3]		
+		en2 = content[3]
+		relation = 0
+		if content[4] not in relation2id:
+			relation = relation2id['NA']
+		else:
+			relation = relation2id[content[4]]		
 		tup = (en1,en2)
+		
 		if tup not in test_sen:
 			test_sen[tup]=[]
-			y_id = relation2id[content[4]]
+			y_id = relation
+			label_tag = 0
 			label = [0 for i in range(len(relation2id))]
 			label[y_id] = 1
 			test_ans[tup] = label
+		else:
+			y_id = relation
+			test_ans[tup][y_id] = 1
 			
 		sentence = content[5:-1]
 
@@ -167,21 +208,27 @@ def init():
 	f = open('./data/train_q&a.txt','w')
 	temp = 0
 	for i in train_sen:
-		train_x.append(train_sen[i])
-		train_y.append(train_ans[i])
-		f.write(str(temp)+'\t'+i[0]+'\t'+i[1]+'\t'+str(np.argmax(train_ans[i]))+'\n')
-		temp+=1
+		if len(train_ans[i]) != len(train_sen[i]):
+			print 'ERROR'
+		lenth = len(train_ans[i])
+		for j in range(lenth):
+			train_x.append(train_sen[i][j])
+			train_y.append(train_ans[i][j])
+			f.write(str(temp)+'\t'+i[0]+'\t'+i[1]+'\t'+str(np.argmax(train_ans[i][j]))+'\n')
+			temp+=1
 	f.close()
 
 	print 'organizing test data'
-	id2tup = []
-	temp = 0
 	f = open('./data/test_q&a.txt','w')
-	for i in test_sen:
+	temp=0
+	for i in test_sen:		
 		test_x.append(test_sen[i])
 		test_y.append(test_ans[i])
-		id2tup.append(i)
-		f.write(str(temp)+'\t'+i[0]+'\t'+i[1]+'\t'+str(np.argmax(test_ans[i]))+'\n')
+		tempstr = ''
+		for j in range(len(test_ans[i])):
+			if test_ans[i][j]!=0:
+				tempstr = tempstr+str(j)+'\t'
+		f.write(str(temp)+'\t'+i[0]+'\t'+i[1]+'\t'+tempstr+'\n')
 		temp+=1
 	f.close()
 
@@ -540,9 +587,23 @@ def getans():
 	allans = np.reshape(eval_y,(-1))
 	np.save('./data/allans.npy',allans)
 
+def get_metadata():
+	fwrite = open('./data/metadata.tsv','w')
+	f = open('./origin_data/vec.txt')
+	f.readline()
+	while True:
+		content = f.readline().strip()
+		if content == '':
+			break
+		name = content.split()[0]
+		fwrite.write(name+'\n')
+	f.close()
+	fwrite.close()
+
+
 init()
 seperate()
 getsmall()
 getans()
-
+get_metadata()
 

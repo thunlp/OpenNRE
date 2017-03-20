@@ -3,144 +3,30 @@ import numpy as np
 import time
 import datetime
 import os
+import network
 from sklearn.metrics import average_precision_score
 
-class Settings(object):
+FLAGS = tf.app.flags.FLAGS
+#change the name to who you want to send
+#tf.app.flags.DEFINE_string('wechat_name', 'Tang-24-0325','the user you want to send info to')
+tf.app.flags.DEFINE_string('wechat_name', 'filehelper','the user you want to send info to')
 
-	def __init__(self):
-
-		self.vocab_size = 114042
-		self.num_steps = 70
-		self.num_epochs = 100
-		self.num_classes = 58
-		self.gru_size = 230
-		self.keep_prob = 0.5
-		self.num_layers = 1
-		self.pos_size = 5
-		self.pos_num = 123
-		self.big_num = 50
-
-class GRU:
-	def __init__(self,is_training,word_embeddings,settings):
-		
-		self.num_steps = num_steps = settings.num_steps
-	
-		self.vocab_size = vocab_size = settings.vocab_size
-		self.num_classes = num_classes = settings.num_classes
-		self.gru_size = gru_size = settings.gru_size
-		self.big_num = big_num = settings.big_num
-
-		self.input_word = tf.placeholder(dtype=tf.int32,shape=[None,num_steps],name='input_word')
-		self.input_pos1 = tf.placeholder(dtype=tf.int32,shape=[None,num_steps],name='input_pos1')
-		self.input_pos2 = tf.placeholder(dtype=tf.int32,shape=[None,num_steps],name='input_pos2')
-		self.input_y = tf.placeholder(dtype=tf.float32,shape=[None,num_classes],name='input_y')
-		self.total_shape = tf.placeholder(dtype=tf.int32,shape=[big_num+1],name='total_shape')
-		total_num = self.total_shape[-1]
-
-		#word_embedding = tf.get_variable(initializer=word_embeddings,name = 'word_embedding')
-		word_embedding = tf.get_variable('word_embedding',[settings.vocab_size,50])		
-		pos1_embedding = tf.get_variable('pos1_embedding',[settings.pos_num,settings.pos_size])
-		pos2_embedding = tf.get_variable('pos2_embedding',[settings.pos_num,settings.pos_size])
-
-		attention_w = tf.get_variable('attention_omega',[gru_size,1])
-		sen_a = tf.get_variable('attention_A',[gru_size])
-		sen_r = tf.get_variable('query_r',[gru_size,1])		
-		relation_embedding = tf.get_variable('relation_embedding',[self.num_classes,gru_size])
-		sen_d = tf.get_variable('bias_d',[self.num_classes])
-
-		gru_cell_forward = tf.nn.rnn_cell.GRUCell(gru_size)
-		gru_cell_backward = tf.nn.rnn_cell.GRUCell(gru_size)
-
-
-		if is_training and settings.keep_prob < 1:
-			gru_cell_forward = tf.nn.rnn_cell.DropoutWrapper(gru_cell_forward,output_keep_prob=settings.keep_prob)
-			gru_cell_backward = tf.nn.rnn_cell.DropoutWrapper(gru_cell_backward,output_keep_prob=settings.keep_prob)
-		
-		cell_forward = tf.nn.rnn_cell.MultiRNNCell([gru_cell_forward]*settings.num_layers)
-		cell_backward = tf.nn.rnn_cell.MultiRNNCell([gru_cell_backward]*settings.num_layers)		
-
-		sen_repre = []
-		sen_alpha = []
-		sen_s = []
-		sen_out = []
-		self.prob = []
-		self.predictions = []
-		self.loss = []
-		self.accuracy = []
-		self.total_loss = 0.0
-
-		self._initial_state_forward = cell_forward.zero_state(total_num,tf.float32)
-		self._initial_state_backward = cell_backward.zero_state(total_num,tf.float32)
-
-		inputs_forward = tf.concat(2,[tf.nn.embedding_lookup(word_embedding,self.input_word),tf.nn.embedding_lookup(pos1_embedding,self.input_pos1),tf.nn.embedding_lookup(pos2_embedding,self.input_pos2)])
-		inputs_backward = tf.concat(2,[tf.nn.embedding_lookup(word_embedding,tf.reverse(self.input_word,[False,True])),tf.nn.embedding_lookup(pos1_embedding,tf.reverse(self.input_pos1,[False,True])),tf.nn.embedding_lookup(pos1_embedding,tf.reverse(self.input_pos2,[False,True]))])
-		
-		outputs_forward = []
-
-		state_forward = self._initial_state_forward
-
-		with tf.variable_scope('GRU_FORWARD'):
-			for step in range(num_steps):
-				if step > 0:
-					tf.get_variable_scope().reuse_variables()
-				(cell_output_forward,state_forward) = cell_forward(inputs_forward[:,step,:],state_forward)
-				outputs_forward.append(cell_output_forward)				
-		
-		outputs_backward = []
-
-		state_backward = self._initial_state_backward
-		with tf.variable_scope('GRU_BACKWARD'):
-			for step in range(num_steps):
-				if step > 0:
-					tf.get_variable_scope().reuse_variables()
-				(cell_output_backward,state_backward) = cell_backward(inputs_backward[:,step,:],state_backward)
-				outputs_backward.append(cell_output_backward)
-		
-		output_forward = tf.reshape(tf.concat(1,  outputs_forward), [total_num, num_steps, gru_size])
-		output_backward  = tf.reverse(tf.reshape(tf.concat(1,  outputs_backward), [total_num, num_steps, gru_size]), [False, True, False])
-		
-		output_h = tf.add(output_forward,output_backward)
-		
-		attention_r = tf.reshape(tf.batch_matmul(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.reshape(tf.tanh(output_h),[total_num*num_steps,gru_size]),attention_w),[total_num,num_steps])),[total_num,1,num_steps]),output_h),[total_num,gru_size])
-
-		
-		for i in range(big_num):
-
-			sen_repre.append(tf.tanh(attention_r[self.total_shape[i]:self.total_shape[i+1]]))
-			batch_size = self.total_shape[i+1]-self.total_shape[i]
-		
-			sen_alpha.append(tf.reshape(tf.nn.softmax(tf.reshape(tf.matmul(tf.mul(sen_repre[i],sen_a),sen_r),[batch_size])),[1,batch_size]))
-		
-			sen_s.append(tf.reshape(tf.matmul(sen_alpha[i],sen_repre[i]),[gru_size,1]))
-			sen_out.append(tf.add(tf.reshape(tf.matmul(relation_embedding,sen_s[i]),[self.num_classes]),sen_d))
-		
-			self.prob.append(tf.nn.softmax(sen_out[i]))
-
-			with tf.name_scope("output"):
-				self.predictions.append(tf.argmax(self.prob[i], 0, name="predictions"))
-
-			with tf.name_scope("loss"):
-				self.loss.append(tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(sen_out[i], self.input_y[i])))
-				if i == 0:
-					self.total_loss = self.loss[i]
-				else:
-					self.total_loss += self.loss[i]
-
-
-			with tf.name_scope("accuracy"):
-				self.accuracy.append(tf.reduce_mean(tf.cast(tf.equal(self.predictions[i], tf.argmax(self.input_y[i], 0)), "float"), name="accuracy"))
-
+#if you want to try itchat, please set it to True
+itchat_run = False
+if itchat_run:
+	import itchat
 
 def main(_):
 
 	# ATTENTION: change pathname before you load your model
 	pathname = "./model/ATT_GRU_model-"
 	
+	wordembedding = np.load('./data/vec.npy')
 
-	test_settings = Settings()
+	test_settings = network.Settings()
 	test_settings.vocab_size = 114044
-	test_settings.num_classes = 58	
-	test_settings.big_num = 262
+	test_settings.num_classes = 53	
+	test_settings.big_num = 262*9
 
 	big_num_test = test_settings.big_num
 
@@ -225,21 +111,33 @@ def main(_):
 						correct_num_300 += 1.0
 				print correct_num_300/300
 
+				if itchat_run:
+					tempstr = 'P@100\n'+str(correct_num_100/100)+'\n'+'P@200\n'+str(correct_num_200/200)+'\n'+'P@300\n'+str(correct_num_300/300)
+	 				itchat.send(tempstr,FLAGS.wechat_name)
+
+
 			
 			with tf.variable_scope("model"):
-				mtest = GRU(is_training=False, word_embeddings = None, settings = test_settings)
+				mtest = network.GRU(is_training=False, word_embeddings = wordembedding, settings = test_settings)
 
 			saver = tf.train.Saver()
 			
 
 			# ATTENTION: change the list to the iters you want to test !!
-
-			for model_iter in [11400]:
+			#testlist = range(9025,14000,25)
+			testlist = [10900]
+			for model_iter in testlist:
 
 				saver.restore(sess,pathname+str(model_iter))
 				print("Evaluating P@N for iter "+str(model_iter))
 
+				if itchat_run:
+					itchat.send("Evaluating P@N for iter "+str(model_iter),FLAGS.wechat_name)
+
 				print 'Evaluating P@N for one'
+				if itchat_run:
+					itchat.send('Evaluating P@N for one',FLAGS.wechat_name)
+
 				test_y = np.load('./data/pone_test_y.npy')
 				test_word = np.load('./data/pone_test_word.npy')
 				test_pos1 = np.load('./data/pone_test_pos1.npy')
@@ -247,6 +145,8 @@ def main(_):
 				eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings)
 
 				print 'Evaluating P@N for two'
+				if itchat_run:
+					itchat.send('Evaluating P@N for two',FLAGS.wechat_name)
 				test_y = np.load('./data/ptwo_test_y.npy')
 				test_word = np.load('./data/ptwo_test_word.npy')
 				test_pos1 = np.load('./data/ptwo_test_pos1.npy')
@@ -254,6 +154,8 @@ def main(_):
 				eval_pn(test_y,test_word,test_pos1,test_pos2,test_settings)
 
 				print 'Evaluating P@N for all'
+				if itchat_run:
+					itchat.send('Evaluating P@N for all',FLAGS.wechat_name)
 				test_y = np.load('./data/pall_test_y.npy')
 				test_word = np.load('./data/pall_test_word.npy')
 				test_pos1 = np.load('./data/pall_test_pos1.npy')
@@ -263,6 +165,9 @@ def main(_):
 				time_str = datetime.datetime.now().isoformat()
 				print time_str
 				print 'Evaluating all test data and save data for PR curve'
+				if itchat_run:
+					itchat.send('Evaluating all test data and save data for PR curve',FLAGS.wechat_name)
+				
 				test_y = np.load('./data/testall_y.npy')
 				test_word = np.load('./data/testall_word.npy')
 				test_pos1 = np.load('./data/testall_pos1.npy')
@@ -282,12 +187,16 @@ def main(_):
 				current_step = model_iter
 				
 				# ATTENTION: change the save path before you save your result !!
-				np.save('./out/sample_allprob_iter_'+str(current_step)+'.npy',allprob)
+				np.save('./out/allprob_iter_'+str(current_step)+'.npy',allprob)
 				allans = np.load('./data/allans.npy')
 				
 				#caculate the pr curve area
 				average_precision = average_precision_score(allans,allprob)
 				print 'PR curve area:'+str(average_precision)
+
+				if itchat_run:
+					itchat.send('PR curve area:'+str(average_precision),FLAGS.wechat_name)
+
 				time_str = datetime.datetime.now().isoformat()
 				print time_str
 				print 'P@N for all test data:'
@@ -315,5 +224,11 @@ def main(_):
 						correct_num_300 += 1.0
 				print correct_num_300/300
 
+				if itchat_run:
+					tempstr = 'P@100\n'+str(correct_num_100/100)+'\n'+'P@200\n'+str(correct_num_200/200)+'\n'+'P@300\n'+str(correct_num_300/300)
+	 				itchat.send(tempstr,FLAGS.wechat_name)
+
 if __name__ == "__main__":
+	if itchat_run:
+		itchat.auto_login(hotReload=True,enableCmdQR=2)
 	tf.app.run() 
