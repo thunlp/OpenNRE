@@ -51,8 +51,3 @@ NA 0
 /people/person/children 50
 /film/film_location/featured_in_films 51
 /film/film_festival/location 52
-/sports/sports_team_location/teams 53
-/people/ethnicity/includes_groups 54
-/people/ethnicity/people 55
-/business/company/industry 56
-/business/company_shareholder/major_shareholder_of 57
