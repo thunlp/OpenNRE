@@ -47,6 +47,7 @@ You can lauch the tensorboard to see the softmax_loss, l2_loss and final_loss cu
 `tensorboard --logdir=./train_loss`  
 
 # Test
+### currently due to TensorFlow version upgrade, the pre-trained model ATT_GRU_model-10900 becomes unusable. Anyway, we are going to train our own.
 For testing, you need to run the `test_GRU.py` to get all results on test dataset. BUT before you run it, you should change the pathname and modeliters you want to perform testing on in the test_GRU.py. We have add 'ATTENTION' to the code in `test_GRU.py` where you have to change before you test your own models.  
 
 As an example, we provide our best model in the model/ directory. You just need to type the following command:  
