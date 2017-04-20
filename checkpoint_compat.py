@@ -8,9 +8,8 @@ def get_compat_dict(filepath):
                    "GRUCell": "gru_cell",
                    "Candidate": "candidate",
                    "Gates": "gates",
-                   "Linear": "linear",
                    "Bias": "biases",
-                   "Matrix": "matrix",
+                   "Matrix": "weights",
                    "Adam": "adam",
                    "Adam_1": "adam_1"}
 
@@ -21,7 +20,9 @@ def get_compat_dict(filepath):
         tokens = key.split('/')
         new_tokens = []
         for token in tokens:
-            if token in compat_dict:
+            if token == 'Linear':
+                continue
+            elif token in compat_dict:
                 new_tokens.append(compat_dict[token])
             else:
                 new_tokens.append(token)
