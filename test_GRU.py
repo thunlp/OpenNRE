@@ -137,9 +137,10 @@ def main(_):
                 pprint(names_to_vars)
                 for old in old_to_new:
                     new = old_to_new[old]
-                    new_var = names_to_vars[new]
-                    names_to_vars[old] = new_var
-                    del names_to_vars[new]
+                    if new in names_to_vars:
+                        new_var = names_to_vars[new]
+                        names_to_vars[old] = new_var
+                        del names_to_vars[new]
 
                 saver = tf.train.Saver(var_list=names_to_vars)
                 saver.restore(sess, pathname + str(model_iter))
