@@ -130,7 +130,15 @@ def main(_):
             testlist = [10900]
             for model_iter in testlist:
                 old_to_new = get_compat_dict(pathname + str(model_iter))
-                saver = tf.train.Saver(old_to_new)
+
+                names_to_vars = {v.op.name: v for v in tf.all_variables()}
+                for old in old_to_new:
+                    new = old_to_new[old]
+                    new_var = names_to_vars[new]
+                    names_to_vars[old] = new_var
+                    del names_to_vars[new]
+
+                saver = tf.train.Saver(var_list=names_to_vars)
                 saver.restore(sess, pathname + str(model_iter))
                 print("Evaluating P@N for iter " + str(model_iter))
 

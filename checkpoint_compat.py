@@ -9,7 +9,7 @@ def get_compat_dict(filepath):
                    "Candidate": "candidate",
                    "Gates": "gates",
                    "Linear": "linear",
-                   "Bias": "bias",
+                   "Bias": "biases",
                    "Matrix": "matrix",
                    "Adam": "adam",
                    "Adam_1": "adam_1"}
