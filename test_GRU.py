@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import tensorflow as tf
 import numpy as np
 import time
@@ -131,7 +133,8 @@ def main(_):
             for model_iter in testlist:
                 old_to_new = get_compat_dict(pathname + str(model_iter))
 
-                names_to_vars = {v.op.name: v for v in tf.all_variables()}
+                names_to_vars = {v.op.name: v for v in tf.global_variables()}
+                pprint(names_to_vars)
                 for old in old_to_new:
                     new = old_to_new[old]
                     new_var = names_to_vars[new]

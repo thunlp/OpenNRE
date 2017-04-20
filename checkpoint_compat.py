@@ -16,7 +16,6 @@ def get_compat_dict(filepath):
 
     ckpt_reader = tf.train.NewCheckpointReader(filepath)
     ckpt_vars = ckpt_reader.get_variable_to_shape_map()
-    pprint(ckpt_vars)
     old_to_new = {}
     for key in ckpt_vars:
         tokens = key.split('/')
