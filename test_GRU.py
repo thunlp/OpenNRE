@@ -5,6 +5,7 @@ import datetime
 import os
 import network
 from sklearn.metrics import average_precision_score
+from checkpoint_compat import get_compat_dict
 
 FLAGS = tf.app.flags.FLAGS
 # change the name to who you want to send
@@ -128,7 +129,8 @@ def main(_):
             # testlist = range(9025,14000,25)
             testlist = [10900]
             for model_iter in testlist:
-
+                old_to_new = get_compat_dict(pathname + str(model_iter))
+                saver = tf.train.Saver(old_to_new)
                 saver.restore(sess, pathname + str(model_iter))
                 print("Evaluating P@N for iter " + str(model_iter))
 
