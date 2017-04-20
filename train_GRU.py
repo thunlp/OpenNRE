@@ -148,7 +148,7 @@ def main(_):
                     train_step(temp_word, temp_pos1, temp_pos2, temp_y, settings.big_num)
 
                     current_step = tf.train.global_step(sess, global_step)
-                    if current_step > 9000 and current_step % 500 == 0:
+                    if current_step > 9000 and current_step % 500 == 0 or current_step == 10900:
                     # if current_step == 50:
                         print('saving model')
                         path = saver.save(sess, save_path + 'ATT_GRU_model', global_step=current_step)

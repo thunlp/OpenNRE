@@ -83,20 +83,18 @@ class GRU:
         # Bi-GRU layer
         with tf.variable_scope('GRU_FORWARD'):
             for step in range(num_steps):
-                if step > 0:
-                    tf.get_variable_scope().reuse_variables()
-                (cell_output_forward, state_forward) = cell_forward(inputs_forward[:, step, :], state_forward)
-                outputs_forward.append(cell_output_forward)
+                with tf.variable_scope(tf.get_variable_scope(), reuse=(step > 0)):
+                    (cell_output_forward, state_forward) = cell_forward(inputs_forward[:, step, :], state_forward)
+                    outputs_forward.append(cell_output_forward)
 
         outputs_backward = []
 
         state_backward = self._initial_state_backward
         with tf.variable_scope('GRU_BACKWARD'):
             for step in range(num_steps):
-                if step > 0:
-                    tf.get_variable_scope().reuse_variables()
-                (cell_output_backward, state_backward) = cell_backward(inputs_backward[:, step, :], state_backward)
-                outputs_backward.append(cell_output_backward)
+                with tf.variable_scope(tf.get_variable_scope(), reuse=(step > 0)):
+                    (cell_output_backward, state_backward) = cell_backward(inputs_backward[:, step, :], state_backward)
+                    outputs_backward.append(cell_output_backward)
 
         output_forward = tf.reshape(tf.concat(axis=1, values=outputs_forward), [total_num, num_steps, gru_size])
         output_backward = tf.reverse(
