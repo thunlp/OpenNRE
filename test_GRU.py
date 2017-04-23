@@ -131,17 +131,19 @@ def main(_):
             # testlist = range(9025,14000,25)
             testlist = [10900]
             for model_iter in testlist:
+                # for compatibility purposes only, name key changes from tf 0.x to 1.x, compat_layer
                 old_to_new = get_compat_dict(pathname + str(model_iter))
-
                 names_to_vars = {v.op.name: v for v in tf.global_variables()}
+                print("OLD name_to_vars")
                 pprint(names_to_vars)
                 for old in old_to_new:
                     new = old_to_new[old]
-                    if new in names_to_vars:
+                    if old != new and new in names_to_vars:
                         new_var = names_to_vars[new]
                         names_to_vars[old] = new_var
                         del names_to_vars[new]
-
+                print("NEW name_to_vars")
+                pprint(names_to_vars)
                 saver = tf.train.Saver(var_list=names_to_vars)
                 saver.restore(sess, pathname + str(model_iter))
                 print("Evaluating P@N for iter " + str(model_iter))
