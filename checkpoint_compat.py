@@ -2,7 +2,7 @@ import tensorflow as tf
 from pprint import pprint
 
 
-def get_compat_dict(filepath):
+def get_compat_dict(filepath="./model/ATT_GRU_model-10900"):
     compat_dict = {"MultiRNNCell": "multi_rnn_cell",
                    "Cell0": "cell_0",
                    "GRUCell": "gru_cell",
@@ -29,7 +29,18 @@ def get_compat_dict(filepath):
         old_to_new[key] = '/'.join(new_tokens)
     return old_to_new
 
-# sess = tf.Session()
-# saver = tf.train.Saver(old_to_new)
-# saver.restore(sess, filepath)
-# filepath = 'model/ATT_GRU_model-10900'
+
+def transform_name_var_dict(names_to_vars):
+    old_to_new = get_compat_dict(filepath="./model/ATT_GRU_model-10900")
+    print("USE LEGACY MODEL FILE")
+    print("OLD name_to_vars")
+    pprint(names_to_vars)
+    for old in old_to_new:
+        new = old_to_new[old]
+        if old != new and new in names_to_vars:
+            new_var = names_to_vars[new]
+            names_to_vars[old] = new_var
+            del names_to_vars[new]
+    print("NEW name_to_vars")
+    pprint(names_to_vars)
+    return names_to_vars

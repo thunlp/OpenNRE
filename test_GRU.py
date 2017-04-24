@@ -7,12 +7,15 @@ import datetime
 import os
 import network
 from sklearn.metrics import average_precision_score
-from checkpoint_compat import get_compat_dict
+from checkpoint_compat import transform_name_var_dict
 
 FLAGS = tf.app.flags.FLAGS
 # change the name to who you want to send
 # tf.app.flags.DEFINE_string('wechat_name', 'Tang-24-0325','the user you want to send info to')
 tf.app.flags.DEFINE_string('wechat_name', 'filehelper', 'the user you want to send info to')
+
+# use the legacy tensorflow 0.x model checkpoint file provided by THUNLP
+USE_LEGACY = 1
 
 # if you want to try itchat, please set it to True
 itchat_run = False
@@ -125,26 +128,16 @@ def main(_):
             with tf.variable_scope("model"):
                 mtest = network.GRU(is_training=False, word_embeddings=wordembedding, settings=test_settings)
 
-            saver = tf.train.Saver()
+            names_to_vars = {v.op.name: v for v in tf.global_variables()}
+            if USE_LEGACY:
+                names_to_vars = transform_name_var_dict(names_to_vars)
+            saver = tf.train.Saver(names_to_vars)
 
             # ATTENTION: change the list to the iters you want to test !!
             # testlist = range(9025,14000,25)
             testlist = [10900]
             for model_iter in testlist:
                 # for compatibility purposes only, name key changes from tf 0.x to 1.x, compat_layer
-                old_to_new = get_compat_dict(pathname + str(model_iter))
-                names_to_vars = {v.op.name: v for v in tf.global_variables()}
-                print("OLD name_to_vars")
-                pprint(names_to_vars)
-                for old in old_to_new:
-                    new = old_to_new[old]
-                    if old != new and new in names_to_vars:
-                        new_var = names_to_vars[new]
-                        names_to_vars[old] = new_var
-                        del names_to_vars[new]
-                print("NEW name_to_vars")
-                pprint(names_to_vars)
-                saver = tf.train.Saver(var_list=names_to_vars)
                 saver.restore(sess, pathname + str(model_iter))
                 print("Evaluating P@N for iter " + str(model_iter))
 
