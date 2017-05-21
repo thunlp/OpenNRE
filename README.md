@@ -39,6 +39,8 @@ The source codes are in the current main directory. `network.py` contains the wh
 - itchat (optional)
 
 # Train
+### Unable to reproduce the training with small_train. (https://github.com/thunlp/TensorFlow-NRE/issues/7)
+### Probably using full sized training data will work?
 For training, you need to type the following command:  
 `python3 train_GRU.py`  
 The training model file will be saved in folder model/

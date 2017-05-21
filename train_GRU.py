@@ -28,6 +28,7 @@ def main(_):
     wordembedding = np.load('./data/vec.npy')
 
     print('reading training data')
+    # TODO: Probably turn to use big training dataset would get better result.
     train_y = np.load('./data/small_y.npy')
     train_word = np.load('./data/small_word.npy')
     train_pos1 = np.load('./data/small_pos1.npy')
@@ -149,7 +150,7 @@ def main(_):
 
                     current_step = tf.train.global_step(sess, global_step)
                     if current_step > 9000 and current_step % 500 == 0 or current_step == 10900:
-                    # if current_step == 50:
+                        # if current_step == 50:
                         print('saving model')
                         path = saver.save(sess, save_path + 'ATT_GRU_model', global_step=current_step)
                         tempstr = 'have saved model to ' + path
