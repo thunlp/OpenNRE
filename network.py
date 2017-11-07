@@ -6,15 +6,15 @@ class Settings(object):
     def __init__(self):
         self.vocab_size = 114042
         self.num_steps = 70
-        self.num_epochs = 3
-        self.num_classes = 53
-        self.gru_size = 230
+        self.num_epochs = 70
+        self.num_classes = 13
+        self.gru_size = 100
         self.keep_prob = 0.5
         self.num_layers = 1
         self.pos_size = 5
         self.pos_num = 123
         # the number of entity pairs of each batch during training or testing
-        self.big_num = 50
+        self.big_num = 20
 
 
 class GRU:

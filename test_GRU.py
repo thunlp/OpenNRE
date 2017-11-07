@@ -6,35 +6,35 @@ import time
 import datetime
 import os
 import network
-from sklearn.metrics import average_precision_score
-from checkpoint_compat import transform_name_var_dict
+import utils
+import sys
 
 FLAGS = tf.app.flags.FLAGS
-# change the name to who you want to send
-# tf.app.flags.DEFINE_string('wechat_name', 'Tang-24-0325','the user you want to send info to')
-tf.app.flags.DEFINE_string('wechat_name', 'filehelper', 'the user you want to send info to')
 
 # use the legacy tensorflow 0.x model checkpoint file provided by THUNLP
-USE_LEGACY = 1
-
-# if you want to try itchat, please set it to True
-itchat_run = False
-if itchat_run:
-    import itchat
+# USE_LEGACY = 0
 
 
 def main(_):
     # ATTENTION: change pathname before you load your model
-    pathname = "./model/ATT_GRU_model-"
+    pathname = "./model/kbp/ATT_GRU_model-"
+    test_model_id = int(sys.argv[1])
 
-    wordembedding = np.load('./data/vec.npy')
+    none_ind = utils.get_none_id('./origin_data/KBP/relation2id.txt')
+    print("None index: ", none_ind)
 
+    wordembedding = np.load('./data/KBP/vec.npy')
+
+    test_y = np.load('./data/KBP/testall_y.npy')
+    test_word = np.load('./data/KBP/testall_word.npy')
+    test_pos1 = np.load('./data/KBP/testall_pos1.npy')
+    test_pos2 = np.load('./data/KBP/testall_pos2.npy')
+
+    print(test_y[0])
     test_settings = network.Settings()
-    test_settings.vocab_size = 114044
-    test_settings.num_classes = 53
-    test_settings.big_num = 262 * 9
-
-    big_num_test = test_settings.big_num
+    test_settings.vocab_size = len(wordembedding)
+    test_settings.num_classes = len(test_y[0])
+    test_settings.big_num = len(test_y)
 
     with tf.Graph().as_default():
 
@@ -72,178 +72,48 @@ def main(_):
                 feed_dict[mtest.input_pos2] = total_pos2
                 feed_dict[mtest.input_y] = y_batch
 
-                loss, accuracy, prob = sess.run(
-                    [mtest.loss, mtest.accuracy, mtest.prob], feed_dict)
-                return prob, accuracy
-
-            # evaluate p@n
-            def eval_pn(test_y, test_word, test_pos1, test_pos2, test_settings):
-                allprob = []
-                acc = []
-                for i in range(int(len(test_word) / float(test_settings.big_num))):
-                    prob, accuracy = test_step(test_word[i * test_settings.big_num:(i + 1) * test_settings.big_num],
-                                               test_pos1[i * test_settings.big_num:(i + 1) * test_settings.big_num],
-                                               test_pos2[i * test_settings.big_num:(i + 1) * test_settings.big_num],
-                                               test_y[i * test_settings.big_num:(i + 1) * test_settings.big_num])
-                    acc.append(np.mean(np.reshape(np.array(accuracy), (test_settings.big_num))))
-                    prob = np.reshape(np.array(prob), (test_settings.big_num, test_settings.num_classes))
-                    for single_prob in prob:
-                        allprob.append(single_prob[1:])
-                allprob = np.reshape(np.array(allprob), (-1))
-                eval_y = []
-                for i in test_y:
-                    eval_y.append(i[1:])
-                allans = np.reshape(eval_y, (-1))
-                order = np.argsort(-allprob)
-
-                print('P@100:')
-                top100 = order[:100]
-                correct_num_100 = 0.0
-                for i in top100:
-                    if allans[i] == 1:
-                        correct_num_100 += 1.0
-                print(correct_num_100 / 100)
-
-                print('P@200:')
-                top200 = order[:200]
-                correct_num_200 = 0.0
-                for i in top200:
-                    if allans[i] == 1:
-                        correct_num_200 += 1.0
-                print(correct_num_200 / 200)
-
-                print('P@300:')
-                top300 = order[:300]
-                correct_num_300 = 0.0
-                for i in top300:
-                    if allans[i] == 1:
-                        correct_num_300 += 1.0
-                print(correct_num_300 / 300)
-
-                if itchat_run:
-                    tempstr = 'P@100\n' + str(correct_num_100 / 100) + '\n' + 'P@200\n' + str(
-                        correct_num_200 / 200) + '\n' + 'P@300\n' + str(correct_num_300 / 300)
-                    itchat.send(tempstr, FLAGS.wechat_name)
+                loss, accuracy, predictions = sess.run(
+                    [mtest.loss, mtest.accuracy, mtest.predictions], feed_dict)
+                return predictions, accuracy
 
             with tf.variable_scope("model"):
                 mtest = network.GRU(is_training=False, word_embeddings=wordembedding, settings=test_settings)
 
-            names_to_vars = {v.op.name: v for v in tf.global_variables()}
-            if USE_LEGACY:
-                names_to_vars = transform_name_var_dict(names_to_vars)
-            saver = tf.train.Saver(names_to_vars)
+            saver = tf.train.Saver()
 
             # ATTENTION: change the list to the iters you want to test !!
             # testlist = range(9025,14000,25)
-            testlist = [10900]
+            testlist = [test_model_id]
             for model_iter in testlist:
-                # for compatibility purposes only, name key changes from tf 0.x to 1.x, compat_layer
                 saver.restore(sess, pathname + str(model_iter))
-                print("Evaluating P@N for iter " + str(model_iter))
-
-                if itchat_run:
-                    itchat.send("Evaluating P@N for iter " + str(model_iter), FLAGS.wechat_name)
-
-                print('Evaluating P@N for one')
-                if itchat_run:
-                    itchat.send('Evaluating P@N for one', FLAGS.wechat_name)
-
-                test_y = np.load('./data/pone_test_y.npy')
-                test_word = np.load('./data/pone_test_word.npy')
-                test_pos1 = np.load('./data/pone_test_pos1.npy')
-                test_pos2 = np.load('./data/pone_test_pos2.npy')
-                eval_pn(test_y, test_word, test_pos1, test_pos2, test_settings)
-
-                print('Evaluating P@N for two')
-                if itchat_run:
-                    itchat.send('Evaluating P@N for two', FLAGS.wechat_name)
-                test_y = np.load('./data/ptwo_test_y.npy')
-                test_word = np.load('./data/ptwo_test_word.npy')
-                test_pos1 = np.load('./data/ptwo_test_pos1.npy')
-                test_pos2 = np.load('./data/ptwo_test_pos2.npy')
-                eval_pn(test_y, test_word, test_pos1, test_pos2, test_settings)
-
-                print('Evaluating P@N for all')
-                if itchat_run:
-                    itchat.send('Evaluating P@N for all', FLAGS.wechat_name)
-                test_y = np.load('./data/pall_test_y.npy')
-                test_word = np.load('./data/pall_test_word.npy')
-                test_pos1 = np.load('./data/pall_test_pos1.npy')
-                test_pos2 = np.load('./data/pall_test_pos2.npy')
-                eval_pn(test_y, test_word, test_pos1, test_pos2, test_settings)
 
                 time_str = datetime.datetime.now().isoformat()
                 print(time_str)
-                print('Evaluating all test data and save data for PR curve')
-                if itchat_run:
-                    itchat.send('Evaluating all test data and save data for PR curve', FLAGS.wechat_name)
 
-                test_y = np.load('./data/testall_y.npy')
-                test_word = np.load('./data/testall_word.npy')
-                test_pos1 = np.load('./data/testall_pos1.npy')
-                test_pos2 = np.load('./data/testall_pos2.npy')
-                allprob = []
-                acc = []
+                all_pred = []
+                all_true = []
+                all_accuracy = []
+
                 for i in range(int(len(test_word) / float(test_settings.big_num))):
-                    prob, accuracy = test_step(test_word[i * test_settings.big_num:(i + 1) * test_settings.big_num],
+                    pred, accuracy = test_step(test_word[i * test_settings.big_num:(i + 1) * test_settings.big_num],
                                                test_pos1[i * test_settings.big_num:(i + 1) * test_settings.big_num],
                                                test_pos2[i * test_settings.big_num:(i + 1) * test_settings.big_num],
                                                test_y[i * test_settings.big_num:(i + 1) * test_settings.big_num])
-                    acc.append(np.mean(np.reshape(np.array(accuracy), (test_settings.big_num))))
-                    prob = np.reshape(np.array(prob), (test_settings.big_num, test_settings.num_classes))
-                    for single_prob in prob:
-                        allprob.append(single_prob[1:])
-                allprob = np.reshape(np.array(allprob), (-1))
-                order = np.argsort(-allprob)
-
-                print('saving all test result...')
-                current_step = model_iter
-
-                # ATTENTION: change the save path before you save your result !!
-                np.save('./out/allprob_iter_' + str(current_step) + '.npy', allprob)
-                allans = np.load('./data/allans.npy')
-
-                # caculate the pr curve area
-                average_precision = average_precision_score(allans, allprob)
-                print('PR curve area:' + str(average_precision))
-
-                if itchat_run:
-                    itchat.send('PR curve area:' + str(average_precision), FLAGS.wechat_name)
-
-                time_str = datetime.datetime.now().isoformat()
-                print(time_str)
-                print('P@N for all test data:')
-                print('P@100:')
-                top100 = order[:100]
-                correct_num_100 = 0.0
-                for i in top100:
-                    if allans[i] == 1:
-                        correct_num_100 += 1.0
-                print(correct_num_100 / 100)
-
-                print('P@200:')
-                top200 = order[:200]
-                correct_num_200 = 0.0
-                for i in top200:
-                    if allans[i] == 1:
-                        correct_num_200 += 1.0
-                print(correct_num_200 / 200)
-
-                print('P@300:')
-                top300 = order[:300]
-                correct_num_300 = 0.0
-                for i in top300:
-                    if allans[i] == 1:
-                        correct_num_300 += 1.0
-                print(correct_num_300 / 300)
-
-                if itchat_run:
-                    tempstr = 'P@100\n' + str(correct_num_100 / 100) + '\n' + 'P@200\n' + str(
-                        correct_num_200 / 200) + '\n' + 'P@300\n' + str(correct_num_300 / 300)
-                    itchat.send(tempstr, FLAGS.wechat_name)
+                    pred = np.array(pred)
+                    all_pred.append(pred)
+                    all_true.append(test_y[i * test_settings.big_num:(i + 1) * test_settings.big_num])
+                    all_accuracy.append(accuracy)
+                all_pred = np.concatenate(all_pred, axis=0)
+                all_true = np.concatenate(all_true, axis=0)
+                accu = float(np.mean(all_accuracy))
+                all_true_inds = np.argmax(all_true, 1)
+                precision, recall, f1 = utils.evaluate_rm_neg(all_pred, all_true_inds, none_ind)
+                print('Accu = %.4f, F1 = %.4f, recall = %.4f, precision = %.4f)' %
+                      (accu,
+                       f1,
+                       recall,
+                       precision))
 
 
 if __name__ == "__main__":
-    if itchat_run:
-        itchat.auto_login(hotReload=True, enableCmdQR=2)
     tf.app.run()
