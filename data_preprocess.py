@@ -38,14 +38,13 @@ def process_file(in_file, out_file, rel_types, training=True):
                 em2_end = rm['em2End']
                 new_sent_str = ""
                 for idx, token in enumerate(sent_tokens_lower):
-                    if em1_start <= idx < em1_end-1 or em2_start <= idx < em2_end-1:
+                    if em1_start <= idx < em1_end - 1 or em2_start <= idx < em2_end - 1:
                         new_sent_str += token + '_'
                     else:
                         new_sent_str += token + ' '
                 em1 = '_'.join(sent_tokens_lower[em1_start:em1_end])
                 em2 = '_'.join(sent_tokens_lower[em2_start:em2_end])
-                out_file.write('_\t_\t' + em1 + '\t' + em2 + '\t' + r +
-                               '\t' + new_sent_str + '\n')
+                out_file.write('_\t_\t' + em1 + '\t' + em2 + '\t' + r + '\t' + new_sent_str + '\n')
     return rel_types
 
 
