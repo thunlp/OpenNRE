@@ -1,4 +1,5 @@
 # Neural Relation Extraction(NRE)
+### This is a forked version, which updates the code for compatibility of Python 3 and Tensorflow 1.x
 Neural relation extraction aims to extract relations from plain text with neural models, which has been the state-of-the-art methods for relation extraction. In this project, we provide our implementations of a word-level and sentence-level combined Bidirectional GRU network (BGRU+2ATT).  
 
 We come up with the idea from the paper "Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification" [Zhou et al.,2016] and the paper "Neural Relation Extraction with Selective Attention over Instances" [Lin et al.,2016]. And we compare our results with PCNN+ATT [Lin et al.,2016] on the same dataset.
@@ -24,36 +25,40 @@ To run our code, the dataset should be put in the folder origin_data/ using the 
 - vec.txt: the pre-train word embedding file
 
 Before you train your model, you need to type the following command:  
-`python initial.py`  
+`python3 initial.py`  
 to transform the original data into .npy files for the input of the network. The .npy files will be saved in data/ directory.
 
 # Codes
 The source codes are in the current main directory. `network.py` contains the whole neural network's defination.
 
 # Requirements
-- Python (>=2.7)
-- TensorFlow (=r0.11)
+- Python (>=3.5)
+- TensorFlow (>=r1.0)
 - scikit-learn (>=0.18)
 - Matplotlib (>=2.0.0)
 - itchat (optional)
 
 # Train
+### Unable to reproduce the training with small_train. (https://github.com/thunlp/TensorFlow-NRE/issues/7)
+### Probably using full sized training data will work?
 For training, you need to type the following command:  
-`python train_GRU.py`  
+`python3 train_GRU.py`  
 The training model file will be saved in folder model/
 
 You can lauch the tensorboard to see the softmax_loss, l2_loss and final_loss curve by typing the following command:
 `tensorboard --logdir=./train_loss`  
 
 # Test
+### currently due to TensorFlow version upgrade, the pre-trained model ATT_GRU_model-10900 which relies on tf 0.x becomes unusable.
+### Fortunately, we implemented an temporary compatibility switch inside test_gru.py (USE_LEGACY = True)
 For testing, you need to run the `test_GRU.py` to get all results on test dataset. BUT before you run it, you should change the pathname and modeliters you want to perform testing on in the test_GRU.py. We have add 'ATTENTION' to the code in `test_GRU.py` where you have to change before you test your own models.  
 
 As an example, we provide our best model in the model/ directory. You just need to type the following command:  
-`python test_GRU.py`  
+`python3 test_GRU.py`  
 The testing results will be printed(mainly the P@N results and the area of PR curve) and the all results on test dataset will be saved in out/ directory with the prefix "sample"  
 
 To draw the PR curve for the sample model, you just need to type the following command:  
-`python plot_pr.py`  
+`python3 plot_pr.py`  
 The PR curve will be saved as .png in current directory. If you want to plot the PR curve for your own model, you just need to change the modeliters in the `plot_pr.py` where we annotated 'ATTENTION'.
 
 # Link to WeChat (optional)
