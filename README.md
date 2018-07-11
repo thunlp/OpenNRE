@@ -1,84 +1,142 @@
-# Neural Relation Extraction(NRE)
-Neural relation extraction aims to extract relations from plain text with neural models, which has been the state-of-the-art methods for relation extraction. In this project, we provide our implementations of a word-level and sentence-level combined Bidirectional GRU network (BGRU+2ATT).  
+# Tensorflow-NRE
 
-We come up with the idea from the paper "Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification" [Zhou et al.,2016] and the paper "Neural Relation Extraction with Selective Attention over Instances" [Lin et al.,2016]. And we compare our results with PCNN+ATT [Lin et al.,2016] on the same dataset.
-#Evaluation Results
-P@N comparison between PCNN+ATT and our method (BGRU+2ATT):
+An open-source framework for neural relation extraction.
 
-![](./images/table.png)
+( Currently this project is being modified so some of the functions may be unavailable )
 
-Precision/Recall curve of our method (BGRU+2ATT) compared to others':
+## Overview
 
-![](./images/iter_10900.png)
+It is a TensorFlow-based framwork for easily building relation extraction models. We divide the pipeline of relation extraction into four parts, which are embedding, encoder, selector and classifier. For each part we have implemented several methods.
 
+* Embedding
+  * Word embedding
+  * Position embedding
+  * Concatenation method
+* Encoder
+  * PCNN
+  * CNN
+  * RNN
+  * BiRNN
+* Selector
+  * Attention
+  * Maximum
+  * Average
+* Classifier
+  * Softmax loss function
+  * Output
+  
+All those methods could be combined freely. 
 
-# Data
-We use the same dataset(NYT10) as in [Lin et al.,2016]. And we provide it in origin_data/ directory. NYT10 is originally released by the paper "Sebastian Riedel, Limin Yao, and Andrew McCallum. Modeling relations and their mentions without labeled text."  
+We also provide fast training and testing codes. You could change hyper-parameters or appoint model architectures by using Python arguments. A plotting method is also in the package.
 
-Pre-Trained Word Vectors are learned from New York Times Annotated Corpus (LDC Data LDC2008T19), which should be obtained from LDC (https://catalog.ldc.upenn.edu/LDC2008T19). And we provide it also in the origin_data/ directory.
+Advesarial training method is implemented following [Wu et al. (2017)](https://people.eecs.berkeley.edu/~russell/papers/emnlp17-relation.pdf). Since it's a general training method, you could adapt it to any models with simply adding a few lines of code.
 
-To run our code, the dataset should be put in the folder origin_data/ using the following format, containing four files
-- train.txt: training file, format (fb_mid_e1, fb_mid_e2, e1_name, e2_name, relation, sentence).
-- test.txt: test file, same format as train.txt.
-- relation2id.txt: all relations and corresponding ids, one per line.
-- vec.txt: the pre-train word embedding file
+This project is under MIT license.
 
-Before you train your model, you need to type the following command:  
-`python initial.py`  
-to transform the original data into .npy files for the input of the network. The .npy files will be saved in data/ directory.
+## Installation
 
-# Codes
-The source codes are in the current main directory. `network.py` contains the whole neural network's defination.
+1. Install TensorFlow
+2. Clone the easyNRE repository:
+  ```bash
+  git clone git@github.com:gaotianyu1350/easyNRE.git
+  ```
+3. Download NYT dataset from `https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing`
+4. Extract dataset to `./origin-data`
+```
+tar xvf origin_data.tar
+```
 
-# Requirements
-- Python (>=2.7)
-- TensorFlow (=r0.11)
-- scikit-learn (>=0.18)
-- Matplotlib (>=2.0.0)
-- itchat (optional)
+## Quick Start
 
-# Train
-For training, you need to type the following command:  
-`python train_GRU.py`  
-The training model file will be saved in folder model/
+### Process Data
 
-You can lauch the tensorboard to see the softmax_loss, l2_loss and final_loss curve by typing the following command:
-`tensorboard --logdir=./train_loss`  
+```bash
+python gen_data.py
+```
+The processed data will be stored in `./data`
 
-# Test
-For testing, you need to run the `test_GRU.py` to get all results on test dataset. BUT before you run it, you should change the pathname and modeliters you want to perform testing on in the test_GRU.py. We have add 'ATTENTION' to the code in `test_GRU.py` where you have to change before you test your own models.  
+### Train Model
+```
+python train.py --model_name pcnn_att
+```
 
-As an example, we provide our best model in the model/ directory. You just need to type the following command:  
-`python test_GRU.py`  
-The testing results will be printed(mainly the P@N results and the area of PR curve) and the all results on test dataset will be saved in out/ directory with the prefix "sample"  
+The arg `model_name` appoints model architecture, and `pcnn_att` is the name of one of our models. All available models are in `./model`. About other arguments please refer to `./train.py`. Once you start training, all checkpoints are stored in `./checkpoint`.
 
-To draw the PR curve for the sample model, you just need to type the following command:  
-`python plot_pr.py`  
-The PR curve will be saved as .png in current directory. If you want to plot the PR curve for your own model, you just need to change the modeliters in the `plot_pr.py` where we annotated 'ATTENTION'.
+### Test Model
+```bash
+python test.py --model_name pcnn_att
+```
 
-# Link to WeChat (optional)
-We use the python package of WeChat, ItChat (https://github.com/littlecodersh/ItChat) to send training details and testing results to your wechat number. If you want to use the function, just change the codes in train_GRU.py or test_GRU.py: `itchat_run=False` to `itchat_run=True`. And also you have to change the string `FLAGS.wechat_name` to the wechat number you want to use. (default is filehelper)
+Same usage as training. When finishing testing, the best checkpoint's corresponding pr-curve data will be stored in `./test_result`.
 
-Then at the start of your training or testing, you have to scan the QR code printed in the command line to login your own wechat number. And then you can receive messages about the training/testing results.
+### Plot
+```bash
+python draw_plot.py pcnn_att
+```
 
-One example of testing results:
+The plot will be saved as `./test_result/pr_curve.png`. You could appoint several models in the arguments, like `python draw_plot.py pcnn_att pcnn_max pcnn_ave`, as long as there are these models' results in `./test_result`.
 
-![](./images/wechat.png)
+## Build Your Own Model
 
+Not only could you train and test existing models in our package, you could also build your own model or add methods to the four basic modules. When adding a new model, you could create a python file in `./model` having the same name as the model and implement it like following:
 
-# Update Logs
-## 2017.03.20
-- Fix the bugs of multi-label. (In training/testing dataset, some entity pairs have multi-relation labels).
-- Seperate the network definition codes from train/test operation codes.
-- Add the function of tensorboard to show loss curve online.
-- (Optional) Use ItChat package to send training details and testing results to wechat.
+```python
+from framework import Framework
+import tensorflow as tf
 
+def your_new_model(is_training):
+    if is_training:
+        framework = Framework(is_training=True)
+    else:
+        framework = Framework(is_training=False)
 
-# Reference
-[Zeng et al., 2014] Daojian Zeng, Kang Liu, Siwei Lai, Guangyou Zhou, and Jun Zhao. Relation classification via convolutional deep neural network. In Proceedings of COLING.  
+    # Word Embedding
+    word_embedding = framework.embedding.word_embedding()
+    # Position Embedding. Set simple_pos=True to use simple pos embedding
+    pos_embedding = framework.embedding.pos_embedding()
+    # Concat two embeddings
+    embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
+    
+    # PCNN. Appoint activation to whatever activation function you want to use.
+    # There are three more encoders:
+    #     framework.encoder.cnn(x, activation=tf.nn.relu)
+    #     framework.encoder.rnn(x, cell_name='lstm')
+    #     framework.encoder.birnn(x, cell_name='lstm')
+    x = framework.encoder.pcnn(embedding, activation=tf.nn.relu)
+    
+    # Selective attention. Setting parameter dropout_before=True means using dropout before attention. 
+    # There are three more selecting method
+    #     framework.selector.maximum(x, dropout_before=True)
+    #     framework.selector.average(x, dropout_before=True)
+    #     framework.selector.no_bag(x)
+    x = framework.selector.attention(x)
 
-[Zeng et al.,2015] Daojian Zeng,Kang Liu,Yubo Chen,and Jun Zhao. Distant supervision for relation extraction via piecewise convolutional neural networks. In Proceedings of EMNLP.  
+    if is_training:
+        loss = framework.classifier.softmax_cross_entropy(x)
+        output = framework.classifier.output(x)
+        # Set optimizer to whatever optimizer you want to use
+        framework.init_train_model(loss, output, optimizer=tf.train.GradientDescentOptimizer)
+        framework.load_train_data()
+        framework.train()
+    else:
+        framework.init_test_model(tf.nn.softmax(x))
+        framework.load_test_data()
+        framework.test()
+```
 
-[Zhou et al.,2016] Zhou P, Shi W, Tian J, et al. Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification[C] Meeting of the Association for Computational Linguistics. 2016:207-212.  
+After creating model's python file, you need to add the model to `./train.py` and `./test.py` as following:
 
-[Lin et al., 2016] Yankai Lin, Shiqi Shen, Zhiyuan Liu, Huanbo Luan, and Maosong Sun. Neural Relation Extraction with Selective Attention over Instances. In Proceedings of ACL.
+```python
+
+# other code ...
+
+def main():
+    from model.your_new_model import your_new_model
+
+# other code ...
+
+```
+
+Then you can train, test and plot!
+
+As for using adversarial training, please refer to `./model/pcnn_att_adv.py` for more details.
