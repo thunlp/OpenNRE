@@ -38,7 +38,7 @@ This project is under MIT license.
 1. Install TensorFlow
 2. Clone the OpenNRE repository:
   ```bash
-  git clone git@github.com:thunlp/TensorFlow-NRE.git
+  git clone git@github.com:thunlp/OpenNRE.git
   ```
 3. Download NYT dataset from `https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing`
 4. Extract dataset to `./origin-data`
