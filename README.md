@@ -1,8 +1,8 @@
-# Tensorflow-NRE
+# OpenNRE
 
 An open-source framework for neural relation extraction.
 
-( Currently this project is being modified so some of the functions may be unavailable )
+Contributed by [Tianyu Gao](https://github.com/gaotianyu1350), [Xu Han](https://github.com/THUCSTHanxu13), [Lumin Tang](https://github.com/Tsingularity), [Yankai Lin](https://github.com/Mrlyk423), [Zhiyuan Liu](http://nlp.csai.tsinghua.edu.cn/~lzy/)
 
 ## Overview
 
@@ -36,9 +36,9 @@ This project is under MIT license.
 ## Installation
 
 1. Install TensorFlow
-2. Clone the easyNRE repository:
+2. Clone the OpenNRE repository:
   ```bash
-  git clone git@github.com:gaotianyu1350/easyNRE.git
+  git clone git@github.com:thunlp/TensorFlow-NRE.git
   ```
 3. Download NYT dataset from `https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing`
 4. Extract dataset to `./origin-data`
