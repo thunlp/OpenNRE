@@ -11,9 +11,6 @@ class Classifier(object):
         self.is_training = is_training
 
     def softmax_cross_entropy(self, x):
-        print x
-        print self.label.shape
-        print FLAGS.num_classes
         with tf.name_scope("loss"):
             label_onehot = tf.one_hot(indices=self.label, depth=FLAGS.num_classes, dtype=tf.int32)
             loss = tf.losses.softmax_cross_entropy(onehot_labels=label_onehot, logits=x, weights=self.weights)
