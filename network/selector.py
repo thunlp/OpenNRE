@@ -18,7 +18,7 @@ class Selector(object):
         else:
             return x
 
-    def __logits__(self, x, var_scope = None, reuse = tf.AUTO_REUSE):
+    def __logits__(self, x, var_scope = None, reuse = None):
         with tf.variable_scope(var_scope or 'logits', reuse = reuse):
             relation_matrix = tf.get_variable('relation_matrix', [self.num_classes, x.shape[1]], dtype=tf.float32, initializer=tf.contrib.layers.xavier_initializer())
             bias = tf.get_variable('bias', [self.num_classes], dtype=tf.float32, initializer=tf.contrib.layers.xavier_initializer())
@@ -68,7 +68,7 @@ class Selector(object):
                 for i in range(scope.shape[0] - 1):
                     test_attention_score = tf.nn.softmax(tf.transpose(test_attention_logit[scope[i]:scope[i+1],:]))
                     final_repre = tf.matmul(test_attention_score, x[scope[i]:scope[i+1]])
-                    logits = self.__logits__(final_repre)
+                    logits = self.__logits__(final_repre, "attention_logits", True)
                     test_repre.append(final_repre)
                     test_tower_output.append(tf.diag_part(tf.nn.softmax(logits)))
                 test_repre = tf.reshape(tf.stack(test_repre), [scope.shape[0] - 1, self.num_classes, -1])
