@@ -33,6 +33,14 @@ Advesarial training method is implemented following [Wu et al. (2017)](https://p
 
 This project is under MIT license.
 
+## Requirements
+
+- Python (>=2.7)
+- TensorFlow (>=1.4.1)
+	- CUDA (>=8.0) if you are using gpu
+- Matplotlib (>=2.0.0)
+- scikit-learn (>=0.18)
+
 ## Installation
 
 1. Install TensorFlow
@@ -41,7 +49,7 @@ This project is under MIT license.
   git clone git@github.com:thunlp/OpenNRE.git
   ```
 3. Download NYT dataset from `https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing`
-4. Extract dataset to `./origin-data`
+4. Extract dataset to `./origin_data`
 ```
 tar xvf origin_data.tar
 ```

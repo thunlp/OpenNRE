@@ -1,11 +1,14 @@
 import numpy as np
 import os
 import json
+import os
 
 # folder of training datasets
 data_path = "./origin_data/"
 # files to export data
 export_path = "./data/"
+if not os.path.exists('./data'):
+    os.mkdir('./data')
 #length of sentence
 fixlen = 120
 #max length of position embedding is 100 (-100~+100)
