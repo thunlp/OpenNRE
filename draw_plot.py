@@ -17,7 +17,7 @@ def main():
         auc = sklearn.metrics.auc(x=x, y=y)
         #plt.plot(x, y, lw=2, label=model + '-auc='+str(auc))
         plt.plot(x, y, lw=2, label=model)
-        print model + '-auc=' + str(auc)
+        print(model + '-auc=' + str(auc))
        
     plt.xlabel('Recall')
     plt.ylabel('Precision')

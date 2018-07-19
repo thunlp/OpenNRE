@@ -33,7 +33,7 @@ def rnn_att_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-	    x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
+            x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
             logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
 
         framework.init_test_model(tf.nn.softmax(logit))

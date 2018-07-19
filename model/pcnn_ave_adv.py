@@ -33,7 +33,7 @@ def pcnn_ave_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-	    x = framework.encoder.pcnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
+            x = framework.encoder.pcnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
             logit, repre = framework.selector.average(x, framework.scope)
 
         framework.init_test_model(tf.nn.softmax(logit))

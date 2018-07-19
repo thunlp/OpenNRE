@@ -33,7 +33,7 @@ def rnn_ave_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-	    x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
+            x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
             logit, repre = framework.selector.average(x, framework.scope)
 
         framework.init_test_model(tf.nn.softmax(logit))

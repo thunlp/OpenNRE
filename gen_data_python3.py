@@ -32,7 +32,7 @@ def init_word():
     # reading word embedding data...
     global word2id, word_size
     print('reading word embedding data...')
-    f = open(data_path + 'vec.txt', "r")
+    f = open(data_path + 'vec.txt', "r", encoding='utf-8')
     total, size = f.readline().strip().split()[:2]
     total = (int)(total)
     word_size = (int)(size)
@@ -52,7 +52,8 @@ def init_relation():
     # reading relation ids...
     global relation2id
     print('reading relation ids...')
-    f = open(data_path + "relation2id.txt","r")
+    f = open(data_path + "relation2id.txt","r", encoding='utf-8')
+ 
     total = (int)(f.readline().strip())
     for i in range(total):
         content = f.readline().strip().split()
@@ -61,7 +62,8 @@ def init_relation():
 
 def sort_files(name):
     hash = {}
-    f = open(data_path + name + '.txt','r')
+    f = open(data_path + name + '.txt','r', encoding='utf-8')
+
     s = 0
     while True:
         content = f.readline()
@@ -82,7 +84,8 @@ def sort_files(name):
             hash[id] = []
         hash[id].append(origin_data)
     f.close()
-    f = open(data_path + name + "_sort.txt", "w")
+    f = open(data_path + name + "_sort.txt", "w", encoding='utf-8')
+
     f.write("%d\n"%(s))
     for i in hash:
         for j in hash[i]:
@@ -91,7 +94,8 @@ def sort_files(name):
 
 def init_train_files(name):
     print('reading ' + name +' data...')
-    f = open(data_path + name + '.txt','r')
+    f = open(data_path + name + '.txt','r', encoding='utf-8')
+
     total = (int)(f.readline().strip())
     sen_word = np.zeros((total, fixlen), dtype = np.int32)
     sen_pos1 = np.zeros((total, fixlen), dtype = np.int32)
@@ -155,7 +159,8 @@ def init_train_files(name):
 
 def init_test_files(name):
     print('reading ' + name +' data...')
-    f = open(data_path + name + '.txt','r')
+    f = open(data_path + name + '.txt','r', encoding='utf-8')
+
     total = (int)(f.readline().strip())
     sen_word = np.zeros((total, fixlen), dtype = np.int32)
     sen_pos1 = np.zeros((total, fixlen), dtype = np.int32)
@@ -237,7 +242,8 @@ def init_test_files(name):
 init_word()
 init_relation()
 np.save(export_path+'vec', word_vec)
-f = open(export_path+'config', "w")
+f = open(export_path+'config', "w", encoding='utf-8')
+
 f.write(json.dumps({"word2id":word2id,"relation2id":relation2id,"word_size":word_size, "fixlen":fixlen, "maxlen":maxlen}))
 f.close()
 

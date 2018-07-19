@@ -69,7 +69,7 @@ class Framework(object):
         self.sess = None
 
     def load_train_data(self):
-        print 'reading training data...'
+        print('reading training data...')
         #self.data_word_vec = np.load(os.path.join(FLAGS.export_path, 'vec.npy'))
         self.data_instance_triple = np.load(os.path.join(FLAGS.export_path, 'train_instance_triple.npy'))
         self.data_instance_scope = np.load(os.path.join(FLAGS.export_path, 'train_instance_scope.npy'))
@@ -80,13 +80,13 @@ class Framework(object):
         self.data_train_pos2 = np.load(os.path.join(FLAGS.export_path, 'train_pos2.npy'))
         self.data_train_mask = np.load(os.path.join(FLAGS.export_path, 'train_mask.npy'))
 
-        print 'reading finished'
-        print 'mentions         : %d' % (len(self.data_instance_triple))
-        print 'sentences        : %d' % (len(self.data_train_length))
-        print 'relations        : %d' % (FLAGS.num_classes)
-        print 'word size        : %d' % (FLAGS.word_size)
-        print 'position size     : %d' % (FLAGS.pos_size)
-        print 'hidden size        : %d' % (FLAGS.hidden_size)
+        print('reading finished')
+        print('mentions         : %d' % (len(self.data_instance_triple)))
+        print('sentences        : %d' % (len(self.data_train_length)))
+        print('relations        : %d' % (FLAGS.num_classes))
+        print('word size        : %d' % (FLAGS.word_size))
+        print('position size     : %d' % (FLAGS.pos_size))
+        print('hidden size        : %d' % (FLAGS.hidden_size))
 
         self.reltot = {}
         for index, i in enumerate(self.data_train_label):
@@ -96,10 +96,10 @@ class Framework(object):
                 self.reltot[i] += 1.0
         for i in self.reltot:
             self.reltot[i] = 1 / (self.reltot[i] ** (0.05))
-        print self.reltot
+        print(self.reltot)
 
     def load_test_data(self):
-        print 'reading test data...'
+        print('reading test data...')
         #self.data_word_vec = np.load(os.path.join(FLAGS.export_path, 'vec.npy'))
         self.data_instance_entity = np.load(os.path.join(FLAGS.export_path, 'test_instance_entity.npy'))
         self.data_instance_entity_no_bag = np.load(os.path.join(FLAGS.export_path, 'test_instance_entity_no_bag.npy'))
@@ -115,16 +115,16 @@ class Framework(object):
         self.data_test_pos2 = np.load(os.path.join(FLAGS.export_path, 'test_pos2.npy'))
         self.data_test_mask = np.load(os.path.join(FLAGS.export_path, 'test_mask.npy'))
 
-        print 'reading finished'
-        print 'mentions         : %d' % (len(self.data_instance_triple))
-        print 'sentences        : %d' % (len(self.data_test_length))
-        print 'relations        : %d' % (FLAGS.num_classes)
-        print 'word size        : %d' % (FLAGS.word_size)
-        print 'position size     : %d' % (FLAGS.pos_size)
-        print 'hidden size        : %d' % (FLAGS.hidden_size)
+        print('reading finished')
+        print('mentions         : %d' % (len(self.data_instance_triple)))
+        print('sentences        : %d' % (len(self.data_test_length)))
+        print('relations        : %d' % (FLAGS.num_classes))
+        print('word size        : %d' % (FLAGS.word_size))
+        print('position size     : %d' % (FLAGS.pos_size))
+        print('hidden size        : %d' % (FLAGS.hidden_size))
 
     def init_train_model(self, loss, output, optimizer=tf.train.GradientDescentOptimizer):
-        print 'initializing training model...'
+        print('initializing training model...')
 
         # Loss and output
         self.loss = loss
@@ -149,14 +149,14 @@ class Framework(object):
         else:
             self.saver.restore(self.sess, FLAGS.pretrain_model)
 
-        print 'initializing finished'
+        print('initializing finished')
 
     def init_test_model(self, output):
-        print 'initializing test model...'
+        print('initializing test model...')
         self.output = output
         self.sess = tf.Session()
         self.saver = tf.train.Saver(max_to_keep=None)
-        print 'initializing finished'
+        print('initializing finished')
 
     def train_one_step(self, index, scope, weights, label, result_needed=[]):
         #print self.data_train_word[index, :].shape
@@ -218,9 +218,9 @@ class Framework(object):
         if not os.path.exists(FLAGS.checkpoint_dir):
             os.mkdir(FLAGS.checkpoint_dir)
         if self.use_bag:
-            train_order = range(len(self.data_instance_triple))
+            train_order = list(range(len(self.data_instance_triple)))
         else:
-            train_order = range(len(self.data_train_word))
+            train_order = list(range(len(self.data_train_word)))
         for epoch in range(FLAGS.max_epoch):
             print('epoch ' + str(epoch) + ' starts...')
             self.acc_NA.clear()
@@ -235,7 +235,7 @@ class Framework(object):
                     weights = []
                     label = []
                     for num in input_scope:
-                        index = index + range(num[0], num[1] + 1)
+                        index = index + list(range(num[0], num[1] + 1))
                         label.append(self.data_train_label[num[0]])
                         scope.append(scope[len(scope) - 1] + num[1] - num[0] + 1)
                         weights.append(self.reltot[self.data_train_label[num[0]]])
@@ -253,10 +253,10 @@ class Framework(object):
                 sys.stdout.flush()
 
             if (epoch + 1) % FLAGS.save_epoch == 0:
-                print 'epoch ' + str(epoch + 1) + ' has finished'
-                print 'saving model...'
+                print('epoch ' + str(epoch + 1) + ' has finished')
+                print('saving model...')
                 path = self.saver.save(self.sess, os.path.join(FLAGS.checkpoint_dir, FLAGS.model_name), global_step=epoch)
-                print 'have saved model to ' + path
+                print('have saved model to ' + path)
 
     def test(self, one_step=test_one_step):
         epoch_range = eval(FLAGS.epoch_range)
@@ -265,11 +265,11 @@ class Framework(object):
         save_y = None
         best_auc = 0
         best_epoch = 0
-        print 'test ' + FLAGS.model_name
+        print('test ' + FLAGS.model_name)
         for epoch in epoch_range:
             if not os.path.exists(os.path.join(FLAGS.checkpoint_dir, FLAGS.model_name + '-' + str(epoch) + '.index')):
                 continue
-            print 'start testing checkpoint, iteration =', epoch
+            print('start testing checkpoint, iteration =', epoch)
             self.saver.restore(self.sess, os.path.join(FLAGS.checkpoint_dir, FLAGS.model_name + '-' + str(epoch)))
             stack_output = []
             stack_label = []
@@ -283,7 +283,7 @@ class Framework(object):
                 scope = [0]
                 label = []
                 for num in input_scope:
-                    index = index + range(num[0], num[1] + 1)
+                    index = index + list(range(num[0], num[1] + 1))
                     label.append(self.data_test_label[num[0]])
                     scope.append(scope[len(scope) - 1] + num[1] - num[0] + 1)
     
@@ -301,7 +301,7 @@ class Framework(object):
                     sys.stdout.write('predicting {} / {}\n'.format(i, total))
                     sys.stdout.flush()
             
-            print '\nevaluating...'
+            print('\nevaluating...')
 
             sorted_test_result = sorted(test_result, key=lambda x: x[2])
             pr_result_x = []
@@ -316,7 +316,7 @@ class Framework(object):
                 #    break
 
             auc = sklearn.metrics.auc(x=pr_result_x, y=pr_result_y)
-            print 'auc:', auc
+            print('auc:', auc)
             if auc > best_auc:
                 best_auc = auc
                 best_epoch = epoch
@@ -327,7 +327,7 @@ class Framework(object):
             os.mkdir(FLAGS.test_result_dir)
         np.save(os.path.join(FLAGS.test_result_dir, FLAGS.model_name + '_x.npy'), save_x)
         np.save(os.path.join(FLAGS.test_result_dir, FLAGS.model_name + '_y.npy'), save_y)
-        print 'best epoch:', best_epoch
+        print('best epoch:', best_epoch)
 
     def adversarial(self, loss, embedding):
         perturb = tf.gradients(loss, embedding)
