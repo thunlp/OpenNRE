@@ -41,7 +41,7 @@ class Encoder(object):
                              kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d())
         return x
 
-    def cnn(self, x, hidden_size, kernel_size = 3, stride_size = 1, activation=tf.nn.relu):
+    def cnn(self, x, hidden_size, mask, kernel_size = 3, stride_size = 1, activation=tf.nn.relu):
         with tf.name_scope("cnn"):
             max_length = x.get_shape()[1]
             x = self.__cnn_cell__(x, hidden_size, kernel_size, stride_size)

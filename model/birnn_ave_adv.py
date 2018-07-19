@@ -10,20 +10,20 @@ def birnn_ave_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-            x = framework.encoder.birnn(embedding)
-            x = framework.selector.average(x)
+            x = framework.encoder.birnn(embedding, FLAGS.hidden_size, framework.length)
+            logit, repre = framework.selector.average(x, framework.scope)
 
         # Add perturbation
-        loss = framework.classifier.softmax_cross_entropy(x)
+        loss = framework.classifier.softmax_cross_entropy(logit)
         new_word_embedding = framework.adversarial(loss, word_embedding)
         new_embedding = framework.embedding.concat_embedding(new_word_embedding, pos_embedding)
         
         # Train
         with tf.variable_scope('birnn_ave_adv', reuse=True): 
-            x = framework.encoder.birnn(new_embedding)
-            x = framework.selector.average(x)
-            loss = framework.classifier.softmax_cross_entropy(x)
-            output = framework.classifier.output(x)
+            x = framework.encoder.birnn(embedding, FLAGS.hidden_size, framework.length)
+            logit, repre = framework.selector.average(x, framework.scope)
+            loss = framework.classifier.softmax_cross_entropy(logit)
+            output = framework.classifier.output(logit)
         framework.init_train_model(loss, output, optimizer=tf.train.GradientDescentOptimizer)
         framework.load_train_data()
         framework.train()
@@ -33,10 +33,10 @@ def birnn_ave_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-            x = framework.encoder.birnn(embedding)
-            x = framework.selector.average(x)
+	    x = framework.encoder.birnn(embedding, FLAGS.hidden_size, framework.length)
+            logit, repre = framework.selector.average(x, framework.scope)
 
-        framework.init_test_model(tf.nn.softmax(x))
+        framework.init_test_model(tf.nn.softmax(logit))
         framework.load_test_data()
         framework.test()
 

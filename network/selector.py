@@ -18,7 +18,7 @@ class Selector(object):
         else:
             return x
 
-    def __logits__(self, x, var_scope = None, reuse = None):
+    def __logits__(self, x, var_scope = None, reuse = tf.AUTO_REUSE):
         with tf.variable_scope(var_scope or 'logits', reuse = reuse):
             relation_matrix = tf.get_variable('relation_matrix', [self.num_classes, x.shape[1]], dtype=tf.float32, initializer=tf.contrib.layers.xavier_initializer())
             bias = tf.get_variable('bias', [self.num_classes], dtype=tf.float32, initializer=tf.contrib.layers.xavier_initializer())
@@ -42,7 +42,7 @@ class Selector(object):
     def no_bag(self, x):
         with tf.name_scope("no_bag"):
             x = self.__dropout__(x)
-        return __logits__(x, "no_bag_logits", False), x
+        return self.__logits__(x, "no_bag_logits", False), x
 
     def attention(self, x, scope, query, dropout_before = False):
         with tf.name_scope("attention"):
@@ -88,7 +88,7 @@ class Selector(object):
                 stack_repre = self.__dropout__(tf.stack(tower_repre))
             else:
                 stack_repre = tf.stack(tower_repre)
-        return __logits__(stack_repre, "average_logits", False), stack_repre
+        return self.__logits__(stack_repre, "average_logits", False), stack_repre
 
     def maximum(self, x, scope, dropout_before = False):
         with tf.name_scope("maximum"):
@@ -97,11 +97,11 @@ class Selector(object):
             tower_repre = []
             for i in range(scope.shape[0] - 1):
                 repre_mat = x[scope[i]:scope[i + 1]]
-                logits = __logits__(repre_mat, "maximum_logits", False)
-                j = tf.argmax(tf.reduce_max(logits, axis = 1))
+                logits = self.__logits__(repre_mat, "maximum_logits")
+                j = tf.argmax(tf.reduce_max(logits, axis = 1), output_type=tf.int32)
                 tower_repre.append(repre_mat[j])
             if not dropout_before:
                 stack_repre = self.__dropout__(tf.stack(tower_repre))
             else:
                 stack_repre = tf.stack(tower_repre)
-        return __logits__(stack_repre, "maximum_logits", True), stack_repre
+        return self.__logits__(stack_repre, "maximum_logits", True), stack_repre

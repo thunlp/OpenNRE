@@ -10,20 +10,20 @@ def rnn_att_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-            x = framework.encoder.rnn(embedding)
-            x = framework.selector.attention(x)
+            x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
+            logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
 
         # Add perturbation
-        loss = framework.classifier.softmax_cross_entropy(x)
+        loss = framework.classifier.softmax_cross_entropy(logit)
         new_word_embedding = framework.adversarial(loss, word_embedding)
         new_embedding = framework.embedding.concat_embedding(new_word_embedding, pos_embedding)
         
         # Train
         with tf.variable_scope('rnn_att_adv', reuse=True): 
-            x = framework.encoder.rnn(new_embedding)
-            x = framework.selector.attention(x)
-            loss = framework.classifier.softmax_cross_entropy(x)
-            output = framework.classifier.output(x)
+            x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
+            logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
+            loss = framework.classifier.softmax_cross_entropy(logit)
+            output = framework.classifier.output(logit)
         framework.init_train_model(loss, output, optimizer=tf.train.GradientDescentOptimizer)
         framework.load_train_data()
         framework.train()
@@ -33,10 +33,10 @@ def rnn_att_adv(is_training):
             word_embedding = framework.embedding.word_embedding()
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-            x = framework.encoder.rnn(embedding)
-            x = framework.selector.attention(x)
+	    x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
+            logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
 
-        framework.init_test_model(tf.nn.softmax(x))
+        framework.init_test_model(tf.nn.softmax(logit))
         framework.load_test_data()
         framework.test()
 
