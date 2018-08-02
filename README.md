@@ -63,6 +63,8 @@ python gen_data.py
 ```
 The processed data will be stored in `./data`
 
+**HINT**: If you are using python3, execute `python3 gen_data_python3.py`.
+
 ### Train Model
 ```
 python train.py --model_name pcnn_att
@@ -107,27 +109,27 @@ def your_new_model(is_training):
     
     # PCNN. Appoint activation to whatever activation function you want to use.
     # There are three more encoders:
-    #     framework.encoder.cnn(x, activation=tf.nn.relu)
-    #     framework.encoder.rnn(x, cell_name='lstm')
-    #     framework.encoder.birnn(x, cell_name='lstm')
-    x = framework.encoder.pcnn(embedding, activation=tf.nn.relu)
+    #     framework.encoder.cnn
+    #     framework.encoder.rnn
+    #     framework.encoder.birnn
+    x = framework.encoder.pcnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
     
     # Selective attention. Setting parameter dropout_before=True means using dropout before attention. 
     # There are three more selecting method
-    #     framework.selector.maximum(x, dropout_before=True)
-    #     framework.selector.average(x, dropout_before=True)
-    #     framework.selector.no_bag(x)
-    x = framework.selector.attention(x)
+    #     framework.selector.maximum
+    #     framework.selector.average
+    #     framework.selector.no_bag
+    logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
 
     if is_training:
-        loss = framework.classifier.softmax_cross_entropy(x)
-        output = framework.classifier.output(x)
+        loss = framework.classifier.softmax_cross_entropy(logit)
+        output = framework.classifier.output(logit)
         # Set optimizer to whatever optimizer you want to use
         framework.init_train_model(loss, output, optimizer=tf.train.GradientDescentOptimizer)
         framework.load_train_data()
         framework.train()
     else:
-        framework.init_test_model(tf.nn.softmax(x))
+        framework.init_test_model(tf.nn.softmax(logit))
         framework.load_test_data()
         framework.test()
 ```
