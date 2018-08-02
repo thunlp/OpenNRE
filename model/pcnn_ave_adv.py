@@ -20,7 +20,7 @@ def pcnn_ave_adv(is_training):
         
         # Train
         with tf.variable_scope('pcnn_ave_adv', reuse=True): 
-            x = framework.encoder.pcnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
+            x = framework.encoder.pcnn(new_embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
             logit, repre = framework.selector.average(x, framework.scope)
             loss = framework.classifier.softmax_cross_entropy(logit)
             output = framework.classifier.output(logit)

@@ -22,7 +22,7 @@ def pcnn_att(is_training):
         framework.load_train_data()
         framework.train()
     else:
-        framework.init_test_model(tf.nn.softmax(logit))
+        framework.init_test_model(logit)
         framework.load_test_data()
         framework.test()
 

@@ -249,7 +249,7 @@ class Framework(object):
                     loss = one_step(self, index, index + [0], weights, self.data_train_label[index], [self.loss])
 
                 time_str = datetime.datetime.now().isoformat()
-                sys.stdout.write("epoch %d step %d time %s | loss : %f, NA accuracy: %f, not NA accuracy: %f, total accuracy %f" % (epoch, i, time_str, loss[0], self.acc_NA.get(), self.acc_not_NA.get(), self.acc_total.get()) + '\n')
+                sys.stdout.write("epoch %d step %d time %s | loss : %f, NA accuracy: %f, not NA accuracy: %f, total accuracy %f" % (epoch, i, time_str, loss[0], self.acc_NA.get(), self.acc_not_NA.get(), self.acc_total.get()) + '\r')
                 sys.stdout.flush()
 
             if (epoch + 1) % FLAGS.save_epoch == 0:
@@ -298,7 +298,7 @@ class Framework(object):
                         test_result.append([(entity[0], entity[1], rel), flag, pred[rel]])
 
                 if i % 100 == 0:
-                    sys.stdout.write('predicting {} / {}\n'.format(i, total))
+                    sys.stdout.write('predicting {} / {}\r'.format(i, total))
                     sys.stdout.flush()
             
             print('\nevaluating...')

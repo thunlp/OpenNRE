@@ -20,7 +20,7 @@ def birnn_ave_adv(is_training):
         
         # Train
         with tf.variable_scope('birnn_ave_adv', reuse=True): 
-            x = framework.encoder.birnn(embedding, FLAGS.hidden_size, framework.length)
+            x = framework.encoder.birnn(new_embedding, FLAGS.hidden_size, framework.length)
             logit, repre = framework.selector.average(x, framework.scope)
             loss = framework.classifier.softmax_cross_entropy(logit)
             output = framework.classifier.output(logit)

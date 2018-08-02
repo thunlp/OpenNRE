@@ -14,10 +14,11 @@ def main():
     for model in models:
         x = np.load(os.path.join(result_dir, model +'_x' + '.npy')) 
         y = np.load(os.path.join(result_dir, model + '_y' + '.npy'))
+        f1 = (2 * x * y / (x + y)).max()
         auc = sklearn.metrics.auc(x=x, y=y)
         #plt.plot(x, y, lw=2, label=model + '-auc='+str(auc))
         plt.plot(x, y, lw=2, label=model)
-        print(model + '-auc=' + str(auc))
+        print(model + ' : ' + 'auc = ' + str(auc) + ' | ' + 'max F1 = ' + str(f1))
        
     plt.xlabel('Recall')
     plt.ylabel('Precision')
