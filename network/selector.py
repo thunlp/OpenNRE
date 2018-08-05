@@ -70,7 +70,8 @@ class Selector(object):
                     final_repre = tf.matmul(test_attention_score, x[scope[i]:scope[i+1]])
                     logits = self.__logits__(final_repre, "attention_logits", True)
                     test_repre.append(final_repre)
-                    test_tower_output.append(tf.diag_part(tf.nn.softmax(logits)))
+                    # test_tower_output.append(tf.diag_part(tf.nn.softmax(logits)))
+                    test_tower_output.append(tf.reduce_max(tf.nn.softmax(logits), axis=0))
                 test_repre = tf.reshape(tf.stack(test_repre), [scope.shape[0] - 1, self.num_classes, -1])
                 test_output = tf.reshape(tf.stack(test_tower_output), [scope.shape[0] - 1, self.num_classes])
                 return test_output, test_repre

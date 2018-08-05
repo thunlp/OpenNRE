@@ -14,7 +14,7 @@ def main():
     for model in models:
         x = np.load(os.path.join(result_dir, model +'_x' + '.npy')) 
         y = np.load(os.path.join(result_dir, model + '_y' + '.npy'))
-        f1 = (2 * x * y / (x + y)).max()
+        f1 = (2 * x * y / (x + y + 1e-20)).max()
         auc = sklearn.metrics.auc(x=x, y=y)
         #plt.plot(x, y, lw=2, label=model + '-auc='+str(auc))
         plt.plot(x, y, lw=2, label=model)
