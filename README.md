@@ -54,6 +54,32 @@ This project is under MIT license.
 tar xvf origin_data.tar
 ```
 
+## Results
+
+### PCNN-based methods
+
+![pcnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/pcnn.png)
+
+method | auc | F1 score
+---- | ---- | ----
+pcnn_att | **0.413296218788** | **0.453957192633**
+pcnn_max | 0.405931239366 | 0.443009545199
+pcnn_ave | 0.391625755769 | 0.438890277431
+
+### CNN-based mathods
+
+![cnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/cnn.png)
+
+method | auc | F1 score
+---- | ---- | ----
+cnn_att | **0.388114442518** | **0.442847206121**
+cnn_max | 0.386364599241 | 0.430067114094
+cnn_ave | 0.382695449053 | 0.438429651305
+
+### Compare PCNN & CNN
+
+![pcnn & cnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/pcnn_cnn.png)
+
 ## Quick Start
 
 ### Process Data
