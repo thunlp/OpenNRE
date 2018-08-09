@@ -36,7 +36,7 @@ def rnn_att_adv(is_training):
             x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
             logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
 
-        framework.init_test_model(tf.nn.softmax(logit))
+        framework.init_test_model(logit)
         framework.load_test_data()
         framework.test()
 
