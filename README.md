@@ -56,29 +56,25 @@ tar xvf origin_data.tar
 
 ## Results
 
-### PCNN-based methods
+### AUC Results
 
-![pcnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/pcnn.png)
+Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
+---- | ---- | ---- | ---- | ----
+PCNN | 0.413 | **0.419** | 0.406 | 0.392
+CNN | 0.388 | 0.399 | 0.386 | 0.383
+RNN | 0.403 | 0.402 | 0.380 | 0.408
+BiRNN | 0.391 | 0.389 | 0.368 | 0.388
 
-method | auc | F1 score
----- | ---- | ----
-pcnn_att | **0.413296218788** | **0.453957192633**
-pcnn_max | 0.405931239366 | 0.443009545199
-pcnn_ave | 0.391625755769 | 0.438890277431
+* (Adv) means using adversarial training
 
-### CNN-based mathods
+### F1 Score Results
 
-![cnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/cnn.png)
-
-method | auc | F1 score
----- | ---- | ----
-cnn_att | **0.388114442518** | **0.442847206121**
-cnn_max | 0.386364599241 | 0.430067114094
-cnn_ave | 0.382695449053 | 0.438429651305
-
-### Compare PCNN & CNN
-
-![pcnn & cnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/pcnn_cnn.png)
+Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
+---- | ---- | ---- | ---- | ----
+PCNN | 0.454 | **0.456** |  0.443 | 0.439
+CNN | 0.443 | 0.443 | 0.430 | 0.438
+RNN | 0.448 | 0.453 | 0.436 | 0.445
+BiRNN | 0.445 | 0.447 | 0.438 | 0.442
 
 ## Quick Start
 
