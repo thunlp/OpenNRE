@@ -56,25 +56,25 @@ tar xvf origin_data.tar
 
 ## Results
 
-### AUC Results
-
-Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
----- | ---- | ---- | ---- | ----
-PCNN | 0.413 | **0.419** | 0.406 | 0.392
-CNN | 0.388 | 0.399 | 0.386 | 0.383
-RNN | 0.403 | 0.402 | 0.380 | 0.408
-BiRNN | 0.391 | 0.389 | 0.368 | 0.388
-
-* (Adv) means using adversarial training
-
 ### F1 Score Results
 
 Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
 ---- | ---- | ---- | ---- | ----
-PCNN | 0.454 | **0.456** |  0.443 | 0.439
-CNN | 0.443 | 0.443 | 0.430 | 0.438
-RNN | 0.448 | 0.453 | 0.436 | 0.445
-BiRNN | 0.445 | 0.447 | 0.438 | 0.442
+PCNN | 0.452 | **0.456** |  0.443 | 0.439
+CNN | 0.431 | 0.445 | 0.430 | 0.438
+RNN | 0.439 | 0.453 | 0.436 | 0.445
+BiRNN | 0.427 | 0.447 | 0.438 | 0.442
+
+* (Adv) means using adversarial training
+
+### AUC Results
+
+Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
+---- | ---- | ---- | ---- | ----
+PCNN | 0.408 | **0.416** | 0.406 | 0.392
+CNN | 0.381 | 0.392 | 0.386 | 0.383
+RNN | 0.385 | 0.402 | 0.380 | 0.408
+BiRNN | 0.367 | 0.389 | 0.368 | 0.388
 
 ## Quick Start
 
