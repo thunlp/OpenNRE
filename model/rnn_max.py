@@ -13,7 +13,7 @@ def rnn_max(is_training):
     pos_embedding = framework.embedding.pos_embedding()
     embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
     x = framework.encoder.rnn(embedding, FLAGS.hidden_size, framework.length)
-    logit, repre = framework.selector.maximum(x, framework.scope) 
+    logit, repre = framework.selector.maximum(x, framework.scope, framework.label_for_select)
 
     if is_training:
         loss = framework.classifier.softmax_cross_entropy(logit)
@@ -22,7 +22,7 @@ def rnn_max(is_training):
         framework.load_train_data()
         framework.train()
     else:
-        framework.init_test_model(tf.nn.softmax(logit))
+        framework.init_test_model(logit)
         framework.load_test_data()
         framework.test()
 

@@ -19,6 +19,7 @@ def main():
         #plt.plot(x, y, lw=2, label=model + '-auc='+str(auc))
         plt.plot(x, y, lw=2, label=model)
         print(model + ' : ' + 'auc = ' + str(auc) + ' | ' + 'max F1 = ' + str(f1))
+        print('    P@100: {} | P@200: {} | P@300: {} | Mean: {}'.format(y[100], y[200], y[300], (y[100] + y[200] + y[300]) / 3))
        
     plt.xlabel('Recall')
     plt.ylabel('Precision')

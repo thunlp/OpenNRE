@@ -70,8 +70,7 @@ class Selector(object):
                     final_repre = tf.matmul(test_attention_score, x[scope[i]:scope[i+1]])
                     logits = self.__logits__(final_repre, "attention_logits", True)
                     test_repre.append(final_repre)
-                    # test_tower_output.append(tf.diag_part(tf.nn.softmax(logits)))
-                    test_tower_output.append(tf.reduce_max(tf.nn.softmax(logits), axis=0))
+                    test_tower_output.append(tf.diag_part(tf.nn.softmax(logits)))
                 test_repre = tf.reshape(tf.stack(test_repre), [scope.shape[0] - 1, self.num_classes, -1])
                 test_output = tf.reshape(tf.stack(test_tower_output), [scope.shape[0] - 1, self.num_classes])
                 return test_output, test_repre
@@ -91,18 +90,35 @@ class Selector(object):
                 stack_repre = tf.stack(tower_repre)
         return self.__logits__(stack_repre, "average_logits", False), stack_repre
 
-    def maximum(self, x, scope, dropout_before = False):
+    def maximum(self, x, scope, query, dropout_before = False):
         with tf.name_scope("maximum"):
-            if dropout_before:
-                x = self.__dropout__(x)
-            tower_repre = []
-            for i in range(scope.shape[0] - 1):
-                repre_mat = x[scope[i]:scope[i + 1]]
-                logits = self.__logits__(repre_mat, "maximum_logits")
-                j = tf.argmax(tf.reduce_max(logits, axis = 1), output_type=tf.int32)
-                tower_repre.append(repre_mat[j])
-            if not dropout_before:
-                stack_repre = self.__dropout__(tf.stack(tower_repre))
+            if self.is_training:    
+                if dropout_before:
+                    x = self.__dropout__(x)
+                tower_repre = []
+                for i in range(scope.shape[0] - 1):
+                    repre_mat = x[scope[i]:scope[i + 1]]
+                    logits = tf.nn.softmax(self.__logits__(repre_mat, "maximum_logits"), axis=-1)
+                    j = tf.argmax(logits[:, query[scope[i]]], output_type=tf.int32)
+                    tower_repre.append(repre_mat[j])
+                if not dropout_before:
+                    stack_repre = self.__dropout__(tf.stack(tower_repre))
+                else:
+                    stack_repre = tf.stack(tower_repre)
+                return self.__logits__(stack_repre, "maximum_logits", True), stack_repre
             else:
-                stack_repre = tf.stack(tower_repre)
-        return self.__logits__(stack_repre, "maximum_logits", True), stack_repre
+                if dropout_before:
+                    x = self.__dropout__(x)
+                tower_repre = []
+                tower_logit = []
+                for i in range(scope.shape[0] - 1):
+                    repre_mat = x[scope[i]:scope[i + 1]]
+                    logits = tf.nn.softmax(self.__logits__(repre_mat, "maximum_logits"), axis=-1)
+                    tower_logit.append(tf.reduce_max(logits, axis=0))
+                    tower_repre.append(repre_mat[0])
+                if not dropout_before:
+                    stack_repre = self.__dropout__(tf.stack(tower_repre))
+                else:
+                    stack_repre = tf.stack(tower_repre)
+                return tf.stack(tower_logit), stack_repre
+

@@ -11,6 +11,7 @@ import os
 import sklearn.metrics
 
 import time
+import math
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -158,7 +159,7 @@ class Framework(object):
         self.saver = tf.train.Saver(max_to_keep=None)
         print('initializing finished')
 
-    def train_one_step(self, index, scope, weights, label, result_needed=[]):
+    def train_one_step(self, index, scope, weights, label, label_for_select, result_needed=[]):
         #print self.data_train_word[index, :].shape
         #print 'limit bag size < 1000'
         #if self.data_train_word[index, :].shape[0] > 500:
@@ -171,14 +172,14 @@ class Framework(object):
             self.mask: self.data_train_mask[index, :],
             self.length: self.data_train_length[index],
             self.label: label,
-            self.label_for_select: self.data_train_label[index],
+            self.label_for_select: label_for_select, 
             self.scope: np.array(scope),
             self.weights: weights
         }
-        result = self.sess.run([self.train_op, self.global_step, self.merged_summary, self.output] + result_needed, feed_dict)
+        result = self.sess.run([self.train_op, self.global_step, self.output] + result_needed, feed_dict)
         self.step = result[1]
-        _output = result[3]
-        result = result[4:]
+        _output = result[2]
+        result = result[3:]
 
         # Training accuracy
         for i, prediction in enumerate(_output):
@@ -240,16 +241,16 @@ class Framework(object):
                         scope.append(scope[len(scope) - 1] + num[1] - num[0] + 1)
                         weights.append(self.reltot[self.data_train_label[num[0]]])
                     
-                    loss = one_step(self, index, scope, weights, label, [self.loss])
+                    loss = one_step(self, index, scope, weights, label, self.data_train_label[index], [self.loss])
                 else:
                     index = range(i * FLAGS.batch_size, (i + 1) * FLAGS.batch_size)
                     weights = []
                     for i in index:
                         weights.append(self.reltot[self.data_train_label[i]])
-                    loss = one_step(self, index, index + [0], weights, self.data_train_label[index], [self.loss])
+                    loss = one_step(self, index, index + [0], weights, self.data_train_label[index], self.data_train_label[index], [self.loss])
 
                 time_str = datetime.datetime.now().isoformat()
-                sys.stdout.write("epoch %d step %d time %s | loss : %f, NA accuracy: %f, not NA accuracy: %f, total accuracy %f" % (epoch, i, time_str, loss[0], self.acc_NA.get(), self.acc_not_NA.get(), self.acc_total.get()) + '\r')
+                sys.stdout.write("epoch %d step %d | loss : %f, NA accuracy: %f, not NA accuracy: %f, total accuracy %f" % (epoch, i, loss[0], self.acc_NA.get(), self.acc_not_NA.get(), self.acc_total.get()) + '\r')
                 sys.stdout.flush()
 
             if (epoch + 1) % FLAGS.save_epoch == 0:
@@ -264,8 +265,16 @@ class Framework(object):
         save_x = None
         save_y = None
         best_auc = 0
+        best_prec_mean = 0
         best_epoch = 0
         print('test ' + FLAGS.model_name)
+        if FLAGS.discard_only_one:
+            test_id = []
+            for i in range(len(self.data_instance_scope)):
+                if self.data_instance_scope[i][0] != self.data_instance_scope[i][1]:
+                    test_id.append(i)
+        else:
+            test_id = list(range(len(self.data_instance_scope)))
         for epoch in epoch_range:
             if not os.path.exists(os.path.join(FLAGS.checkpoint_dir, FLAGS.model_name + '-' + str(epoch) + '.index')):
                 continue
@@ -273,12 +282,12 @@ class Framework(object):
             self.saver.restore(self.sess, os.path.join(FLAGS.checkpoint_dir, FLAGS.model_name + '-' + str(epoch)))
             stack_output = []
             stack_label = []
-            total = int(len(self.data_instance_scope) / FLAGS.batch_size)
+            total = int(len(test_id) / FLAGS.batch_size)
 
             test_result = []
             total_recall = 0 
             for i in range(total):
-                input_scope = self.data_instance_scope[i * FLAGS.batch_size:min((i + 1) * FLAGS.batch_size, len(self.data_instance_scope))]
+                input_scope = np.take(self.data_instance_scope, test_id[i * FLAGS.batch_size:(i + 1) * FLAGS.batch_size], axis=0)
                 index = []
                 scope = [0]
                 label = []
@@ -291,7 +300,7 @@ class Framework(object):
                
                 for j in range(len(self.test_output)):
                     pred = self.test_output[j]
-                    entity = self.data_instance_entity[j + i * FLAGS.batch_size]
+                    entity = self.data_instance_entity[test_id[j + i * FLAGS.batch_size]]
                     for rel in range(1, len(pred)):
                         flag = int(((entity[0], entity[1], rel) in self.data_instance_triple))
                         total_recall += flag
@@ -312,11 +321,18 @@ class Framework(object):
                     correct += 1
                 pr_result_y.append(float(correct) / (i + 1))
                 pr_result_x.append(float(correct) / total_recall)
-                #if i > 5000:
-                #    break
+                if i > 2000:
+                    break
 
             auc = sklearn.metrics.auc(x=pr_result_x, y=pr_result_y)
-            print('auc:', auc)
+            prec_mean = (pr_result_y[100] + pr_result_y[200] + pr_result_y[300]) / 3
+            print('auc: {}'.format(auc))
+            print('p@(100,200,300) mean: {}'.format(prec_mean))
+            # if prec_mean > best_prec_mean:
+            #     best_prec_mean = prec_mean
+            #     best_epoch = epoch
+            #     save_x = pr_result_x
+            #     save_y = pr_result_y
             if auc > best_auc:
                 best_auc = auc
                 best_epoch = epoch
@@ -328,9 +344,212 @@ class Framework(object):
         np.save(os.path.join(FLAGS.test_result_dir, FLAGS.model_name + '_x.npy'), save_x)
         np.save(os.path.join(FLAGS.test_result_dir, FLAGS.model_name + '_y.npy'), save_y)
         print('best epoch:', best_epoch)
+        if FLAGS.discard_only_one:
+            print('USING [DISCARD ONLY ONE INSTANCE ENTITY] MODE!')
 
+    # adversarial part
     def adversarial(self, loss, embedding):
         perturb = tf.gradients(loss, embedding)
         perturb = tf.reshape((0.01 * tf.stop_gradient(tf.nn.l2_normalize(perturb, dim=[0, 1, 2]))), [-1, FLAGS.max_length, embedding.shape[-1]])
         embedding = embedding + perturb
         return embedding
+    # adversarial part ends
+
+    # rl part
+    def init_policy_agent(self, policy_agent_loss, policy_agent_output, optimizer=tf.train.GradientDescentOptimizer):
+        print('initializing policy agent...')
+
+        # Loss and output
+        self.policy_agent_loss = policy_agent_loss
+        self.policy_agent_output = policy_agent_output
+
+        # Optimizer
+        self.policy_agent_global_step = tf.Variable(0, name='policy_agent_global_step', trainable=False)
+        tf.summary.scalar('policy_agent_learning_rate', FLAGS.learning_rate)
+        self.policy_agent_optimizer = optimizer(FLAGS.learning_rate)
+        self.policy_agent_grads_and_vars = self.policy_agent_optimizer.compute_gradients(policy_agent_loss)
+        self.policy_agent_train_op = self.policy_agent_optimizer.apply_gradients(self.policy_agent_grads_and_vars, global_step=self.policy_agent_global_step)
+
+        print('policy agent initializing finished')
+
+    def train_policy_agent_one_step(self, index, label, weights, calc_acc=False):
+        feed_dict = {
+            self.word: self.data_train_word[index, :],
+            self.pos1: self.data_train_pos1[index, :],
+            self.pos2: self.data_train_pos2[index, :],
+            self.mask: self.data_train_mask[index, :],
+            self.length: self.data_train_length[index],
+            self.label: label,
+            self.weights: weights,
+        }
+        result = self.sess.run([self.policy_agent_train_op, self.policy_agent_global_step, self.policy_agent_output, self.policy_agent_loss] , feed_dict)
+
+        self.policy_agent_step = result[1]
+        _output = result[2]
+        result = result[3:]
+
+        # Training accuracy
+        if calc_acc:
+            for i, prediction in enumerate(_output):
+                self.acc_total.add(prediction == label[i])
+                if label[i] != 0:
+                    self.acc_not_NA.add(prediction == label[i])
+        return result
+
+    def make_action(self, index):
+        feed_dict = {
+            self.word: self.data_train_word[index, :],
+            self.pos1: self.data_train_pos1[index, :],
+            self.pos2: self.data_train_pos2[index, :],
+            self.mask: self.data_train_mask[index, :],
+            self.length: self.data_train_length[index]
+        }
+        result = self.sess.run([self.policy_agent_output], feed_dict)
+
+        return result
+
+    def pretrain_policy_agent(self, max_epoch=1):
+        train_order = list(range(len(self.data_train_word)))
+        for epoch in range(max_epoch):
+            print('[pretrain policy agent] ' + 'epoch ' + str(epoch) + ' starts...')
+            self.acc_total.clear()
+            self.acc_not_NA.clear()
+            np.random.shuffle(train_order)
+            for i in range(int(len(train_order) / float(FLAGS.batch_size))):
+                index = range(i * FLAGS.batch_size, (i + 1) * FLAGS.batch_size)
+                policy_agent_label = self.data_train_label[index] + 0
+                policy_agent_label[policy_agent_label > 0] = 1
+                weights = np.ones(policy_agent_label.shape, dtype=np.float32)
+                loss = self.train_policy_agent_one_step(index, policy_agent_label, weights, calc_acc=True)
+
+                time_str = datetime.datetime.now().isoformat()
+                sys.stdout.write("[pretrain policy agent] epoch %d step %d | loss : %f, accuracy: %f, accuracy of 1: %f" % (epoch, i, loss[0], self.acc_total.get(), self.acc_not_NA.get()) + '\n')
+                sys.stdout.flush()
+            if self.acc_total.get() > 0.9:
+                break
+
+    def train_rl(self, one_step=train_one_step):
+        if not os.path.exists(FLAGS.checkpoint_dir):
+            os.mkdir(FLAGS.checkpoint_dir)
+        if self.use_bag:
+            train_order = list(range(len(self.data_train_instance_triple)))
+        else:
+            train_order = list(range(len(self.data_train_word)))
+        for epoch in range(FLAGS.max_epoch):
+            print('epoch ' + str(epoch) + ' starts...')
+            self.acc_NA.clear()
+            self.acc_not_NA.clear()
+            self.acc_total.clear()
+            self.step = 0
+            self.policy_agent_step = 0
+
+            np.random.shuffle(train_order)
+
+            # update policy agent
+            tot_delete = 0
+            batch_count = 0
+            instance_count = 0
+            tot_batch = int(len(train_order) / float(FLAGS.batch_size))
+            reward = 0.0
+            action_result_his = np.zeros(self.data_train_label.shape, dtype=np.int32)
+            for i in range(tot_batch):
+                # data prepare
+                input_scope = np.take(self.data_train_instance_scope, train_order[i * FLAGS.batch_size:(i + 1) * FLAGS.batch_size], axis=0)
+                index = []
+                scope = [0]
+                weights = []
+                label = []
+                for num in input_scope:
+                    index = index + list(range(num[0], num[1] + 1))
+                    label.append(self.data_train_label[num[0]])
+                    scope.append(scope[len(scope) - 1] + num[1] - num[0] + 1)
+                    weights.append(self.reltot[self.data_train_label[num[0]]])
+
+                # make action
+                action_result = self.make_action(index)[0]
+                action_result_his[index] = action_result
+
+                # calculate reward
+                batch_label = self.data_train_label[index]
+                batch_delete = np.sum(np.logical_and(batch_label != 0, action_result == 0)) 
+                batch_label[action_result == 0] = 0
+
+                feed_dict = {
+                    self.word: self.data_train_word[index, :],
+                    self.pos1: self.data_train_pos1[index, :],
+                    self.pos2: self.data_train_pos2[index, :],
+                    self.mask: self.data_train_mask[index, :],
+                    self.length: self.data_train_length[index],
+                    self.label: label,
+                    self.label_for_select: batch_label,
+                    self.scope: np.array(scope),
+                    self.weights: weights
+                }
+                batch_loss_sum = self.sess.run([self.loss], feed_dict)[0]
+
+                reward += batch_loss_sum
+                tot_delete += batch_delete
+                batch_count += 1
+                
+                alpha = 0.1
+                if batch_count == 100:
+                    reward = reward / float(batch_count)
+                    average_loss = reward
+                    reward = - math.log(1 - math.e ** (-reward))
+                    sys.stdout.write('tot delete : %f | reward : %f | average loss : %f' % (tot_delete, reward, average_loss))
+                    sys.stdout.flush()
+                    for j in range(i - batch_count + 1, i + 1):
+                        input_scope = np.take(self.data_train_instance_scope, train_order[j * FLAGS.batch_size:(j + 1) * FLAGS.batch_size], axis=0)
+                        index = []
+                        for num in input_scope:
+                            index = index + list(range(num[0], num[1] + 1))
+                        batch_result = action_result_his[index]
+                        weights = np.ones(batch_result.shape, dtype=np.float32)
+                        weights *= reward
+                        weights *= alpha
+                        loss = self.train_policy_agent_one_step(index, batch_result, weights)
+
+                    batch_count = 0
+                    reward = 0
+                    tot_delete = 0
+
+            for i in range(int(len(train_order) / float(FLAGS.batch_size))):
+                if self.use_bag:
+                    input_scope = np.take(self.data_train_instance_scope, train_order[i * FLAGS.batch_size:(i + 1) * FLAGS.batch_size], axis=0)
+                    index = []
+                    scope = [0]
+                    weights = []
+                    label = []
+                    for num in input_scope:
+                        index = index + list(range(num[0], num[1] + 1))
+                        label.append(self.data_train_label[num[0]])
+                        scope.append(scope[len(scope) - 1] + num[1] - num[0] + 1)
+                        weights.append(self.reltot[self.data_train_label[num[0]]])
+
+                    # make action
+                    action_result = self.make_action(index) 
+    
+                    # calculate reward
+                    batch_label = self.data_train_label[index]
+                    batch_delete = np.sum(np.logical_and(batch_label != 0, action_result == 0)) 
+                    batch_label[action_result == 0] = 0
+    
+                    loss = one_step(self, index, scope, weights, label, batch_label, [self.loss])
+                else:
+                    index = range(i * FLAGS.batch_size, (i + 1) * FLAGS.batch_size)
+                    weights = []
+                    for i in index:
+                        weights.append(self.reltot[self.data_train_label[i]])
+                    loss = one_step(self, index, index + [0], weights, self.data_train_label[index], [self.loss])
+
+                time_str = datetime.datetime.now().isoformat()
+                sys.stdout.write("epoch %d step %d | loss : %f, NA accuracy: %f, not NA accuracy: %f, total accuracy %f" % (epoch, i, loss[0], self.acc_NA.get(), self.acc_not_NA.get(), self.acc_total.get()) + '\r')
+                sys.stdout.flush()
+
+            if (epoch + 1) % FLAGS.save_epoch == 0:
+                print('epoch ' + str(epoch + 1) + ' has finished')
+                print('saving model...')
+                path = self.saver.save(self.sess, os.path.join(FLAGS.checkpoint_dir, FLAGS.model_name), global_step=epoch)
+                print('have saved model to ' + path)
+
+    # rl part ends

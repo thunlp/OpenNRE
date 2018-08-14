@@ -11,7 +11,7 @@ def cnn_max_adv(is_training):
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
             x = framework.encoder.cnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
-            logit, repre = framework.selector.maximum(x, framework.scope)
+            logit, repre = framework.selector.maximum(x, framework.scope, framework.label_for_select)
 
         # Add perturbation
         loss = framework.classifier.softmax_cross_entropy(logit)
@@ -21,7 +21,7 @@ def cnn_max_adv(is_training):
         # Train
         with tf.variable_scope('cnn_max_adv', reuse=True): 
             x = framework.encoder.cnn(new_embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
-            logit, repre = framework.selector.maximum(x, framework.scope)
+            logit, repre = framework.selector.maximum(x, framework.scope, framework.label_for_select)
             loss = framework.classifier.softmax_cross_entropy(logit)
             output = framework.classifier.output(logit)
         framework.init_train_model(loss, output, optimizer=tf.train.GradientDescentOptimizer)
@@ -34,9 +34,9 @@ def cnn_max_adv(is_training):
             pos_embedding = framework.embedding.pos_embedding()
             embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
             x = framework.encoder.cnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
-            logit, repre = framework.selector.maximum(x, framework.scope)
+            logit, repre = framework.selector.maximum(x, framework.scope, framework.label_for_select)
 
-        framework.init_test_model(tf.nn.softmax(logit))
+        framework.init_test_model(logit)
         framework.load_test_data()
         framework.test()
 
