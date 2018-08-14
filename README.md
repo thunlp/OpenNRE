@@ -48,7 +48,7 @@ This project is under MIT license.
   ```bash
   git clone git@github.com:thunlp/OpenNRE.git
   ```
-3. Download NYT dataset from `https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing`
+3. Download NYT dataset from [Google Drive](https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing) or [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/e106518775cf4bbc9e79/?dl=1)
 4. Extract dataset to `./origin_data`
 ```
 tar xvf origin_data.tar
@@ -56,29 +56,25 @@ tar xvf origin_data.tar
 
 ## Results
 
-### PCNN-based methods
+### F1 Score Results
 
-![pcnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/pcnn.png)
+Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
+---- | ---- | ---- | ---- | ----
+PCNN | 0.452 | **0.456** |  0.443 | 0.439
+CNN | 0.431 | 0.445 | 0.430 | 0.438
+RNN | 0.439 | 0.453 | 0.436 | 0.445
+BiRNN | 0.427 | 0.447 | 0.438 | 0.442
 
-method | auc | F1 score
----- | ---- | ----
-pcnn_att | **0.413296218788** | **0.453957192633**
-pcnn_max | 0.405931239366 | 0.443009545199
-pcnn_ave | 0.391625755769 | 0.438890277431
+* (Adv) means using adversarial training
 
-### CNN-based mathods
+### AUC Results
 
-![cnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/cnn.png)
-
-method | auc | F1 score
----- | ---- | ----
-cnn_att | **0.388114442518** | **0.442847206121**
-cnn_max | 0.386364599241 | 0.430067114094
-cnn_ave | 0.382695449053 | 0.438429651305
-
-### Compare PCNN & CNN
-
-![pcnn & cnn precision-recall curve](https://github.com/thunlp/OpenNRE/blob/master/images/pcnn_cnn.png)
+Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
+---- | ---- | ---- | ---- | ----
+PCNN | 0.408 | **0.416** | 0.406 | 0.392
+CNN | 0.381 | 0.392 | 0.386 | 0.383
+RNN | 0.385 | 0.402 | 0.380 | 0.408
+BiRNN | 0.367 | 0.389 | 0.368 | 0.388
 
 ## Quick Start
 
@@ -176,3 +172,13 @@ def main():
 Then you can train, test and plot!
 
 As for using adversarial training, please refer to `./model/pcnn_att_adv.py` for more details.
+
+## Reference
+
+1. **Neural Relation Extraction with Selective Attention over Instances.** _Yankai Lin, Shiqi Shen, Zhiyuan Liu, Huanbo Luan, Maosong Sun._ ACL2016. [paper](http://www.aclweb.org/anthology/P16-1200)
+
+2. **Adversarial Training for Relation Extraction.** _Yi Wu, David Bamman, Stuart Russell._ EMNLP2017. [paper](http://www.aclweb.org/anthology/D17-1187)
+
+3. **A Soft-label Method for Noise-tolerant Distantly Supervised Relation Extraction.** _Tianyu Liu, Kexiang Wang, Baobao Chang, Zhifang Sui._ EMNLP2017. [paper](http://aclweb.org/anthology/D17-1189)
+
+4. **Reinforcement Learning for Relation Classification from Noisy Data.** _Jun Feng, Minlie Huang, Li Zhao, Yang Yang, Xiaoyan Zhu._ AAAI2018. [paper](https://tianjun.me/static/essay_resources/RelationExtraction/Paper/AAAI2018Denoising.pdf)
