@@ -98,7 +98,7 @@ class Selector(object):
                 tower_repre = []
                 for i in range(scope.shape[0] - 1):
                     repre_mat = x[scope[i]:scope[i + 1]]
-                    logits = tf.nn.softmax(self.__logits__(repre_mat, "maximum_logits"), axis=-1)
+                    logits = tf.nn.softmax(self.__logits__(repre_mat, "maximum_logits"))
                     j = tf.argmax(logits[:, query[scope[i]]], output_type=tf.int32)
                     tower_repre.append(repre_mat[j])
                 if not dropout_before:
@@ -113,7 +113,7 @@ class Selector(object):
                 tower_logit = []
                 for i in range(scope.shape[0] - 1):
                     repre_mat = x[scope[i]:scope[i + 1]]
-                    logits = tf.nn.softmax(self.__logits__(repre_mat, "maximum_logits"), axis=-1)
+                    logits = tf.nn.softmax(self.__logits__(repre_mat, "maximum_logits"))
                     tower_logit.append(tf.reduce_max(logits, axis=0))
                     tower_repre.append(repre_mat[0])
                 if not dropout_before:

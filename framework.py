@@ -243,10 +243,10 @@ class Framework(object):
                     
                     loss = one_step(self, index, scope, weights, label, self.data_train_label[index], [self.loss])
                 else:
-                    index = range(i * FLAGS.batch_size, (i + 1) * FLAGS.batch_size)
+                    index = list(range(i * FLAGS.batch_size, (i + 1) * FLAGS.batch_size))
                     weights = []
-                    for i in index:
-                        weights.append(self.reltot[self.data_train_label[i]])
+                    for j in index:
+                        weights.append(self.reltot[self.data_train_label[j]])
                     loss = one_step(self, index, index + [0], weights, self.data_train_label[index], self.data_train_label[index], [self.loss])
 
                 time_str = datetime.datetime.now().isoformat()
@@ -321,8 +321,6 @@ class Framework(object):
                     correct += 1
                 pr_result_y.append(float(correct) / (i + 1))
                 pr_result_x.append(float(correct) / total_recall)
-                if i > 2000:
-                    break
 
             auc = sklearn.metrics.auc(x=pr_result_x, y=pr_result_y)
             prec_mean = (pr_result_y[100] + pr_result_y[200] + pr_result_y[300]) / 3
