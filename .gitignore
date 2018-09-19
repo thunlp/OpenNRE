@@ -1,0 +1,12 @@
+data
+summary
+checkpoint
+test_result
+*.pyc
+origin_data
+origin_data.tar
+*.swp
+sbatch*
+log_sbatch
+*.sh
+_processed_data/*
