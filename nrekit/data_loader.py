@@ -307,6 +307,7 @@ class json_file_data_loader(file_data_loader):
             _pos1 = []
             _pos2 = []
             _rel = []
+            _multi_rel = np.zeros((self.rel_tot), dtype=np.int32)
             _length = []
             _scope = []
             cur_pos = 0
@@ -315,6 +316,8 @@ class json_file_data_loader(file_data_loader):
                 _pos1.append(self.data_pos1[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _pos2.append(self.data_pos2[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _rel.append(self.data_rel[self.scope[self.order[i]][0]])
+                for j in range(self.scope[self.order[i]][0], self.scope[self.order[i]][1]):
+                    _multi_rel[self.data_rel[j]] = 1 
                 _length.append(self.data_length[self.scope[self.order[i]][0]])
 
                 bag_size = self.scope[self.order[i]][1] - self.scope[self.order[i]][0]
@@ -324,6 +327,7 @@ class json_file_data_loader(file_data_loader):
             batch_data['pos1'] = np.concatenate(_pos1)
             batch_data['pos2'] = np.concatenate(_pos2)
             batch_data['rel'] = np.stack(_rel)
+            batch_data['multi_rel'] = np.stack(_multi_rel)
             batch_data['length'] = np.stack(_length)
             batch_data['scope'] = np.stack(_scope)
 
