@@ -75,7 +75,6 @@ class re_framework:
             tot_not_na = 0
             for i, batch_data in enumerate(self.train_data_loader):
                 iter_loss, iter_output, _train_op  = self.one_step(self.sess, batch_data, [loss, train_output, train_op], keep_prob=0.5)
-                print(iter_output)
                 iter_correct = (iter_output == batch_data['rel']).sum()
                 iter_not_na_correct = np.logical_and(iter_output == batch_data['rel'], batch_data['rel'] != 0).sum()
                 tot_correct += iter_correct

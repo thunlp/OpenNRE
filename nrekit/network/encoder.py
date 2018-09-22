@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 def __dropout__(x):
-    keep_prob = tf.Graph.get_tensor_by_name("keep_prob")
+    keep_prob = tf.get_default_graph().get_tensor_by_name("keep_prob:0")
     return tf.contrib.layers.dropout(x, keep_prob=keep_prob)
 
 def __init_mask_embedding__(shape, dtype=tf.int32, partition_info=None):
@@ -22,7 +22,7 @@ def __mask__(pos1, pos2):
     with tf.variable_scope("mask", reuse=tf.AUTO_REUSE):
         max_length = pos1.shape[-1]
         mask_embedding = tf.get_variable("mask_embedding", shape=[max_length * max_length, max_length, 3], initializer=__init_mask_embedding__, trainable=False)
-        return tf.nn.embedding_lookup(pos1[:, 0] * max_length + pos2[:, 0], mask_embedding)
+        return tf.nn.embedding_lookup(mask_embedding, pos1[:, 0] * max_length + pos2[:, 0])
 
 def __pooling__(x):
     return tf.reduce_max(x, axis=-2)
@@ -40,7 +40,7 @@ def __cnn_cell__(x, hidden_size=230, kernel_size=3, stride_size=1):
                          kernel_size=kernel_size, 
                          strides=stride_size, 
                          padding='same', 
-                         kernel_initializer=tf.contrib.layers.xavier_initializer_conv1d())
+                         kernel_initializer=tf.contrib.layers.xavier_initializer())
     return x
 
 def cnn(x, hidden_size=230, kernel_size=3, stride_size=1, activation=tf.nn.relu, var_scope=None):
