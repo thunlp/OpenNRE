@@ -2,8 +2,8 @@ import nrekit
 import numpy as np
 import tensorflow as tf
 
-train_loader = nrekit.data_loader.json_file_data_loader('data/train.json', './data/nyt_data.json', mode=nrekit.data_loader.json_file_data_loader.MODE_RELFACT_BAG, shuffle=True, reprocess=False)
-test_loader = nrekit.data_loader.json_file_data_loader('data/test.json', './data/nyt_data.json', mode=nrekit.data_loader.json_file_data_loader.MODE_ENTPAIR_BAG, shuffle=False, reprocess=False)
+train_loader = nrekit.data_loader.json_file_data_loader('data/train.json', './data/nyt_data.json', './data/rel2id.json', mode=nrekit.data_loader.json_file_data_loader.MODE_RELFACT_BAG, shuffle=True, reprocess=False)
+test_loader = nrekit.data_loader.json_file_data_loader('data/test.json', './data/nyt_data.json', './data/rel2id.json', mode=nrekit.data_loader.json_file_data_loader.MODE_ENTPAIR_BAG, shuffle=False, reprocess=False)
 
 f = nrekit.framework.re_framework(train_loader, test_loader)
 
@@ -17,21 +17,13 @@ def get_weights(f):
     print("Finish calculating")
     return weights_table
 
-def train(f):
+def model(f):
     x = nrekit.network.embedding.word_position_embedding(f.word, f.word_vec_mat, f.pos1, f.pos2)
     x = nrekit.network.encoder.pcnn(x, f.pos1, f.pos2)
-    logit, repre = nrekit.network.selector.bag_maximum(x, f.scope, f.label, f.rel_tot, True)
-    loss = nrekit.network.classifier.softmax_cross_entropy(logit, f.label, f.rel_tot, weights_table=get_weights(f))
-    output = nrekit.network.classifier.output(logit)
-    return loss, output
+    train_logit, train_repre = nrekit.network.selector.bag_attention(x, f.scope, f.ins_label, f.rel_tot, True)
+    test_logit, test_repre = nrekit.network.selector.bag_attention(x, f.scope, f.ins_label, f.rel_tot, False)
+    loss = nrekit.network.classifier.softmax_cross_entropy(train_logit, f.label, f.rel_tot, weights_table=get_weights(f))
+    return loss, train_logit, test_logit
 
-def test(framework):
-    x = nrekit.network.embedding.word_position_embedding(f.word, f.word_vec_mat, f.pos1, f.pos2)
-    x = nrekit.network.encoder.pcnn(x, f.pos1, f.pos2)
-    logit, repre = nrekit.network.selector.bag_attention(x, f.scope, f.label, f.rel_tot, False)
-    output = nrekit.network.classifier.output(logit)
-    return output
-
-train_loss, train_output = train(f)
-test_output = test(f)
-f.train(train_loss, train_output, test_output, ckpt_dir='tmp_ckpt', model_name='pcnn_ave_test', max_epoch=5)
+loss, train_logit, test_logit = model(f)
+f.train(loss, train_logit, test_logit, ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40)

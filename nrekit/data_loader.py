@@ -51,7 +51,6 @@ class json_file_data_loader(file_data_loader):
         self.data_length = np.load(length_npy_file_name)
         self.entpair2scope = json.load(open(entpair2scope_file_name))
         self.relfact2scope = json.load(open(relfact2scope_file_name))
-        self.rel2id = json.load(open(rel2id_file_name))
         self.word_vec_mat = np.load(word_vec_mat_file_name)
         self.word2id = json.load(open(word2id_file_name))
         if self.data_word.shape[1] != self.max_length:
@@ -60,7 +59,7 @@ class json_file_data_loader(file_data_loader):
         print("Finish loading")
         return True
 
-    def __init__(self, file_name, word_vec_file_name, mode, shuffle=True, max_length=120, case_sensitive=False, reprocess=False, batch_size=160):
+    def __init__(self, file_name, word_vec_file_name, rel2id_file_name, mode, shuffle=True, max_length=120, case_sensitive=False, reprocess=False, batch_size=160):
         '''
         file_name: Json file storing the data in the following format
             [
@@ -78,6 +77,13 @@ class json_file_data_loader(file_data_loader):
                 ',': [0.013441, 0.23682, ...],
                 ...
             }
+        rel2id_file_name: Json file storing relation-to-id diction in the following format
+            {
+                'NA': 0
+                'founder': 1
+                ...
+            }
+            **IMPORTANT**: make sure the id of NA is 0!
         mode: Specify how to get a batch of data. See MODE_* constants for details.
         shuffle: Whether to shuffle the data, default as True. You should use shuffle when training.
         max_length: The length that all the sentences need to be extend to, default as 120.
@@ -93,6 +99,7 @@ class json_file_data_loader(file_data_loader):
         self.mode = mode
         self.shuffle = shuffle
         self.batch_size = batch_size
+        self.rel2id = json.load(open(rel2id_file_name))
 
         if reprocess or not self._load_preprocessed_file(): # Try to load pre-processed files:
             # Check files
@@ -155,7 +162,6 @@ class json_file_data_loader(file_data_loader):
             self.instance_tot = len(self.ori_data)
             self.entpair2scope = {} # (head, tail) -> scope
             self.relfact2scope = {} # (head, tail, relation) -> scope
-            self.rel2id = {} # relation -> id
             self.data_word = np.zeros((self.instance_tot, self.max_length), dtype=np.int32)
             self.data_pos1 = np.zeros((self.instance_tot, self.max_length), dtype=np.int32) # [start_pos, end_pos], left closed right open
             self.data_pos2 = np.zeros((self.instance_tot, self.max_length), dtype=np.int32)
@@ -167,8 +173,6 @@ class json_file_data_loader(file_data_loader):
             last_relfact_pos = -1
             for i in range(self.instance_tot):
                 ins = self.ori_data[i]
-                if not ins['relation'] in self.rel2id:
-                    self.rel2id[ins['relation']] = len(self.rel2id)
                 self.data_rel[i] = self.rel2id[ins['relation']]
                 sentence = ' '.join(ins['sentence'].split()) # delete extra spaces
                 head = ins['head']['word']
@@ -247,7 +251,6 @@ class json_file_data_loader(file_data_loader):
             np.save(os.path.join(processed_data_dir, name_prefix + '_length.npy'), self.data_length)
             json.dump(self.entpair2scope, open(os.path.join(processed_data_dir, name_prefix + '_entpair2scope.json'), 'w'))
             json.dump(self.relfact2scope, open(os.path.join(processed_data_dir, name_prefix + '_relfact2scope.json'), 'w'))
-            json.dump(self.rel2id, open(os.path.join(processed_data_dir, name_prefix + '_rel2id.json'), 'w'))
             np.save(os.path.join(processed_data_dir, word_vec_name_prefix + '_mat.npy'), self.word_vec_mat)
             json.dump(self.word2id, open(os.path.join(processed_data_dir, word_vec_name_prefix + '_word2id.json'), 'w'))
             print("Finish storing")
@@ -289,7 +292,10 @@ class json_file_data_loader(file_data_loader):
             idx0 = self.idx
             idx1 = self.idx + self.batch_size
             if idx1 > len(self.order):
-                idx1 = len(self.order)
+                self.idx = 0
+                if self.shuffle:
+                    random.shuffle(self.order) 
+                raise StopIteration
             self.idx = idx1
             batch_data['word'] = self.data_word[idx0:idx1]
             batch_data['pos1'] = self.data_pos1[idx0:idx1]
@@ -301,13 +307,17 @@ class json_file_data_loader(file_data_loader):
             idx0 = self.idx
             idx1 = self.idx + self.batch_size
             if idx1 > len(self.order):
-                idx1 = len(self.order)
+                self.idx = 0
+                if self.shuffle:
+                    random.shuffle(self.order) 
+                raise StopIteration
             self.idx = idx1
             _word = []
             _pos1 = []
             _pos2 = []
             _rel = []
-            _multi_rel = np.zeros((self.rel_tot), dtype=np.int32)
+            _ins_rel = []
+            _multi_rel = []
             _length = []
             _scope = []
             cur_pos = 0
@@ -316,19 +326,24 @@ class json_file_data_loader(file_data_loader):
                 _pos1.append(self.data_pos1[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _pos2.append(self.data_pos2[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _rel.append(self.data_rel[self.scope[self.order[i]][0]])
-                for j in range(self.scope[self.order[i]][0], self.scope[self.order[i]][1]):
-                    _multi_rel[self.data_rel[j]] = 1 
-                _length.append(self.data_length[self.scope[self.order[i]][0]])
-
+                _ins_rel.append(self.data_rel[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _length.append(self.data_length[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 bag_size = self.scope[self.order[i]][1] - self.scope[self.order[i]][0]
                 _scope.append([cur_pos, cur_pos + bag_size])
                 cur_pos = cur_pos + bag_size
+                if self.mode == self.MODE_ENTPAIR_BAG:
+                    _one_multi_rel = np.zeros((self.rel_tot), dtype=np.int32)
+                    for j in range(self.scope[self.order[i]][0], self.scope[self.order[i]][1]):
+                        _one_multi_rel[self.data_rel[j]] = 1
+                    _multi_rel.append(_one_multi_rel)
             batch_data['word'] = np.concatenate(_word)
             batch_data['pos1'] = np.concatenate(_pos1)
             batch_data['pos2'] = np.concatenate(_pos2)
             batch_data['rel'] = np.stack(_rel)
-            batch_data['multi_rel'] = np.stack(_multi_rel)
-            batch_data['length'] = np.stack(_length)
+            batch_data['ins_rel'] = np.concatenate(_ins_rel)
+            if self.mode == self.MODE_ENTPAIR_BAG:
+                batch_data['multi_rel'] = np.stack(_multi_rel)
+            batch_data['length'] = np.concatenate(_length)
             batch_data['scope'] = np.stack(_scope)
 
         return batch_data
