@@ -10,3 +10,4 @@ sbatch*
 log_sbatch
 *.sh
 _processed_data/*
+tmp_ckpt
