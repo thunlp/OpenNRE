@@ -22,7 +22,7 @@ class pcnn_att(nrekit.framework.re_model):
         x_test = nrekit.network.encoder.pcnn(x, self.pos1, self.pos2, keep_prob=1.0)
         self._train_logit, train_repre = nrekit.network.selector.bag_attention(x_train, self.scope, self.ins_label, self.rel_tot, True, keep_prob=0.5)
         self._test_logit, test_repre = nrekit.network.selector.bag_attention(x_test, self.scope, self.ins_label, self.rel_tot, False, keep_prob=1.0)
-        self._loss = nrekit.network.classifier.softmax_cross_entropy(train_logit, self.label, self.rel_tot, weights_table=self.get_weights())
+        self._loss = nrekit.network.classifier.softmax_cross_entropy(self._train_logit, self.label, self.rel_tot, weights_table=self.get_weights())
 
     def loss(self):
         return self._loss
@@ -44,6 +44,6 @@ class pcnn_att(nrekit.framework.re_model):
         return weights_table
 
         
-f.train(pcnn_att, ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40)
+f.train(pcnn_att, ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40, gpu_nums=2)
 #f.train(model,ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40)
 

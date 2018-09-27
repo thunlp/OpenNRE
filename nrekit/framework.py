@@ -70,11 +70,12 @@ class re_framework:
         self.test_data_loader = test_data_loader
         self.sess = None
 
-    def one_step_multi_models(self, sess, models, batch_data_gen, run_array):
+    def one_step_multi_models(self, sess, models, batch_data_gen, run_array, return_label=True):
         feed_dict = {}
+        batch_label = []
         for model in models:
             batch_data = batch_data_gen.next_batch(batch_data_gen.batch_size // len(models))
-            feed_dict += {
+            feed_dict.update({
                 model.word: batch_data['word'],
                 model.pos1: batch_data['pos1'],
                 model.pos2: batch_data['pos2'],
@@ -82,8 +83,12 @@ class re_framework:
                 model.ins_label: batch_data['ins_rel'],
                 model.scope: batch_data['scope'],
                 model.length: batch_data['length'],
-            }
+            })
+            batch_label.append(batch_data['rel'])
         result = sess.run(run_array, feed_dict)
+        batch_label = np.concatenate(batch_label)
+        if return_label:
+            result += [batch_label]
         return result
 
     def one_step(self, sess, model, batch_data, run_array):
@@ -115,7 +120,8 @@ class re_framework:
         print("Start training...")
         
         # Init
-        self.sess = tf.Session()
+        config = tf.ConfigProto(allow_soft_placement=True)
+        self.sess = tf.Session(config=config)
         optimizer = optimizer(learning_rate)
         
         # Multi GPUs
@@ -127,9 +133,14 @@ class re_framework:
                     cur_model = model(self.train_data_loader, self.train_data_loader.max_length)
                     tower_grads.append(optimizer.compute_gradients(cur_model.loss()))
                     tower_models.append(cur_model)
-                    tf.add_to_collection("loss", loss)
-                    tf.add_to_collection("train_logit", train_logit)
-                    tf.add_to_coolection("test_logit", test_logit)
+                    tf.add_to_collection("loss", cur_model.loss())
+                    tf.add_to_collection("train_logit", cur_model.train_logit())
+
+        loss_collection = tf.get_collection("loss")
+        loss = tf.add_n(loss_collection) / len(loss_collection)
+        train_logit_collection = tf.get_collection("train_logit")
+        train_logit = tf.concat(train_logit_collection, 0)
+
         grads = average_gradients(tower_grads)
         train_op = optimizer.apply_gradients(grads)
         summary_writer = tf.summary.FileWriter(summary_dir, self.sess.graph)
@@ -149,19 +160,24 @@ class re_framework:
             tot_not_na_correct = 0
             tot = 0
             tot_not_na = 0
-            for i, batch_data in enumerate(self.train_data_loader):
+            i = 0
+            while True:
                 time_start = time.time()
-                iter_loss, iter_logit, _train_op = self.one_step(self.sess, batch_data, [loss, train_logit, train_op])
+                try:
+                    iter_loss, iter_logit, _train_op, iter_label = self.one_step_multi_models(self.sess, tower_models, self.train_data_loader, [loss, train_logit, train_op])
+                except StopIteration:
+                    break
                 time_end = time.time()
                 iter_output = iter_logit.argmax(-1)
-                iter_correct = (iter_output == batch_data['rel']).sum()
-                iter_not_na_correct = np.logical_and(iter_output == batch_data['rel'], batch_data['rel'] != 0).sum()
+                iter_correct = (iter_output == iter_label).sum()
+                iter_not_na_correct = np.logical_and(iter_output == iter_label, iter_label != 0).sum()
                 tot_correct += iter_correct
                 tot_not_na_correct += iter_not_na_correct
-                tot += batch_data['rel'].shape[0]
-                tot_not_na += (batch_data['rel'] != 0).sum()
+                tot += iter_label.shape[0]
+                tot_not_na += (iter_label != 0).sum()
                 sys.stdout.write("epoch %d step %d time %.2f | loss: %f, not NA accuracy: %f, accuracy: %f\r" % (epoch, i, time_end - time_start, iter_loss, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
                 sys.stdout.flush()
+                i += 1
 
             if (epoch + 1) % test_epoch == 0:
                 metric = self.test(test_logit)
