@@ -11,6 +11,9 @@ class file_data_loader:
     def next(self):
         return self.__next__()
 
+    def next_batch(self, batch_size):
+        raise NotImplementedError
+
 class npy_data_loader(file_data_loader):
     MODE_INSTANCE = 0      # One batch contains batch_size instances.
     MODE_ENTPAIR_BAG = 1   # One batch contains batch_size bags, instances in which have the same entity pair (usually for testing).
@@ -54,6 +57,9 @@ class npy_data_loader(file_data_loader):
         print("Total relation fact: %d" % (self.relfact_tot))
 
     def __next__(self):
+        return self.next_batch(self.batch_size)
+
+    def next_batch(self, batch_size):
         if self.idx >= len(self.order):
             self.idx = 0
             if self.shuffle:
@@ -64,7 +70,7 @@ class npy_data_loader(file_data_loader):
 
         if self.mode == self.MODE_INSTANCE:
             idx0 = self.idx
-            idx1 = self.idx + self.batch_size
+            idx1 = self.idx + batch_size
             if idx1 > len(self.order):
                 self.idx = 0
                 if self.shuffle:
@@ -79,7 +85,7 @@ class npy_data_loader(file_data_loader):
             batch_data['scope'] = np.stack([list(range(idx1 - idx0)), list(range(1, idx1 - idx0 + 1))], axis=1)
         elif self.mode == self.MODE_ENTPAIR_BAG or self.mode == self.MODE_RELFACT_BAG:
             idx0 = self.idx
-            idx1 = self.idx + self.batch_size
+            idx1 = self.idx + batch_size
             if idx1 > len(self.order):
                 self.idx = 0
                 if self.shuffle:
@@ -414,6 +420,9 @@ class json_file_data_loader(file_data_loader):
         return self
 
     def __next__(self):
+        return self.next_batch(self.batch_size)
+
+    def next_batch(self, batch_size):
         if self.idx >= len(self.order):
             self.idx = 0
             if self.shuffle:
@@ -424,7 +433,7 @@ class json_file_data_loader(file_data_loader):
 
         if self.mode == self.MODE_INSTANCE:
             idx0 = self.idx
-            idx1 = self.idx + self.batch_size
+            idx1 = self.idx + batch_size
             if idx1 > len(self.order):
                 self.idx = 0
                 if self.shuffle:
@@ -439,7 +448,7 @@ class json_file_data_loader(file_data_loader):
             batch_data['scope'] = np.stack([list(range(idx1 - idx0)), list(range(1, idx1 - idx0 + 1))], axis=1)
         elif self.mode == self.MODE_ENTPAIR_BAG or self.mode == self.MODE_RELFACT_BAG:
             idx0 = self.idx
-            idx1 = self.idx + self.batch_size
+            idx1 = self.idx + batch_size
             if idx1 > len(self.order):
                 self.idx = 0
                 if self.shuffle:

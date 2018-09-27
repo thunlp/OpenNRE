@@ -43,40 +43,50 @@ def average_gradients(tower_grads):
     return average_grads
 
 class re_model:
-    def __init__(self, max_length=120):
+    def __init__(self, train_data_loader, max_length=120):
         self.word = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='word')
         self.pos1 = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='pos1')
         self.pos2 = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='pos2')
-        self.label = tf.placeholder(dtype=tf.int32, shape=[batch_size], name='label')
+        self.label = tf.placeholder(dtype=tf.int32, shape=[train_data_loader.batch_size], name='label')
         self.ins_label = tf.placeholder(dtype=tf.int32, shape=[None], name='ins_label')
         self.length = tf.placeholder(dtype=tf.int32, shape=[None], name='length')
-        self.scope = tf.placeholder(dtype=tf.int32, shape=[batch_size, 2], name='scope')
-        self.keep_prob = tf.placeholder(dtype=tf.float32, shape=(), name='keep_prob')
+        self.scope = tf.placeholder(dtype=tf.int32, shape=[train_data_loader.batch_size, 2], name='scope')
+        self.train_data_loader = train_data_loader
+        self.rel_tot = train_data_loader.rel_tot
+        self.word_vec_mat = train_data_loader.word_vec_mat
 
-    def __call__(self):
-        '''
-        Any class extends re_model should implement this function.
-        Return values: train_loss, train_logit, test_logit
-        '''
+    def loss(self):
+        raise NotImplementedError
+    
+    def train_logit(self):
+        raise NotImplementedError
+    
+    def test_logit(self):
         raise NotImplementedError
 
 class re_framework:
     def __init__(self, train_data_loader, test_data_loader, max_length=120, batch_size=160):
-        self.word = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='word')
-        self.pos1 = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='pos1')
-        self.pos2 = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='pos2')
-        self.label = tf.placeholder(dtype=tf.int32, shape=[batch_size], name='label')
-        self.ins_label = tf.placeholder(dtype=tf.int32, shape=[None], name='ins_label')
-        self.length = tf.placeholder(dtype=tf.int32, shape=[None], name='length')
-        self.scope = tf.placeholder(dtype=tf.int32, shape=[batch_size, 2], name='scope')
-        self.keep_prob = tf.placeholder(dtype=tf.float32, shape=(), name='keep_prob')
-        self.word_vec_mat = train_data_loader.word_vec_mat
-        self.rel_tot = train_data_loader.rel_tot
         self.train_data_loader = train_data_loader
         self.test_data_loader = test_data_loader
         self.sess = None
 
-    def one_step(self, sess, model, batch_data, run_array, keep_prob=1.0):
+    def one_step_multi_models(self, sess, models, batch_data_gen, run_array):
+        feed_dict = {}
+        for model in models:
+            batch_data = batch_data_gen.next_batch(batch_data_gen.batch_size // len(models))
+            feed_dict += {
+                model.word: batch_data['word'],
+                model.pos1: batch_data['pos1'],
+                model.pos2: batch_data['pos2'],
+                model.label: batch_data['rel'],
+                model.ins_label: batch_data['ins_rel'],
+                model.scope: batch_data['scope'],
+                model.length: batch_data['length'],
+            }
+        result = sess.run(run_array, feed_dict)
+        return result
+
+    def one_step(self, sess, model, batch_data, run_array):
         feed_dict = {
             model.word: batch_data['word'],
             model.pos1: batch_data['pos1'],
@@ -85,7 +95,6 @@ class re_framework:
             model.ins_label: batch_data['ins_rel'],
             model.scope: batch_data['scope'],
             model.length: batch_data['length'],
-            model.keep_prob: keep_prob
         }
         result = sess.run(run_array, feed_dict)
         return result
@@ -111,11 +120,13 @@ class re_framework:
         
         # Multi GPUs
         tower_grads = []
+        tower_models = []
         for gpu_id in range(gpu_nums):
             with tf.device("/gpu:%d" % gpu_id):
-                with tf.name_scope("gpu:%d" % gpu_id):
-                    loss, train_logit, test_logit = model(self)
-                    tower_grads.append(optimizer.compute_gradients(loss)
+                with tf.name_scope("gpu_%d" % gpu_id):
+                    cur_model = model(self.train_data_loader, self.train_data_loader.max_length)
+                    tower_grads.append(optimizer.compute_gradients(cur_model.loss()))
+                    tower_models.append(cur_model)
                     tf.add_to_collection("loss", loss)
                     tf.add_to_collection("train_logit", train_logit)
                     tf.add_to_coolection("test_logit", test_logit)
@@ -132,7 +143,6 @@ class re_framework:
 
         # Training
         best_metric = 0
-        self.train_data_loader.batch_size = self.train_data_loader.batch_size
         for epoch in range(max_epoch):
             print('Epoch ' + str(epoch) + ' starts...')
             tot_correct = 0
@@ -141,7 +151,7 @@ class re_framework:
             tot_not_na = 0
             for i, batch_data in enumerate(self.train_data_loader):
                 time_start = time.time()
-                iter_loss, iter_logit, _train_op = self.one_step(self.sess, batch_data, [loss, train_logit, train_op], keep_prob=0.5)
+                iter_loss, iter_logit, _train_op = self.one_step(self.sess, batch_data, [loss, train_logit, train_op])
                 time_end = time.time()
                 iter_output = iter_logit.argmax(-1)
                 iter_correct = (iter_output == batch_data['rel']).sum()
@@ -163,7 +173,6 @@ class re_framework:
                     print("Finish storing")
     
     def test(self,
-             logit,
              ckpt=None,
              eval_by_accuracy=False):
         print("\nTesting...")
@@ -179,7 +188,7 @@ class re_framework:
         entpair_tot = 0
         test_result = []
         for i, batch_data in enumerate(self.test_data_loader):
-            iter_logit = self.one_step(self.sess, batch_data, [logit], keep_prob=1.0)[0]
+            iter_logit = self.one_step(self.sess, batch_data, [logit])[0]
             iter_output = iter_logit.argmax(-1)
             iter_correct = (iter_output == batch_data['rel']).sum()
             iter_not_na_correct = np.logical_and(iter_output == batch_data['rel'], batch_data['rel'] != 0).sum()
