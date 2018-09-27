@@ -2,14 +2,8 @@ import nrekit
 import numpy as np
 import tensorflow as tf
 
-train_loader = nrekit.data_loader.json_file_data_loader('data/train.json', './data/nyt_word_vec.json', './data/rel2id.json', mode=nrekit.data_loader.json_file_data_loader.MODE_RELFACT_BAG, shuffle=True, reprocess=False)
-test_loader = nrekit.data_loader.json_file_data_loader('data/test.json', './data/nyt_word_vec.json', './data/rel2id.json', mode=nrekit.data_loader.json_file_data_loader.MODE_ENTPAIR_BAG, shuffle=False, reprocess=False)
-
-# train_loader = nrekit.data_loader.json_file_data_loader('data_lyk_json/train_nyt_lyk.json', './data_lyk_json/nyt_word_vec.json', './data_lyk_json/rel2id.json', mode=nrekit.data_loader.json_file_data_loader.MODE_RELFACT_BAG, shuffle=True, reprocess=True)
-# test_loader = nrekit.data_loader.json_file_data_loader('data_lyk_json/test_nyt_lyk.json', './data_lyk_json/nyt_word_vec.json', './data_lyk_json/rel2id.json', mode=nrekit.data_loader.json_file_data_loader.MODE_ENTPAIR_BAG, shuffle=False, reprocess=True)
-# test_loader = nrekit.data_loader.npy_data_loader('./data_old', 'test', mode=nrekit.data_loader.npy_data_loader.MODE_ENTPAIR_BAG, shuffle=False)
-
-
+train_loader = nrekit.data_loader.npy_data_loader('./data_old', 'train', mode=nrekit.data_loader.npy_data_loader.MODE_RELFACT_BAG, shuffle=True)
+test_loader = nrekit.data_loader.npy_data_loader('./data_old', 'test', mode=nrekit.data_loader.npy_data_loader.MODE_ENTPAIR_BAG, shuffle=False)
 
 f = nrekit.framework.re_framework(train_loader, test_loader)
 
@@ -32,6 +26,6 @@ def model(f):
     return loss, train_logit, test_logit
 
 loss, train_logit, test_logit = model(f)
-f.train(loss, train_logit, test_logit, ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40)
+f.train(loss, train_logit, test_logit, ckpt_dir='tmp_ckpt', model_name='pcnn_att_old', max_epoch=40)
 #f.train(model, ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40)
 

@@ -10,7 +10,121 @@ class file_data_loader:
     
     def next(self):
         return self.__next__()
-    
+
+class npy_data_loader(file_data_loader):
+    MODE_INSTANCE = 0      # One batch contains batch_size instances.
+    MODE_ENTPAIR_BAG = 1   # One batch contains batch_size bags, instances in which have the same entity pair (usually for testing).
+    MODE_RELFACT_BAG = 2   # One batch contains batch size bags, instances in which have the same relation fact. (usually for training).
+
+    def __iter__(self):
+        return self
+
+    def __init__(self, data_dir, prefix, mode, word_vec_npy='vec.npy', shuffle=True, max_length=120, batch_size=160):
+        if not os.path.isdir(data_dir):
+            raise Exception("[ERROR] Data dir doesn't exist!")
+        self.mode = mode
+        self.shuffle = shuffle
+        self.max_length = max_length
+        self.batch_size = batch_size
+        self.word_vec_mat = np.load(os.path.join(data_dir, word_vec_npy))
+        self.data_word = np.load(os.path.join(data_dir, prefix + "_word.npy")) 
+        self.data_pos1 = np.load(os.path.join(data_dir, prefix + "_pos1.npy")) 
+        self.data_pos2 = np.load(os.path.join(data_dir, prefix + "_pos2.npy")) 
+        self.data_mask = np.load(os.path.join(data_dir, prefix + "_mask.npy")) 
+        self.data_rel = np.load(os.path.join(data_dir, prefix + "_label.npy")) 
+        self.data_length = np.load(os.path.join(data_dir, prefix + "_len.npy")) 
+        self.scope = np.load(os.path.join(data_dir, prefix + "_instance_scope.npy"))
+        self.triple = np.load(os.path.join(data_dir, prefix + "_instance_triple.npy"))
+        self.relfact_tot = len(self.triple)
+        for i in range(self.scope.shape[0]):
+            self.scope[i][1] += 1
+
+        self.instance_tot = self.data_word.shape[0]
+        self.rel_tot = 53
+
+        if self.mode == self.MODE_INSTANCE:
+            self.order = list(range(self.instance_tot))
+        else:
+            self.order = list(range(len(self.scope)))
+        self.idx = 0
+
+        if self.shuffle:
+            random.shuffle(self.order) 
+
+        print("Total relation fact: %d" % (self.relfact_tot))
+
+    def __next__(self):
+        if self.idx >= len(self.order):
+            self.idx = 0
+            if self.shuffle:
+                random.shuffle(self.order) 
+            raise StopIteration
+
+        batch_data = {}
+
+        if self.mode == self.MODE_INSTANCE:
+            idx0 = self.idx
+            idx1 = self.idx + self.batch_size
+            if idx1 > len(self.order):
+                self.idx = 0
+                if self.shuffle:
+                    random.shuffle(self.order) 
+                raise StopIteration
+            self.idx = idx1
+            batch_data['word'] = self.data_word[idx0:idx1]
+            batch_data['pos1'] = self.data_pos1[idx0:idx1]
+            batch_data['pos2'] = self.data_pos2[idx0:idx1]
+            batch_data['rel'] = self.data_rel[idx0:idx1]
+            batch_data['length'] = self.data_length[idx0:idx1]
+            batch_data['scope'] = np.stack([list(range(idx1 - idx0)), list(range(1, idx1 - idx0 + 1))], axis=1)
+        elif self.mode == self.MODE_ENTPAIR_BAG or self.mode == self.MODE_RELFACT_BAG:
+            idx0 = self.idx
+            idx1 = self.idx + self.batch_size
+            if idx1 > len(self.order):
+                self.idx = 0
+                if self.shuffle:
+                    random.shuffle(self.order) 
+                raise StopIteration
+            self.idx = idx1
+            _word = []
+            _pos1 = []
+            _pos2 = []
+            _rel = []
+            _ins_rel = []
+            _multi_rel = []
+            _length = []
+            _scope = []
+            _mask = []
+            cur_pos = 0
+            for i in range(idx0, idx1):
+                _word.append(self.data_word[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _pos1.append(self.data_pos1[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _pos2.append(self.data_pos2[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _rel.append(self.data_rel[self.scope[self.order[i]][0]])
+                _ins_rel.append(self.data_rel[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _length.append(self.data_length[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _mask.append(self.data_mask[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                bag_size = self.scope[self.order[i]][1] - self.scope[self.order[i]][0]
+                _scope.append([cur_pos, cur_pos + bag_size])
+                cur_pos = cur_pos + bag_size
+                if self.mode == self.MODE_ENTPAIR_BAG:
+                    _one_multi_rel = np.zeros((self.rel_tot), dtype=np.int32)
+                    for j in range(self.scope[self.order[i]][0], self.scope[self.order[i]][1]):
+                        _one_multi_rel[self.data_rel[j]] = 1
+                    _multi_rel.append(_one_multi_rel)
+            batch_data['word'] = np.concatenate(_word)
+            batch_data['pos1'] = np.concatenate(_pos1)
+            batch_data['pos2'] = np.concatenate(_pos2)
+            batch_data['rel'] = np.stack(_rel)
+            batch_data['ins_rel'] = np.concatenate(_ins_rel)
+            if self.mode == self.MODE_ENTPAIR_BAG:
+                batch_data['multi_rel'] = np.stack(_multi_rel)
+            batch_data['length'] = np.concatenate(_length)
+            batch_data['scope'] = np.stack(_scope)
+            batch_data['mask'] = np.concatenate(_mask)
+
+        return batch_data
+
 class json_file_data_loader(file_data_loader):
     MODE_INSTANCE = 0      # One batch contains batch_size instances.
     MODE_ENTPAIR_BAG = 1   # One batch contains batch_size bags, instances in which have the same entity pair (usually for testing).
@@ -29,7 +143,6 @@ class json_file_data_loader(file_data_loader):
         length_npy_file_name = os.path.join(processed_data_dir, name_prefix + '_length.npy')
         entpair2scope_file_name = os.path.join(processed_data_dir, name_prefix + '_entpair2scope.json')
         relfact2scope_file_name = os.path.join(processed_data_dir, name_prefix + '_relfact2scope.json')
-        rel2id_file_name = os.path.join(processed_data_dir, name_prefix + '_rel2id.json')
         word_vec_mat_file_name = os.path.join(processed_data_dir, word_vec_name_prefix + '_mat.npy')
         word2id_file_name = os.path.join(processed_data_dir, word_vec_name_prefix + '_word2id.json')
         if not os.path.exists(word_npy_file_name) or \
@@ -39,7 +152,6 @@ class json_file_data_loader(file_data_loader):
            not os.path.exists(length_npy_file_name) or \
            not os.path.exists(entpair2scope_file_name) or \
            not os.path.exists(relfact2scope_file_name) or \
-           not os.path.exists(rel2id_file_name) or \
            not os.path.exists(word_vec_mat_file_name) or \
            not os.path.exists(word2id_file_name):
             return False
@@ -112,7 +224,6 @@ class json_file_data_loader(file_data_loader):
             print("Loading data file...")
             self.ori_data = json.load(open(self.file_name, "r"))
             print("Finish loading")
-            self.ori_word_vec = None
             print("Loading word vector file...")
             self.ori_word_vec = json.load(open(self.word_vec_file_name, "r"))
             print("Finish loading")
@@ -129,8 +240,8 @@ class json_file_data_loader(file_data_loader):
             # Sort data by entities and relations
             print("Sort data...")
             def compare_by_entities_and_relations(a, b):
-                a_key = a['head']['word'] + '#' + a['tail']['word'] + '#' + a['relation']
-                b_key = b['head']['word'] + '#' + b['tail']['word'] + '#' + b['relation']
+                a_key = a['head']['id'] + '#' + a['tail']['id'] + '#' + a['relation']
+                b_key = b['head']['id'] + '#' + b['tail']['id'] + '#' + b['relation']
                 if a_key > b_key:
                     return 1
                 elif a_key == b_key:
@@ -142,19 +253,21 @@ class json_file_data_loader(file_data_loader):
        
             # Pre-process word vec
             self.word2id = {}
-            self.word_vec_tot = len(self.ori_word_vec) + 2 # +BLANK and UNK
-            self.word_vec_dim = len(self.ori_word_vec.values()[0])
+            self.word_vec_tot = len(self.ori_word_vec)
+            UNK = self.word_vec_tot
+            BLANK = self.word_vec_tot + 1
+            self.word_vec_dim = len(self.ori_word_vec[0]['vec'])
             print("Got {} words of {} dims".format(self.word_vec_tot, self.word_vec_dim))
             print("Building word vector matrix and mapping...")
             self.word_vec_mat = np.zeros((self.word_vec_tot, self.word_vec_dim), dtype=np.float32)
-            cur_id = 2
-            for word in self.ori_word_vec.keys():
-                self.word2id[word] = cur_id
-                self.word_vec_mat[cur_id, :] = self.ori_word_vec[word]
-                cur_id += 1 
-            self.word_vec_mat[1, :] = self.word_vec_mat[2:].mean(0)
-            self.word2id['BLANK'] = 0
-            self.word2id['UNK'] = 1
+            for cur_id, word in enumerate(self.ori_word_vec):
+                w = word['word']
+                if not case_sensitive:
+                    w = w.lower()
+                self.word2id[w] = cur_id
+                self.word_vec_mat[cur_id, :] = word['vec']
+            self.word2id['UNK'] = UNK
+            self.word2id['BLANK'] = BLANK
             print("Finish building")
 
             # Pre-process data
@@ -173,12 +286,15 @@ class json_file_data_loader(file_data_loader):
             last_relfact_pos = -1
             for i in range(self.instance_tot):
                 ins = self.ori_data[i]
-                self.data_rel[i] = self.rel2id[ins['relation']]
+                if ins['relation'] in self.rel2id:
+                    self.data_rel[i] = self.rel2id[ins['relation']]
+                else:
+                    self.data_rel[i] = self.rel2id['NA']
                 sentence = ' '.join(ins['sentence'].split()) # delete extra spaces
                 head = ins['head']['word']
                 tail = ins['tail']['word']
-                cur_entpair = head + '#' + tail
-                cur_relfact = head + '#' + tail + '#' + ins['relation']
+                cur_entpair = ins['head']['id'] + '#' + ins['tail']['id']
+                cur_relfact = ins['head']['id'] + '#' + ins['tail']['id'] + '#' + ins['relation']
                 if cur_entpair != last_entpair:
                     if last_entpair != '':
                         self.entpair2scope[last_entpair] = [last_entpair_pos, i] # left closed right open
@@ -189,20 +305,29 @@ class json_file_data_loader(file_data_loader):
                         self.relfact2scope[last_relfact] = [last_relfact_pos, i]
                     last_relfact = cur_relfact
                     last_relfact_pos = i
-                p1 = sentence.find(' ' + head + ' ') + 1
-                p2 = sentence.find(' ' + tail + ' ') + 1
+                p1 = sentence.find(' ' + head + ' ')
+                p2 = sentence.find(' ' + tail + ' ')
                 if p1 == -1:
-                    if sentence[:len(head)] == head:
+                    if sentence[:len(head) + 1] == head + " ":
                         p1 = 0
-                    elif sentence[-len(head):] == head:
+                    elif sentence[-len(head) - 1:] == " " + head:
                         p1 = len(sentence) - len(head)
+                    else:
+                        p1 = 0 # shouldn't happen
+                else:
+                    p1 += 1
                 if p2 == -1:
-                    if sentence[:len(tail)] == tail:
+                    if sentence[:len(tail) + 1] == tail + " ":
                         p2 = 0
-                    elif sentence[-len(tail):] == tail:
+                    elif sentence[-len(tail) - 1:] == " " + tail:
                         p2 = len(sentence) - len(tail)
-                if p1 == -1 or p2 == -1:
-                    raise Exception("[ERROR] Sentence doesn't contain the entity, index = {}, sentence = {}, head = {}, tail = {}".format(i, sentence, head, tail))
+                    else:
+                        p2 = 0 # shouldn't happen
+                else:
+                    p2 += 1
+                # if p1 == -1 or p2 == -1:
+                #     raise Exception("[ERROR] Sentence doesn't contain the entity, index = {}, sentence = {}, head = {}, tail = {}".format(i, sentence, head, tail))
+
                 words = sentence.split()
                 cur_ref_data_word = self.data_word[i]         
                 cur_pos = 0
@@ -213,7 +338,7 @@ class json_file_data_loader(file_data_loader):
                         if word in self.word2id:
                             cur_ref_data_word[j] = self.word2id[word]
                         else:
-                            cur_ref_data_word[j] = 1
+                            cur_ref_data_word[j] = UNK
                     if cur_pos == p1:
                         pos1 = j
                         p1 = -1
@@ -221,14 +346,18 @@ class json_file_data_loader(file_data_loader):
                         pos2 = j
                         p2 = -1
                     cur_pos += len(word) + 1
+                for j in range(j + 1, max_length):
+                    cur_ref_data_word[j] = BLANK
                 self.data_length[i] = len(words)
                 if len(words) > max_length:
                     self.data_length[i] = max_length
                 if pos1 == -1 or pos2 == -1:
                     raise Exception("[ERROR] Position error, index = {}, sentence = {}, head = {}, tail = {}".format(i, sentence, head, tail))
+                if pos1 >= max_length:
+                    pos1 = max_length - 1
+                if pos2 >= max_length:
+                    pos2 = max_length - 1
                 for j in range(max_length):
-                    if cur_ref_data_word[j] == 0:
-                        break
                     self.data_pos1[i][j] = j - pos1 + max_length
                     self.data_pos2[i][j] = j - pos2 + max_length
             if last_entpair != '':
@@ -258,16 +387,19 @@ class json_file_data_loader(file_data_loader):
         # Prepare for idx
         self.instance_tot = self.data_word.shape[0]
         self.entpair_tot = len(self.entpair2scope)
-        self.relfact_tot = len(self.relfact2scope)
+        self.relfact_tot = 0 # The number of relation facts, without NA.
+        for key in self.relfact2scope:
+            if key[-2:] != 'NA':
+                self.relfact_tot += 1
         self.rel_tot = len(self.rel2id)
 
         if self.mode == self.MODE_INSTANCE:
             self.order = list(range(self.instance_tot))
         elif self.mode == self.MODE_ENTPAIR_BAG:
-            self.order = list(range(self.entpair_tot))
+            self.order = list(range(len(self.entpair2scope)))
             self.scope = self.entpair2scope.values()
         elif self.mode == self.MODE_RELFACT_BAG:
-            self.order = list(range(self.relfact_tot))
+            self.order = list(range(len(self.relfact2scope)))
             self.scope = self.relfact2scope.values()
         else:
             raise Exception("[ERROR] Invalid mode")
@@ -275,6 +407,8 @@ class json_file_data_loader(file_data_loader):
 
         if self.shuffle:
             random.shuffle(self.order) 
+
+        print("Total relation fact: %d" % (self.relfact_tot))
 
     def __iter__(self):
         return self
