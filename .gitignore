@@ -11,3 +11,5 @@ log_sbatch
 *.sh
 _processed_data/*
 tmp_ckpt
+data_old
+data_lyk_json
