@@ -43,14 +43,14 @@ def average_gradients(tower_grads):
     return average_grads
 
 class re_model:
-    def __init__(self, train_data_loader, max_length=120):
+    def __init__(self, train_data_loader, batch_size, max_length=120):
         self.word = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='word')
         self.pos1 = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='pos1')
         self.pos2 = tf.placeholder(dtype=tf.int32, shape=[None, max_length], name='pos2')
-        self.label = tf.placeholder(dtype=tf.int32, shape=[train_data_loader.batch_size], name='label')
+        self.label = tf.placeholder(dtype=tf.int32, shape=[batch_size], name='label')
         self.ins_label = tf.placeholder(dtype=tf.int32, shape=[None], name='ins_label')
         self.length = tf.placeholder(dtype=tf.int32, shape=[None], name='length')
-        self.scope = tf.placeholder(dtype=tf.int32, shape=[train_data_loader.batch_size, 2], name='scope')
+        self.scope = tf.placeholder(dtype=tf.int32, shape=[batch_size, 2], name='scope')
         self.train_data_loader = train_data_loader
         self.rel_tot = train_data_loader.rel_tot
         self.word_vec_mat = train_data_loader.word_vec_mat
@@ -130,7 +130,7 @@ class re_framework:
         for gpu_id in range(gpu_nums):
             with tf.device("/gpu:%d" % gpu_id):
                 with tf.name_scope("gpu_%d" % gpu_id):
-                    cur_model = model(self.train_data_loader, self.train_data_loader.max_length)
+                    cur_model = model(self.train_data_loader, self.train_data_loader.batch_size // gpu_nums, self.train_data_loader.max_length)
                     tower_grads.append(optimizer.compute_gradients(cur_model.loss()))
                     tower_models.append(cur_model)
                     tf.add_to_collection("loss", cur_model.loss())
@@ -161,6 +161,7 @@ class re_framework:
             tot = 0
             tot_not_na = 0
             i = 0
+            time_sum = 0
             while True:
                 time_start = time.time()
                 try:
@@ -168,6 +169,8 @@ class re_framework:
                 except StopIteration:
                     break
                 time_end = time.time()
+                t = time_end - time_start
+                time_sum += t
                 iter_output = iter_logit.argmax(-1)
                 iter_correct = (iter_output == iter_label).sum()
                 iter_not_na_correct = np.logical_and(iter_output == iter_label, iter_label != 0).sum()
@@ -175,9 +178,10 @@ class re_framework:
                 tot_not_na_correct += iter_not_na_correct
                 tot += iter_label.shape[0]
                 tot_not_na += (iter_label != 0).sum()
-                sys.stdout.write("epoch %d step %d time %.2f | loss: %f, not NA accuracy: %f, accuracy: %f\r" % (epoch, i, time_end - time_start, iter_loss, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
+                sys.stdout.write("epoch %d step %d time %.2f | loss: %f, not NA accuracy: %f, accuracy: %f\r" % (epoch, i, t, iter_loss, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
                 sys.stdout.flush()
                 i += 1
+            print("\nAverage iteration time: %f" % (time_sum / i))
 
             if (epoch + 1) % test_epoch == 0:
                 metric = self.test(test_logit)

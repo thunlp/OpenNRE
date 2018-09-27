@@ -14,8 +14,8 @@ test_loader = nrekit.data_loader.json_file_data_loader('data/test.json', './data
 f = nrekit.framework.re_framework(train_loader, test_loader)
 
 class pcnn_att(nrekit.framework.re_model):
-    def __init__(self, train_data_loader, max_length=120):
-        nrekit.framework.re_model.__init__(self, train_data_loader, max_length=max_length)
+    def __init__(self, train_data_loader, batch_size, max_length=120):
+        nrekit.framework.re_model.__init__(self, train_data_loader, batch_size, max_length=max_length)
 
         x = nrekit.network.embedding.word_position_embedding(self.word, self.word_vec_mat, self.pos1, self.pos2)
         x_train = nrekit.network.encoder.pcnn(x, self.pos1, self.pos2, keep_prob=0.5)
@@ -34,15 +34,15 @@ class pcnn_att(nrekit.framework.re_model):
         return self._test_logit
 
     def get_weights(self):
-        print("Calculating weights_table...")
-        _weights_table = np.zeros((self.rel_tot), dtype=np.float32)
-        for i in range(len(self.train_data_loader.data_rel)):
-            _weights_table[self.train_data_loader.data_rel[i]] += 1.0 
-        _weights_table = 1 / (_weights_table ** 0.05)
-        weights_table = tf.get_variable(name='weights_table', dtype=tf.float32, trainable=False, initializer=_weights_table)
-        print("Finish calculating")
+        with tf.variable_scope("weights_table", reuse=tf.AUTO_REUSE):
+            print("Calculating weights_table...")
+            _weights_table = np.zeros((self.rel_tot), dtype=np.float32)
+            for i in range(len(self.train_data_loader.data_rel)):
+                _weights_table[self.train_data_loader.data_rel[i]] += 1.0 
+            _weights_table = 1 / (_weights_table ** 0.05)
+            weights_table = tf.get_variable(name='weights_table', dtype=tf.float32, trainable=False, initializer=_weights_table)
+            print("Finish calculating")
         return weights_table
-
         
 f.train(pcnn_att, ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40, gpu_nums=2)
 #f.train(model,ckpt_dir='tmp_ckpt', model_name='pcnn_att', max_epoch=40)
