@@ -146,6 +146,7 @@ class json_file_data_loader(file_data_loader):
         pos1_npy_file_name = os.path.join(processed_data_dir, name_prefix + '_pos1.npy')
         pos2_npy_file_name = os.path.join(processed_data_dir, name_prefix + '_pos2.npy')
         rel_npy_file_name = os.path.join(processed_data_dir, name_prefix + '_rel.npy')
+        mask_npy_file_name = os.path.join(processed_data_dir, name_prefix + '_mask.npy')
         length_npy_file_name = os.path.join(processed_data_dir, name_prefix + '_length.npy')
         entpair2scope_file_name = os.path.join(processed_data_dir, name_prefix + '_entpair2scope.json')
         relfact2scope_file_name = os.path.join(processed_data_dir, name_prefix + '_relfact2scope.json')
@@ -155,6 +156,7 @@ class json_file_data_loader(file_data_loader):
            not os.path.exists(pos1_npy_file_name) or \
            not os.path.exists(pos2_npy_file_name) or \
            not os.path.exists(rel_npy_file_name) or \
+           not os.path.exists(mask_npy_file_name) or \
            not os.path.exists(length_npy_file_name) or \
            not os.path.exists(entpair2scope_file_name) or \
            not os.path.exists(relfact2scope_file_name) or \
@@ -166,6 +168,7 @@ class json_file_data_loader(file_data_loader):
         self.data_pos1 = np.load(pos1_npy_file_name)
         self.data_pos2 = np.load(pos2_npy_file_name)
         self.data_rel = np.load(rel_npy_file_name)
+        self.data_mask = np.load(mask_npy_file_name)
         self.data_length = np.load(length_npy_file_name)
         self.entpair2scope = json.load(open(entpair2scope_file_name))
         self.relfact2scope = json.load(open(relfact2scope_file_name))
@@ -190,11 +193,11 @@ class json_file_data_loader(file_data_loader):
                 ...
             ]
         word_vec_file_name: Json file storing word vectors in the following format
-            {
-                'the': [0.418, 0.24968, ...],
-                ',': [0.013441, 0.23682, ...],
+            [
+                {'word': 'the', 'vec': [0.418, 0.24968, ...]},
+                {'word': ',', 'vec': [0.013441, 0.23682, ...]},
                 ...
-            }
+            ]
         rel2id_file_name: Json file storing relation-to-id diction in the following format
             {
                 'NA': 0
@@ -285,6 +288,7 @@ class json_file_data_loader(file_data_loader):
             self.data_pos1 = np.zeros((self.instance_tot, self.max_length), dtype=np.int32) # [start_pos, end_pos], left closed right open
             self.data_pos2 = np.zeros((self.instance_tot, self.max_length), dtype=np.int32)
             self.data_rel = np.zeros((self.instance_tot), dtype=np.int32)
+            self.data_mask = np.zeros((self.instance_tot, self.max_length), dtype=np.int32)
             self.data_length = np.zeros((self.instance_tot), dtype=np.int32)
             last_entpair = ''
             last_entpair_pos = -1
@@ -363,9 +367,20 @@ class json_file_data_loader(file_data_loader):
                     pos1 = max_length - 1
                 if pos2 >= max_length:
                     pos2 = max_length - 1
+                pos_min = min(pos1, pos2)
+                pos_max = max(pos1, pos2)
                 for j in range(max_length):
                     self.data_pos1[i][j] = j - pos1 + max_length
                     self.data_pos2[i][j] = j - pos2 + max_length
+                    if j >= self.data_length[i]:
+                        self.data_mask[i][j] = 0
+                    elif j <= pos_min:
+                        self.data_mask[i][j] = 1
+                    elif j <= pos_max:
+                        self.data_mask[i][j] = 2
+                    else:
+                        self.data_mask[i][j] = 3
+                    
             if last_entpair != '':
                 self.entpair2scope[last_entpair] = [last_entpair_pos, self.instance_tot] # left closed right open
             if last_relfact != '':
@@ -383,6 +398,7 @@ class json_file_data_loader(file_data_loader):
             np.save(os.path.join(processed_data_dir, name_prefix + '_pos1.npy'), self.data_pos1)
             np.save(os.path.join(processed_data_dir, name_prefix + '_pos2.npy'), self.data_pos2)
             np.save(os.path.join(processed_data_dir, name_prefix + '_rel.npy'), self.data_rel)
+            np.save(os.path.join(processed_data_dir, name_prefix + '_mask.npy'), self.data_mask)
             np.save(os.path.join(processed_data_dir, name_prefix + '_length.npy'), self.data_length)
             json.dump(self.entpair2scope, open(os.path.join(processed_data_dir, name_prefix + '_entpair2scope.json'), 'w'))
             json.dump(self.relfact2scope, open(os.path.join(processed_data_dir, name_prefix + '_relfact2scope.json'), 'w'))
@@ -444,6 +460,7 @@ class json_file_data_loader(file_data_loader):
             batch_data['pos1'] = self.data_pos1[idx0:idx1]
             batch_data['pos2'] = self.data_pos2[idx0:idx1]
             batch_data['rel'] = self.data_rel[idx0:idx1]
+            batch_data['mask'] = self.data_mask[idx0:idx1]
             batch_data['length'] = self.data_length[idx0:idx1]
             batch_data['scope'] = np.stack([list(range(idx1 - idx0)), list(range(1, idx1 - idx0 + 1))], axis=1)
         elif self.mode == self.MODE_ENTPAIR_BAG or self.mode == self.MODE_RELFACT_BAG:
@@ -458,6 +475,7 @@ class json_file_data_loader(file_data_loader):
             _word = []
             _pos1 = []
             _pos2 = []
+            _mask = []
             _rel = []
             _ins_rel = []
             _multi_rel = []
@@ -468,6 +486,7 @@ class json_file_data_loader(file_data_loader):
                 _word.append(self.data_word[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _pos1.append(self.data_pos1[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _pos2.append(self.data_pos2[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
+                _mask.append(self.data_mask[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _rel.append(self.data_rel[self.scope[self.order[i]][0]])
                 _ins_rel.append(self.data_rel[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
                 _length.append(self.data_length[self.scope[self.order[i]][0]:self.scope[self.order[i]][1]])
@@ -482,6 +501,7 @@ class json_file_data_loader(file_data_loader):
             batch_data['word'] = np.concatenate(_word)
             batch_data['pos1'] = np.concatenate(_pos1)
             batch_data['pos2'] = np.concatenate(_pos2)
+            batch_data['mask'] = np.concatenate(_mask)
             batch_data['rel'] = np.stack(_rel)
             batch_data['ins_rel'] = np.concatenate(_ins_rel)
             if self.mode == self.MODE_ENTPAIR_BAG:

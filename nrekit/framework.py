@@ -84,6 +84,8 @@ class re_framework:
                 model.scope: batch_data['scope'],
                 model.length: batch_data['length'],
             })
+            if 'mask' in batch_data and hasattr(model, "mask"):
+                feed_dict.update({model.mask: batch_data['mask']})
             batch_label.append(batch_data['rel'])
         result = sess.run(run_array, feed_dict)
         batch_label = np.concatenate(batch_label)
@@ -101,6 +103,8 @@ class re_framework:
             model.scope: batch_data['scope'],
             model.length: batch_data['length'],
         }
+        if 'mask' in batch_data and hasattr(model, "mask"):
+            feed_dict.update({model.mask: batch_data['mask']})
         result = sess.run(run_array, feed_dict)
         return result
 
@@ -154,8 +158,9 @@ class re_framework:
 
         # Training
         best_metric = 0
+        not_best_count = 0 # Stop training after several epochs without improvement.
         for epoch in range(max_epoch):
-            print('Epoch ' + str(epoch) + ' starts...')
+            print('###### Epoch ' + str(epoch) + ' ######')
             tot_correct = 0
             tot_not_na_correct = 0
             tot = 0
@@ -178,26 +183,38 @@ class re_framework:
                 tot_not_na_correct += iter_not_na_correct
                 tot += iter_label.shape[0]
                 tot_not_na += (iter_label != 0).sum()
-                sys.stdout.write("epoch %d step %d time %.2f | loss: %f, not NA accuracy: %f, accuracy: %f\r" % (epoch, i, t, iter_loss, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
-                sys.stdout.flush()
+                if tot_not_na > 0:
+                    sys.stdout.write("epoch %d step %d time %.2f | loss: %f, not NA accuracy: %f, accuracy: %f\r" % (epoch, i, t, iter_loss, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
+                    sys.stdout.flush()
                 i += 1
             print("\nAverage iteration time: %f" % (time_sum / i))
 
             if (epoch + 1) % test_epoch == 0:
-                metric = self.test(test_logit)
+                metric = self.test(model)
                 if metric > best_metric:
+                    best_metric = metric
                     print("Best model, storing...")
                     if not os.path.isdir(ckpt_dir):
                         os.mkdir(ckpt_dir)
                     path = saver.save(self.sess, os.path.join(ckpt_dir, model_name))
                     print("Finish storing")
-    
+                    not_best_count = 0
+                else:
+                    not_best_count += 1
+
+            if not_best_count >= 5:
+                break
+
+        print("######\nBest epoch auc = %f" % (best_metric))
+
     def test(self,
+             model,
              ckpt=None,
              eval_by_accuracy=False):
-        print("\nTesting...")
+        print("Testing...")
         if self.sess == None:
             self.sess = tf.Session()
+        model = model(self.test_data_loader, self.test_data_loader.batch_size, self.test_data_loader.max_length)
         if not ckpt is None:
             saver = tf.train.Saver()
             saver.restore(self.sess, ckpt)
@@ -207,8 +224,9 @@ class re_framework:
         tot_not_na = 0
         entpair_tot = 0
         test_result = []
+        
         for i, batch_data in enumerate(self.test_data_loader):
-            iter_logit = self.one_step(self.sess, batch_data, [logit])[0]
+            iter_logit = self.one_step(self.sess, model, batch_data, [model.test_logit()])[0]
             iter_output = iter_logit.argmax(-1)
             iter_correct = (iter_output == batch_data['rel']).sum()
             iter_not_na_correct = np.logical_and(iter_output == batch_data['rel'], batch_data['rel'] != 0).sum()
@@ -216,8 +234,9 @@ class re_framework:
             tot_not_na_correct += iter_not_na_correct
             tot += batch_data['rel'].shape[0]
             tot_not_na += (batch_data['rel'] != 0).sum()
-            sys.stdout.write("[TEST] step %d | not NA accuracy: %f, accuracy: %f\r" % (i, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
-            sys.stdout.flush()
+            if tot_not_na > 0:
+                sys.stdout.write("[TEST] step %d | not NA accuracy: %f, accuracy: %f\r" % (i, float(tot_not_na_correct) / tot_not_na, float(tot_correct) / tot))
+                sys.stdout.flush()
             for idx in range(len(iter_logit)):
                 for rel in range(1, self.test_data_loader.rel_tot):
                     test_result.append({'score': iter_logit[idx][rel], 'flag': batch_data['multi_rel'][idx][rel]})

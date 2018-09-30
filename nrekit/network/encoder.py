@@ -5,40 +5,12 @@ import math
 def __dropout__(x, keep_prob=1.0):
     return tf.contrib.layers.dropout(x, keep_prob=keep_prob)
 
-def __init_mask_embedding__(shape, dtype=tf.int32, partition_info=None):
-    assert(len(shape) == 3 and shape[1] * shape[1] == shape[0] and shape[2] == 3) # (max_length ^ 2, max_length, 3)
-    max_length = shape[1]
-    mask_embedding = np.zeros(shape, dtype=np.int32) 
-    for pos1 in range(max_length):
-        for pos2 in range(max_length):
-            idx = pos1 * max_length + pos2
-            pos_first = min(pos1, pos2)
-            pos_second = max(pos1, pos2)
-            mask_embedding[idx, :pos_first, 0] = 1
-            mask_embedding[idx, pos_first:pos_second, 1] = 1
-            mask_embedding[idx, pos_second:, 2] = 1
-    return mask_embedding
-
-def __mask__(pos1, pos2):
-    with tf.variable_scope("mask", reuse=tf.AUTO_REUSE):
-        max_length = pos1.shape[-1]
-        mask_embedding = tf.get_variable("mask_embedding", shape=[max_length * max_length, max_length, 3], initializer=__init_mask_embedding__, trainable=False)
-        return tf.nn.embedding_lookup(mask_embedding, pos1[:, 0] * max_length + pos2[:, 0])
-
 def __pooling__(x):
     return tf.reduce_max(x, axis=-2)
 
-def __piecewise_pooling__(x, pos1, pos2):
-    mask = __mask__(pos1, pos2)
-    max_length = pos1.shape[-1]
-    hidden_size = x.shape[-1]
-    x = tf.reduce_max(tf.expand_dims(mask * 100, 2) + tf.expand_dims(x, 3), axis=1) - 100
-    return tf.reshape(x, [-1, hidden_size * 3])
-
-def __piecewise_pooling_with_mask__(x, mask):
+def __piecewise_pooling__(x, mask):
     mask_embedding = tf.constant([[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=np.float32)
     mask = tf.nn.embedding_lookup(mask_embedding, mask)
-    max_length = pos1.shape[-1]
     hidden_size = x.shape[-1]
     x = tf.reduce_max(tf.expand_dims(mask * 100, 2) + tf.expand_dims(x, 3), axis=1) - 100
     return tf.reshape(x, [-1, hidden_size * 3])
@@ -61,20 +33,11 @@ def cnn(x, hidden_size=230, kernel_size=3, stride_size=1, activation=tf.nn.relu,
         x = __dropout__(x, keep_prob)
         return x
 
-def pcnn(x, pos1, pos2, hidden_size=230, kernel_size=3, stride_size=1, activation=tf.nn.relu, var_scope=None, keep_prob=1.0):
+def pcnn(x, mask, hidden_size=230, kernel_size=3, stride_size=1, activation=tf.nn.relu, var_scope=None, keep_prob=1.0):
     with tf.variable_scope(var_scope or "pcnn", reuse=tf.AUTO_REUSE):
         max_length = x.shape[1]
         x = __cnn_cell__(x, hidden_size, kernel_size, stride_size)
-        x = __piecewise_pooling__(x, pos1, pos2)
-        x = activation(x)
-        x = __dropout__(x, keep_prob)
-        return x
-
-def pcnn_with_mask(x, mask, hidden_size=230, kernel_size=3, stride_size=1, activation=tf.nn.relu, var_scope=None, keep_prob=1.0):
-    with tf.variable_scope(var_scope or "pcnn", reuse=tf.AUTO_REUSE):
-        max_length = x.shape[1]
-        x = __cnn_cell__(x, hidden_size, kernel_size, stride_size)
-        x = __piecewise_pooling_with_mask__(x, mask)
+        x = __piecewise_pooling__(x, mask)
         x = activation(x)
         x = __dropout__(x, keep_prob)
         return x
