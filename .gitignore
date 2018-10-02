@@ -1,15 +1,15 @@
+# folders
 data
+_processed_data
 summary
 checkpoint
 test_result
-*.pyc
-origin_data
-origin_data.tar
-*.swp
-sbatch*
 log_sbatch
+
+# files
+*.pyc
+*.swp
+*.tar
 *.sh
-_processed_data/*
-tmp_ckpt
-data_old
-data_lyk_json
+sbatch*
+_*
