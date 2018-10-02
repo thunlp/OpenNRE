@@ -110,9 +110,10 @@ class re_framework:
 
     def train(self,
               model,
-              ckpt_dir,
-              model_name='model',
+              model_name,
+              ckpt_dir='ckpt',
               summary_dir='./summary',
+              test_result_dir='./test_result',
               learning_rate=0.5,
               max_epoch=60,
               pretrain_model=None,
@@ -158,6 +159,8 @@ class re_framework:
 
         # Training
         best_metric = 0
+        best_prec = None
+        best_recall = None
         not_best_count = 0 # Stop training after several epochs without improvement.
         for epoch in range(max_epoch):
             print('###### Epoch ' + str(epoch) + ' ######')
@@ -193,6 +196,8 @@ class re_framework:
                 metric = self.test(model)
                 if metric > best_metric:
                     best_metric = metric
+                    best_prec = self.cur_prec
+                    best_recall = self.cur_recall
                     print("Best model, storing...")
                     if not os.path.isdir(ckpt_dir):
                         os.mkdir(ckpt_dir)
@@ -202,10 +207,17 @@ class re_framework:
                 else:
                     not_best_count += 1
 
-            if not_best_count >= 5:
+            if not_best_count >= 20:
                 break
-
-        print("######\nBest epoch auc = %f" % (best_metric))
+        
+        print("######")
+        print("Finish training " + model_name)
+        print("Best epoch auc = %f" % (best_metric))
+        if (not best_prec is None) and (not best_recall is None):
+            if not os.path.isdir(test_result_dir):
+                os.mkdir(test_result_dir)
+            np.save(os.path.join(test_result_dir, model_name + "_x.npy"), best_recall)
+            np.save(os.path.join(test_result_dir, model_name + "_y.npy"), best_prec)
 
     def test(self,
              model,
@@ -256,4 +268,6 @@ class re_framework:
         auc = sklearn.metrics.auc(x=recall, y=prec)
         print("\n[TEST] auc: {}".format(auc))
         print("Finish testing")
-        return auc 
+        self.cur_prec = prec
+        self.cur_recall = recall
+        return auc
