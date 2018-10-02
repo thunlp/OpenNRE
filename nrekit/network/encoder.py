@@ -52,7 +52,7 @@ def __rnn_cell__(hidden_size, cell_name='lstm'):
         return tf.contrib.rnn.BasicLSTMCell(hidden_size, state_is_tuple=True)
     elif cell_name.lower() == 'gru':
         return tf.contrib.rnn.GRUCell(hidden_size)
-    raise NotImplemented
+    raise NotImplementedError
 
 def rnn(x, length, hidden_size=230, cell_name='lstm', var_scope=None, keep_prob=1.0):
     with tf.variable_scope(var_scope or "rnn", reuse=tf.AUTO_REUSE):

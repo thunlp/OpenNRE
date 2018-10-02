@@ -13,3 +13,4 @@ log_sbatch
 *.sh
 sbatch*
 _*
+*.ipynb

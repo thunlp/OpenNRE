@@ -111,7 +111,7 @@ class re_framework:
     def train(self,
               model,
               model_name,
-              ckpt_dir='ckpt',
+              ckpt_dir='./checkpoint',
               summary_dir='./summary',
               test_result_dir='./test_result',
               learning_rate=0.5,
