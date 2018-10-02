@@ -106,15 +106,15 @@ We've provided a toolkit to convert the original NYT10 data into JSON format tha
 
 ## Installation and Quick Start
 
-1. Install all the required package.
+1. ** Install all the required package. **
 
-2. Clone the OpenNRE repository:
+2. ** Clone the OpenNRE repository: **
 
 ```bash
 git clone https://github.com/thunlp/OpenNRE.git
 ```
 
-3. Make data folder in the following structure
+3. ** Make data folder in the following structure **
 
 ```
 OpenNRE
@@ -137,7 +137,7 @@ OpenNRE
 
 You could use your own data or download datasets provided above.
 
-4. Run `train_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME}`. For example, if you want to train model with PCNN as the encoder and attention as the selector on the `nyt` dataset, run the following command
+4. ** Run `train_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME}`. For example, if you want to train model with PCNN as the encoder and attention as the selector on the `nyt` dataset, run the following command **
 
 ```
 python train_demo.py nyt pcnn att
@@ -147,7 +147,7 @@ Currently `{ENCODER_NAME}` includes `pcnn`, `cnn`, `rnn` and `birnn`, and `{SELE
 
 The checkpoint of the best epoch (each epoch will be validated while training) will be saved in `./checkpoint` and results for plotting precision-recall curve will be saved in `./test_result` by default.
 
-5. Use `draw_plot.py` to check auc, average precision, F1 score and precision-recall curve by the following command
+5. ** Use `draw_plot.py` to check auc, average precision, F1 score and precision-recall curve by the following command **
 
 ```
 python draw_plot.py {MODEL_NAME_1} {MODEL_NAME_2} ...
