@@ -2,176 +2,158 @@
 
 An open-source framework for neural relation extraction.
 
-Contributed by [Tianyu Gao](https://github.com/gaotianyu1350), [Xu Han](https://github.com/THUCSTHanxu13), [Lumin Tang](https://github.com/Tsingularity), [Yankai Lin](https://github.com/Mrlyk423), [Zhiyuan Liu](http://nlp.csai.tsinghua.edu.cn/~lzy/)
+Contributed by [Tianyu Gao](https://github.com/gaotianyu1350), [Xu Han](https://github.com/THUCSTHanxu13), [Shulian Cao](https://github.com/ShulinCao), [Lumin Tang](https://github.com/Tsingularity), [Yankai Lin](https://github.com/Mrlyk423), [Zhiyuan Liu](http://nlp.csai.tsinghua.edu.cn/~lzy/)
+
+**BIG UPDATE**: The project has been completely reconstructed and is faster, more extendable and the codes are easier to read and use now. If you need get to the old version, please refer to branch [old_version](https://github.com/thunlp/OpenNRE/tree/old_version).  
+
+New features:
+
+- JSON data support.
+- Multi GPU training.
+- Validating while training.
 
 ## Overview
 
-It is a TensorFlow-based framwork for easily building relation extraction models. We divide the pipeline of relation extraction into four parts, which are embedding, encoder, selector and classifier. For each part we have implemented several methods.
+It is a TensorFlow-based framwork for easily building relation extraction (RE) models. We divide the pipeline of relation extraction into four parts, which are embedding, encoder, selector (for distant supervision) and classifier. For each part we have implemented several methods.
 
 * Embedding
   * Word embedding
   * Position embedding
-  * Concatenation method
 * Encoder
   * PCNN
   * CNN
   * RNN
-  * BiRNN
+  * Bidirection RNN
 * Selector
   * Attention
   * Maximum
   * Average
 * Classifier
-  * Softmax loss function
+  * Softmax Loss Function
   * Output
   
 All those methods could be combined freely. 
 
-We also provide fast training and testing codes. You could change hyper-parameters or appoint model architectures by using Python arguments. A plotting method is also in the package.
-
-Advesarial training method is implemented following [Wu et al. (2017)](https://people.eecs.berkeley.edu/~russell/papers/emnlp17-relation.pdf). Since it's a general training method, you could adapt it to any models with simply adding a few lines of code.
+We also provide training and testing framework for sentence-level RE and bag-level RE. A plotting tool is also in the package.
 
 This project is under MIT license.
 
 ## Requirements
 
 - Python (>=2.7)
+- Numpy (>=1.13.3)
 - TensorFlow (>=1.4.1)
-	- CUDA (>=8.0) if you are using gpu
+    - CUDA (>=8.0) if you are using gpu
 - Matplotlib (>=2.0.0)
 - scikit-learn (>=0.18)
 
-## Installation
+## Data Format
 
-1. Install TensorFlow
-2. Clone the OpenNRE repository:
-  ```bash
+For training and testing, you should provide four `JSON` files including training data, testing data, word embedding data and relation-ID mapping data. 
+
+### Training Data & Testing Data
+
+Training data file and testing data file, containing sentences and their corresponding entity pairs and relations, should be in the following format
+
+```
+[
+    {
+        'sentence': 'Bill Gates is the founder of Microsoft .',
+        'head': {'word': 'Bill Gates', ...(other information)},
+        'tail': {'word': 'Microsoft', ...(other information)},
+        'relation': 'founder'
+    },
+    ...
+]
+```
+
+**IMPORTANT**: In the sentence part, words and punctuations should be separated by blank spaces.
+
+### Word Embedding Data
+
+Word embedding data is used to initialize word embedding in the networks, and should be in the following format
+
+```
+[
+    {'word': 'the', 'vec': [0.418, 0.24968, ...]},
+    {'word': ',', 'vec': [0.013441, 0.23682, ...]},
+    ...
+]
+```
+
+### Relation-ID Mapping Data
+
+This file indicates corresponding IDs for relations to make sure during each training and testing period, the same ID means the same relation. Its format is as follows
+
+```
+{
+    'NA': 0,
+    'relation_1': 1,
+    'relation_2': 2,
+    ...
+}
+```
+
+**IMPORTANT**: Make sure the ID of `NA` is always 0.
+
+## Provided Data
+
+### NYT10 Dataset
+
+NYT10 is a distantly supervised dataset originally released by the paper "Sebastian Riedel, Limin Yao, and Andrew McCallum. Modeling relations and their mentions without labeled text.". Here is the download link for the original data.
+
+We've provided a toolkit to convert the original NYT10 data into JSON format that `OpenNRE` could use. You could download the original data + toolkit from [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/11391e48b72749d8b60a/?dl=1). Further instructions are included in the toolkit.
+
+## Installation and Quick Start
+
+1. Install all the required package.
+
+1. Clone the OpenNRE repository:
+
+```bash
 git clone https://github.com/thunlp/OpenNRE.git
-  ```
-3. Download NYT dataset from [Google Drive](https://drive.google.com/file/d/1BnyXMJ71jM0kxyJUlXa5MHf-vNjE57i-/view?usp=sharing) or [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/e106518775cf4bbc9e79/?dl=1)
-4. Extract dataset to `./origin_data`
-```
-tar xvf origin_data.tar
 ```
 
-## Results
-
-### F1 Score Results
-
-Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
----- | ---- | ---- | ---- | ----
-PCNN | 0.452 | **0.456** |  0.443 | 0.439
-CNN | 0.431 | 0.445 | 0.430 | 0.438
-RNN | 0.439 | 0.453 | 0.436 | 0.445
-BiRNN | 0.427 | 0.447 | 0.438 | 0.442
-
-* (Adv) means using adversarial training
-
-### AUC Results
-
-Encoder\\Selector(Trainer) | Attention | Attention(Adv) | Maximum | Average
----- | ---- | ---- | ---- | ----
-PCNN | 0.408 | **0.416** | 0.406 | 0.392
-CNN | 0.381 | 0.392 | 0.386 | 0.383
-RNN | 0.385 | 0.402 | 0.380 | 0.408
-BiRNN | 0.367 | 0.389 | 0.368 | 0.388
-
-## Quick Start
-
-### Process Data
-
-```bash
-python gen_data.py
-```
-The processed data will be stored in `./data`
-
-**HINT**: If you are using python3, execute `python3 gen_data_python3.py`.
-
-### Train Model
-```
-python train.py --model_name pcnn_att
-```
-
-The arg `model_name` appoints model architecture, and `pcnn_att` is the name of one of our models. All available models are in `./model`. About other arguments please refer to `./train.py`. Once you start training, all checkpoints are stored in `./checkpoint`.
-
-### Test Model
-```bash
-python test.py --model_name pcnn_att
-```
-
-Same usage as training. When finishing testing, the best checkpoint's corresponding pr-curve data will be stored in `./test_result`.
-
-### Plot
-```bash
-python draw_plot.py pcnn_att
-```
-
-The plot will be saved as `./test_result/pr_curve.png`. You could appoint several models in the arguments, like `python draw_plot.py pcnn_att pcnn_max pcnn_ave`, as long as there are these models' results in `./test_result`.
-
-## Build Your Own Model
-
-Not only could you train and test existing models in our package, you could also build your own model or add methods to the four basic modules. When adding a new model, you could create a python file in `./model` having the same name as the model and implement it like following:
-
-```python
-from framework import Framework
-import tensorflow as tf
-
-def your_new_model(is_training):
-    if is_training:
-        framework = Framework(is_training=True)
-    else:
-        framework = Framework(is_training=False)
-
-    # Word Embedding
-    word_embedding = framework.embedding.word_embedding()
-    # Position Embedding. Set simple_pos=True to use simple pos embedding
-    pos_embedding = framework.embedding.pos_embedding()
-    # Concat two embeddings
-    embedding = framework.embedding.concat_embedding(word_embedding, pos_embedding)
-    
-    # PCNN. Appoint activation to whatever activation function you want to use.
-    # There are three more encoders:
-    #     framework.encoder.cnn
-    #     framework.encoder.rnn
-    #     framework.encoder.birnn
-    x = framework.encoder.pcnn(embedding, FLAGS.hidden_size, framework.mask, activation=tf.nn.relu)
-    
-    # Selective attention. Setting parameter dropout_before=True means using dropout before attention. 
-    # There are three more selecting method
-    #     framework.selector.maximum
-    #     framework.selector.average
-    #     framework.selector.no_bag
-    logit, repre = framework.selector.attention(x, framework.scope, framework.label_for_select)
-
-    if is_training:
-        loss = framework.classifier.softmax_cross_entropy(logit)
-        output = framework.classifier.output(logit)
-        # Set optimizer to whatever optimizer you want to use
-        framework.init_train_model(loss, output, optimizer=tf.train.GradientDescentOptimizer)
-        framework.load_train_data()
-        framework.train()
-    else:
-        framework.init_test_model(tf.nn.softmax(logit))
-        framework.load_test_data()
-        framework.test()
-```
-
-After creating model's python file, you need to add the model to `./train.py` and `./test.py` as following:
-
-```python
-
-# other code ...
-
-def main():
-    from model.your_new_model import your_new_model
-
-# other code ...
+1. Make data folder in the following structure
 
 ```
+OpenNRE
+|-- ... 
+|-- data
+    |
+    |-- {DATASET_NAME_1}
+    |   |
+    |   |-- train.json
+    |   |-- test.json
+    |   |-- word_vec.json
+    |   |-- rel2id.json
+    |
+    |-- {DATASET_NAME_2}
+    |   |
+    |   |-- ...
+    |
+    |-- ...
+```
 
-Then you can train, test and plot!
+You could use your own data or download datasets provided above.
 
-As for using adversarial training, please refer to `./model/pcnn_att_adv.py` for more details.
+1. Run `train_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME}`. For example, if you want to train model with PCNN as the encoder and attention as the selector on the `nyt` dataset, run the following command
+
+```
+python train_demo.py nyt pcnn att
+```
+
+Currently `{ENCODER_NAME}` includes `pcnn`, `cnn`, `rnn` and `birnn`, and `{SELECTOR_NAME}` includes `att` (for attention), `max` (for maximum) and `ave` (for average). The model will be named as `{DATASET_NAME}_{ENCODER_NAME}_{SELECTOR_NAME}` automatically.
+
+The checkpoint of the best epoch (each epoch will be validated while training) will be saved in `./checkpoint` and results for plotting precision-recall curve will be saved in `./test_result` by default.
+
+1. Use `draw_plot.py` to check auc, average precision, F1 score and precision-recall curve by the following command
+
+```
+python draw_plot.py {MODEL_NAME_1} {MODEL_NAME_2} ...
+```
+
+All the results of the models mentioned will be printed and precision-recall curves containing all the models will be saved in `./test_result/pr_curve.png`.
 
 ## Reference
 
