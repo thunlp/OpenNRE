@@ -100,7 +100,7 @@ This file indicates corresponding IDs for relations to make sure during each tra
 
 ### NYT10 Dataset
 
-NYT10 is a distantly supervised dataset originally released by the paper "Sebastian Riedel, Limin Yao, and Andrew McCallum. Modeling relations and their mentions without labeled text.". Here is the download link for the original data.
+NYT10 is a distantly supervised dataset originally released by the paper "Sebastian Riedel, Limin Yao, and Andrew McCallum. Modeling relations and their mentions without labeled text.". Here is the download [link](http://iesl.cs.umass.edu/riedel/ecml/) for the original data.
 
 We've provided a toolkit to convert the original NYT10 data into JSON format that `OpenNRE` could use. You could download the original data + toolkit from [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/11391e48b72749d8b60a/?dl=1). Further instructions are included in the toolkit.
 
@@ -108,13 +108,13 @@ We've provided a toolkit to convert the original NYT10 data into JSON format tha
 
 1. Install all the required package.
 
-1. Clone the OpenNRE repository:
+2. Clone the OpenNRE repository:
 
 ```bash
 git clone https://github.com/thunlp/OpenNRE.git
 ```
 
-1. Make data folder in the following structure
+3. Make data folder in the following structure
 
 ```
 OpenNRE
@@ -137,7 +137,7 @@ OpenNRE
 
 You could use your own data or download datasets provided above.
 
-1. Run `train_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME}`. For example, if you want to train model with PCNN as the encoder and attention as the selector on the `nyt` dataset, run the following command
+4. Run `train_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME}`. For example, if you want to train model with PCNN as the encoder and attention as the selector on the `nyt` dataset, run the following command
 
 ```
 python train_demo.py nyt pcnn att
@@ -147,7 +147,7 @@ Currently `{ENCODER_NAME}` includes `pcnn`, `cnn`, `rnn` and `birnn`, and `{SELE
 
 The checkpoint of the best epoch (each epoch will be validated while training) will be saved in `./checkpoint` and results for plotting precision-recall curve will be saved in `./test_result` by default.
 
-1. Use `draw_plot.py` to check auc, average precision, F1 score and precision-recall curve by the following command
+5. Use `draw_plot.py` to check auc, average precision, F1 score and precision-recall curve by the following command
 
 ```
 python draw_plot.py {MODEL_NAME_1} {MODEL_NAME_2} ...
