@@ -59,8 +59,8 @@ Training data file and testing data file, containing sentences and their corresp
 [
     {
         'sentence': 'Bill Gates is the founder of Microsoft .',
-        'head': {'word': 'Bill Gates', ...(other information)},
-        'tail': {'word': 'Microsoft', ...(other information)},
+        'head': {'word': 'Bill Gates', 'id': 'm.03_3d', ...(other information)},
+        'tail': {'word': 'Microsoft', 'id': 'm.07dfk', ...(other information)},
         'relation': 'founder'
     },
     ...
