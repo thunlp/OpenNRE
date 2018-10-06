@@ -65,6 +65,9 @@ class re_model:
         raise NotImplementedError
 
 class re_framework:
+    MODE_BAG = 0 # Train and test the model at bag level.
+    MODE_INS = 1 # Train and test the model at instance level
+
     def __init__(self, train_data_loader, test_data_loader, max_length=120, batch_size=160):
         self.train_data_loader = train_data_loader
         self.test_data_loader = test_data_loader
@@ -222,7 +225,16 @@ class re_framework:
     def test(self,
              model,
              ckpt=None,
-             eval_by_accuracy=False):
+             return_result=False,
+             mode=MODE_BAG):
+        if mode == re_framework.MODE_BAG:
+            return self.__test_bag__(model, ckpt=ckpt, return_result=return_result)
+        elif mode == re_framework.MODE_INS:
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
+        
+    def __test_bag__(self, model, ckpt=None, return_result=False):
         print("Testing...")
         if self.sess == None:
             self.sess = tf.Session()
@@ -236,7 +248,8 @@ class re_framework:
         tot_not_na = 0
         entpair_tot = 0
         test_result = []
-        
+        pred_result = []
+         
         for i, batch_data in enumerate(self.test_data_loader):
             iter_logit = self.one_step(self.sess, model, batch_data, [model.test_logit()])[0]
             iter_output = iter_logit.argmax(-1)
@@ -252,11 +265,9 @@ class re_framework:
             for idx in range(len(iter_logit)):
                 for rel in range(1, self.test_data_loader.rel_tot):
                     test_result.append({'score': iter_logit[idx][rel], 'flag': batch_data['multi_rel'][idx][rel]})
-                entpair_tot += 1
-            
-        if eval_by_accuracy:
-            return float(tot_correct) / tot
-
+                    if batch_data['entpair'][idx] != "None#None":
+                        pred_result.append({'score': iter_logit[idx][rel], 'entpair': batch_data['entpair'][idx], 'relation': rel})
+                entpair_tot += 1 
         sorted_test_result = sorted(test_result, key=lambda x: x['score'])
         prec = []
         recall = [] 
@@ -270,4 +281,8 @@ class re_framework:
         print("Finish testing")
         self.cur_prec = prec
         self.cur_recall = recall
-        return auc
+
+        if not return_result:
+            return auc
+        else:
+            return (auc, pred_result)

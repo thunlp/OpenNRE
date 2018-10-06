@@ -4,6 +4,8 @@ An open-source framework for neural relation extraction.
 
 Contributed by [Tianyu Gao](https://github.com/gaotianyu1350), [Xu Han](https://github.com/THUCSTHanxu13), [Shulian Cao](https://github.com/ShulinCao), [Lumin Tang](https://github.com/Tsingularity), [Yankai Lin](https://github.com/Mrlyk423), [Zhiyuan Liu](http://nlp.csai.tsinghua.edu.cn/~lzy/)
 
+If you want to learn more about neural relation extraction, visit another project of ours [NREPapers](https://github.com/thunlp/NREPapers).
+
 **BIG UPDATE**: The project has been completely reconstructed and is faster, more extendable and the codes are easier to read and use now. If you need get to the old version, please refer to branch [old_version](https://github.com/thunlp/OpenNRE/tree/old_version).  
 
 New features:
@@ -160,6 +162,14 @@ python draw_plot.py {MODEL_NAME_1} {MODEL_NAME_2} ...
 ```
 
 All the results of the models mentioned will be printed and precision-recall curves containing all the models will be saved in `./test_result/pr_curve.png`.
+
+6. **If you have the checkpoint of the model and want to evaluate it, run `test_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME}`. For example:**
+
+```
+python test_demo.py nyt pcnn att
+```
+
+The prediction results will be stored in `test_result/nyt_pcnn_att_pred.json`.
 
 ## Reference
 
