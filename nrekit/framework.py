@@ -266,7 +266,7 @@ class re_framework:
                 for rel in range(1, self.test_data_loader.rel_tot):
                     test_result.append({'score': iter_logit[idx][rel], 'flag': batch_data['multi_rel'][idx][rel]})
                     if batch_data['entpair'][idx] != "None#None":
-                        pred_result.append({'score': iter_logit[idx][rel], 'entpair': batch_data['entpair'][idx], 'relation': rel})
+                        pred_result.append({'score': float(iter_logit[idx][rel]), 'entpair': batch_data['entpair'][idx].encode('utf-8'), 'relation': rel})
                 entpair_tot += 1 
         sorted_test_result = sorted(test_result, key=lambda x: x['score'])
         prec = []
