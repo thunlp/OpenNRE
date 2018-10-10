@@ -97,8 +97,7 @@ if len(sys.argv) > 3:
     model.selector = sys.argv[3]
 
 auc, pred_result = framework.test(model, ckpt="./checkpoint/" + dataset_name + "_" + model.encoder + "_" + model.selector, return_result=True)
-result_file = open('./test_result/' + dataset_name + "_" + model.encoder + "_" + model.selector + "_pred.json", 'w')
-result_file.write('[\n')
-for item in pred_result:
-    result_file.write(str(item) + ',\n')
-result_file.write(']\n')
+
+with open('./test_result/' + dataset_name + "_" + model.encoder + "_" + model.selector + "_pred.json", 'w') as outfile:
+    json.dump(pred_result, outfile)
+
