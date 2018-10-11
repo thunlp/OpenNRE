@@ -171,6 +171,19 @@ python test_demo.py nyt pcnn att
 
 The prediction results will be stored in `test_result/nyt_pcnn_att_pred.json`.
 
+## Test Results
+
+### NYT10 Dataset
+
+AUC Results:
+
+Model |  Attention | Maximum | Average
+---- | ---- | ---- | ----
+PCNN | 0.3408 | 0.3247 | 0.3190
+CNN | 0.3277 | 0.3151 | 0.3044
+RNN | 0.3418 | 0.3473 | 0.3405
+BiRNN | 0.3352 | 0.3575 | 0.3244
+
 ## Reference
 
 1. **Neural Relation Extraction with Selective Attention over Instances.** _Yankai Lin, Shiqi Shen, Zhiyuan Liu, Huanbo Luan, Maosong Sun._ ACL2016. [paper](http://www.aclweb.org/anthology/P16-1200)
