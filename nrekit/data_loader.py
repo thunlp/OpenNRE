@@ -248,16 +248,7 @@ class json_file_data_loader(file_data_loader):
 
             # Sort data by entities and relations
             print("Sort data...")
-            def compare_by_entities_and_relations(a, b):
-                a_key = a['head']['id'] + '#' + a['tail']['id'] + '#' + a['relation']
-                b_key = b['head']['id'] + '#' + b['tail']['id'] + '#' + b['relation']
-                if a_key > b_key:
-                    return 1
-                elif a_key == b_key:
-                    return 0
-                else:
-                    return -1
-            self.ori_data.sort(cmp=compare_by_entities_and_relations)
+            self.ori_data.sort(key=lambda a: a['head']['id'] + '#' + a['tail']['id'] + '#' + a['relation'])
             print("Finish sorting")
        
             # Pre-process word vec
