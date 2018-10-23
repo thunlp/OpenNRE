@@ -61,8 +61,8 @@ class model(nrekit.framework.re_model):
             self._test_logit, test_repre = nrekit.network.selector.bag_average(x_test, self.scope, self.rel_tot, keep_prob=1.0)
             self._test_logit = tf.nn.softmax(self._test_logit)
         elif model.selector == "max":
-            self._train_logit, train_repre = nrekit.network.selector.bag_maximum(x_train, self.scope, self.ins_label, self.rel_tot, True, keep_prob=0.5)
-            self._test_logit, test_repre = nrekit.network.selector.bag_maximum(x_test, self.scope, self.ins_label, self.rel_tot, False, keep_prob=1.0)
+            self._train_logit, train_repre = nrekit.network.selector.bag_maximum(x_train, self.scope, self.label, self.rel_tot, True, keep_prob=0.5)
+            self._test_logit, test_repre = nrekit.network.selector.bag_maximum(x_test, self.scope, self.label, self.rel_tot, False, keep_prob=1.0)
             self._test_logit = tf.nn.softmax(self._test_logit)
         else:
             raise NotImplementedError
