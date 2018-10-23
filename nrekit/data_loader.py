@@ -1,3 +1,5 @@
+from six import iteritems
+
 import json
 import os
 import multiprocessing
@@ -412,14 +414,14 @@ class json_file_data_loader(file_data_loader):
             self.order = list(range(len(self.entpair2scope)))
             self.scope_name = []
             self.scope = []
-            for key, value in self.entpair2scope.iteritems():
+            for key, value in iteritems(self.entpair2scope):
                 self.scope_name.append(key)
                 self.scope.append(value)
         elif self.mode == self.MODE_RELFACT_BAG:
             self.order = list(range(len(self.relfact2scope)))
             self.scope_name = []
             self.scope = []
-            for key, value in self.relfact2scope.iteritems():
+            for key, value in iteritems(self.relfact2scope):
                 self.scope_name.append(key)
                 self.scope.append(value)
         else:
