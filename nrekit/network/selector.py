@@ -102,3 +102,21 @@ def bag_maximum(x, scope, query, rel_tot, is_training, var_scope=None, dropout_b
             bag_logit = tf.stack(bag_logit)
             bag_repre = tf.stack(bag_repre)
             return bag_logit, bag_repre
+
+def bag_cross_max(x, scope, rel_tot, var_scope=None, dropout_before=False, keep_prob=1.0):
+    '''
+    Cross-sentence Max-pooling proposed by (Jiang et al. 2016.)
+    "Relation Extraction with Multi-instance Multi-label Convolutional Neural Networks"
+    https://pdfs.semanticscholar.org/8731/369a707046f3f8dd463d1fd107de31d40a24.pdf
+    '''
+    with tf.variable_scope(var_scope or "cross_max", reuse=tf.AUTO_REUSE):
+        if dropout_before:
+            x = __dropout__(x, keep_prob)
+        bag_repre = []
+        for i in range(scope.shape[0]):
+            bag_hidden_mat = x[scope[i][0]:scope[i][1]]
+            bag_repre.append(tf.reduce_max(bag_hidden_mat, 0)) # (n', hidden_size) -> (hidden_size)
+        bag_repre = tf.stack(bag_repre)
+        if not dropout_before:
+            bag_repre = __dropout__(bag_repre, keep_prob)
+    return __logit__(bag_repre, rel_tot), bag_repre
