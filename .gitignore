@@ -14,3 +14,6 @@ log_sbatch
 sbatch*
 _*
 *.ipynb
+
+# virtual env
+.virtual
