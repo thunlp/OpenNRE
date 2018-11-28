@@ -18,7 +18,7 @@ class policy_agent(framework.re_model):
         x_test = network.encoder.cnn(x, keep_prob=1.0)
         self._train_logit = network.selector.instance(x_train, 2, keep_prob=0.5)
         self._test_logit = network.selector.instance(x_test, 2, keep_prob=1.0)
-        self._loss = network.softmax_cross_entropy(self._train_logit, self.label, 2, self.weights)
+        self._loss = network.classifier.softmax_cross_entropy(self._train_logit, self.label, 2, self.weights)
 
     def loss(self):
         return self._loss
@@ -126,13 +126,13 @@ class rl_re_framework(framework.re_framework):
         # Init
         self.model = model(self.train_data_loader, self.train_data_loader.batch_size, self.train_data_loader.max_length)
         model_optimizer = optimizer(learning_rate)
-        grads = model_optimizer.compute_gradients(model.loss())
+        grads = model_optimizer.compute_gradients(self.model.loss())
         self.train_op = model_optimizer.apply_gradients(grads)
 
         # Init policy agent
-        self.agent_model = None
+        self.agent_model = agent_model(self.train_data_loader, self.train_data_loader.batch_size, self.train_data_loader.max_length)
         agent_optimizer = optimizer(learning_rate)
-        agent_grads = agent_optimizer.compute_gradients(agent_grads.loss())
+        agent_grads = agent_optimizer.compute_gradients(self.agent_model.loss())
         self.agent_train_op = agent_optimizer.apply_gradients(agent_grads)
 
         # Session, writer and saver
