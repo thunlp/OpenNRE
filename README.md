@@ -171,6 +171,20 @@ python test_demo.py nyt pcnn att
 
 The prediction results will be stored in `test_result/nyt_pcnn_att_pred.json`.
 
+## Additional Modules
+
+### Reinforcement Learning (Feng et al. 2018)
+
+We have implemented a reinforcement learning module following [(Feng et al. 2018)](https://tianjun.me/static/essay_resources/RelationExtraction/Paper/AAAI2018Denoising.pdf). There might be some slight differences in implementation details. The RL code is in `nrekit/rl.py`, and it can be added to any models by running:
+
+```
+python train_demo.py {DATASET_NAME} {ENCODER_NAME} {SELECTOR_NAME} rl
+```
+
+For example, by running `python train_demo.py nyt pcnn att rl`, you will get a `pcnn_att` model trained by RL.
+
+For how the RL module helps alleviate false positive problem in DS data, please refer to the paper.
+
 ## Test Results
 
 ### NYT10 Dataset
