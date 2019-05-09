@@ -5,8 +5,8 @@ import numpy as np
 import sys
 import math
 import time
-import framework
-import network
+from . import framework
+from . import network
 
 class policy_agent(framework.re_model):
     def __init__(self, train_data_loader, batch_size, max_length=120):
