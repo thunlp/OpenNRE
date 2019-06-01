@@ -5,7 +5,7 @@ import math
 import numpy as np
 from nltk import word_tokenize
 
-class CNNSentenceEncoder(nn.Module):
+class CNNEncoder(nn.Module):
 
     def __init__(self, num_word, word2id, max_length, 
         word_embedding_dim=50, pos_embedding_dim=5, kernel_size=3, padding=1, hidden_size=230):
@@ -20,7 +20,7 @@ class CNNSentenceEncoder(nn.Module):
             padding: padding for CNN
             hidden_size: hidden size
         """
-        super.__init__()
+        super().__init__()
         self.num_word = num_word
         self.word2id = word2id
         self.max_length = max_length

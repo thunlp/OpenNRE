@@ -1,9 +1,10 @@
 import torch
 from torch import nn
+import json
 
 class SentenceRE(nn.Module):
     def __init__(self):
-        super.__init__()
+        super().__init__()
     
     def forward(self, sentence, pos_head, pos_tail, is_token=False):
         """
@@ -16,12 +17,3 @@ class SentenceRE(nn.Module):
             Name of the relation of the sentence
         """
         raise NotImplementedError
-
-def sentence_re_model():
-    return None
-
-def bag_re_model():
-    raise NotImplementedError
-
-def fewshot_re_model():
-    raise NotImplementedError
