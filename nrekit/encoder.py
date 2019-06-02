@@ -8,7 +8,7 @@ from nltk import word_tokenize
 class CNNEncoder(nn.Module):
 
     def __init__(self, num_word, word2id, max_length, 
-        word_embedding_dim=50, pos_embedding_dim=5, kernel_size=3, padding=1, hidden_size=230):
+        word_embedding_dim=50, pos_embedding_dim=5, kernel_size=3, padding=1, hidden_size=230, word2vec=None):
         """
         Args:
             num_word: number of words, including 'UNK' and 'BLANK'
@@ -19,6 +19,7 @@ class CNNEncoder(nn.Module):
             kernel_size: kernel_size for CNN
             padding: padding for CNN
             hidden_size: hidden size
+            word2vec: pretrained word2vec numpy
         """
         super().__init__()
         self.num_word = num_word
@@ -31,6 +32,12 @@ class CNNEncoder(nn.Module):
     
         # Word embedding
         self.word_embedding = nn.Embedding(num_word, self.word_embedding_dim)
+        if word2vec is not None:
+            print("Initialize word embedding with word2vec")
+            word2vec = torch.from_numpy(word2vec)
+            unk = torch.randn(1, word_embedding_dim) / math.sqrt(word_embedding_dim)
+            blk = torch.zeros(1, word_embedding_dim)
+            self.word_embedding.weight.data.copy_(torch.cat([word2vec, unk, blk], 0))
 
         # Position Embedding
         self.pos1_embedding = nn.Embedding(2 * max_length, pos_embedding_dim, padding_idx=0)
@@ -60,7 +67,7 @@ class CNNEncoder(nn.Module):
         x, _ = x.max(-1) # (B, H)
         return x
 
-    def tokenize(self, sentence, pos_head, pos_tail, is_token=False):
+    def tokenize(self, sentence, pos_head, pos_tail, is_token=False, padding=False):
         """
         Args:
             sentence: string, the input sentence
@@ -111,6 +118,17 @@ class CNNEncoder(nn.Module):
             pos1.append(i - pos1_in_index + self.max_length)
             pos2.append(i - pos2_in_index + self.max_length)
 
+        # Padding
+        if padding:
+            while len(indexed_tokens) < self.max_length:
+                indexed_tokens.append(self.word2id['BLANK'])
+            while len(pos1) < self.max_length:
+                pos1.append(0)
+            while len(pos2) < self.max_length:
+                pos2.append(0)
+            indexed_tokens = indexed_tokens[:self.max_length]
+            pos1 = pos1[:self.max_length]
+            pos2 = pos2[:self.max_length]
         indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0) # (1, L)
         pos1 = torch.tensor(pos1).long().unsqueeze(0) # (1, L)
         pos2 = torch.tensor(pos2).long().unsqueeze(0) # (1, L)

@@ -6,7 +6,7 @@ class SentenceRE(nn.Module):
     def __init__(self):
         super().__init__()
     
-    def forward(self, sentence, pos_head, pos_tail, is_token=False):
+    def infer(self, sentence, pos_head, pos_tail, is_token=False):
         """
         Args:
             sentence: string, the input sentence
