@@ -1,0 +1,11 @@
+[UNK]
+[CLS]
+[SEP]
+want
+##want
+##ed
+wa
+un
+runn
+##ing
+,
