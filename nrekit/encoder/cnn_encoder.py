@@ -10,15 +10,15 @@ class CNNEncoder(BaseEncoder):
 
     def __init__(self, 
                  token2id, 
-                 max_length = 128, 
-                 hidden_size = 230, 
-                 word_size = 50,
-                 position_size = 5,
-                 blank_padding = True,
-                 word2vec = None,
-                 kernel_size = 3, 
-                 padding_size = 1,
-                 dropout = 0):
+                 max_length=128, 
+                 hidden_size=230, 
+                 word_size=50,
+                 position_size=5,
+                 blank_padding=True,
+                 word2vec=None,
+                 kernel_size=3, 
+                 padding_size=1,
+                 dropout=0):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -31,7 +31,7 @@ class CNNEncoder(BaseEncoder):
             kernel_size: kernel_size size for CNN
             padding_size: padding_size for CNN
         """
-        # hyperparameters
+        # Hyperparameters
         super().__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
         self.dropout = dropout
         self.kernel_size = kernel_size

@@ -9,12 +9,12 @@ class BaseEncoder(nn.Module):
 
     def __init__(self, 
                  token2id, 
-                 max_length = 128, 
-                 hidden_size = 230, 
-                 word_size = 50,
-                 position_size = 5,
-                 blank_padding = True,
-                 word2vec = None):
+                 max_length=128, 
+                 hidden_size=230, 
+                 word_size=50,
+                 position_size=5,
+                 blank_padding=True,
+                 word2vec=None):
         """
         Args:
             token2id: dictionary of token->idx mapping
