@@ -4,9 +4,9 @@ import torch.nn as nn
 from .base_encoder import BaseEncoder
 from pytorch_pretrained_bert import BertModel, BertTokenizer
 
-class BERTEncoder(BaseEncoder):
 
-    def __init__(self, max_length, pretrain_path):
+class BERTEncoder(nn.Module):
+    def __init__(self, max_length, pretrain_path, blank_padding=True):
         """
         Args:
             max_length: max length of sentence
@@ -14,6 +14,8 @@ class BERTEncoder(BaseEncoder):
         """
         super().__init__()
         self.max_length = max_length
+        self.blank_padding = blank_padding
+        self.hidden_size = 768
         self.bert = BertModel.from_pretrained(pretrain_path)
         self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
 
@@ -28,18 +30,20 @@ class BERTEncoder(BaseEncoder):
         _, x = self.bert(token, attention_mask=att_mask)
         return x
 
-    def tokenize(self, item, is_token = False):
+    def tokenize(self, item):
         """
         Args:
-            sentence: string, the input sentence
-            pos_head: [start, end], position of the head entity
-            pos_end: [start, end], position of the tail entity
-            is_token: if is_token == True, sentence becomes an array of token
+            item: data instance containing 'text' / 'token', 'h' and 't'
         Return:
             Name of the relation of the sentence
         """
         # Sentence -> token
-        sentence = item['text']
+        if 'text' in item:
+            sentence = item['text']
+            is_token = False
+        else:
+            sentence = item['token']
+            is_token = True
         pos_head = item['h']['pos']
         pos_tail = item['t']['pos']
 
@@ -58,14 +62,20 @@ class BERTEncoder(BaseEncoder):
             ent1 = self.tokenizer.tokenize(sentence[pos_max[0]:pos_max[1]])
             sent2 = self.tokenizer.tokenize(sentence[pos_max[1]:])
             pos_head = [len(sent0), len(sent0) + len(ent0)]
-            pos_tail = [len(sent0) + len(ent0) + len(sent1), len(sent0) + len(ent0) + len(sent1) + len(ent1)]
+            pos_tail = [
+                len(sent0) + len(ent0) + len(sent1),
+                len(sent0) + len(ent0) + len(sent1) + len(ent1)
+            ]
             if rev:
                 pos_tail = [len(sent0), len(sent0) + len(ent0)]
-                pos_head = [len(sent0) + len(ent0) + len(sent1), len(sent0) + len(ent0) + len(sent1) + len(ent1)]
+                pos_head = [
+                    len(sent0) + len(ent0) + len(sent1),
+                    len(sent0) + len(ent0) + len(sent1) + len(ent1)
+                ]
             tokens = sent0 + ent0 + sent1 + ent1 + sent2
         else:
             tokens = sentence
-        
+
         # Token -> index
         re_tokens = ['[CLS]']
         cur_pos = 0
@@ -86,14 +96,15 @@ class BERTEncoder(BaseEncoder):
         avai_len = len(indexed_tokens)
 
         # Padding
-        if self.padding:
+        if self.blank_padding:
             while len(indexed_tokens) < self.max_length:
-                indexed_tokens.append(0) # 0 is id for [PAD]
+                indexed_tokens.append(0)  # 0 is id for [PAD]
             indexed_tokens = indexed_tokens[:self.max_length]
-        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0) # (1, L)
+        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(
+            0)  # (1, L)
 
         # Attention mask
-        att_mask = torch.zeros(indexed_tokens.size()).long() # (1, L)
+        att_mask = torch.zeros(indexed_tokens.size()).long()  # (1, L)
         att_mask[0, :avai_len] = 1
-        
+
         return indexed_tokens, att_mask

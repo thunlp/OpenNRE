@@ -9,15 +9,15 @@ class PCNNEncoder(BaseEncoder):
 
     def __init__(self, 
                  token2id, 
-                 max_length = 128, 
-                 hidden_size = 230, 
-                 word_size = 50,
-                 position_size = 5,
-                 padding = True,
-                 word2vec = None,
-                 kernel_size = 3, 
-                 padding_size = 1,
-                 dropout = 0):
+                 max_length=128, 
+                 hidden_size=230, 
+                 word_size=50,
+                 position_size=5,
+                 padding=True,
+                 word2vec=None,
+                 kernel_size=3, 
+                 padding_size=1,
+                 dropout=0.5):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -58,7 +58,7 @@ class PCNNEncoder(BaseEncoder):
         x = self.pool(x) # (B, EMBED)
         return x
 
-    def tokenize(self, item, is_token = False):
+    def tokenize(self, item):
         """
         Args:
             sentence: string, the input sentence

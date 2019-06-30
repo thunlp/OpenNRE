@@ -4,7 +4,6 @@ import torch.nn.functional as F
 import math
 import numpy as np
 from ..tokenization import WordTokenizer
-
 class BaseEncoder(nn.Module):
 
     def __init__(self, 
@@ -64,14 +63,14 @@ class BaseEncoder(nn.Module):
                 blk = torch.zeros(1, self.word_size)
                 self.word_embedding.weight.data.copy_(torch.cat([word2vec, unk, blk], 0))
             else:
-                self.word_embedding.weight.data.copy_(word2vec, 0)
+                self.word_embedding.weight.data.copy_(word2vec)
 
         print('Finished!')
 
         # Position Embedding
         self.pos1_embedding = nn.Embedding(2 * max_length + 1, self.position_size, padding_idx=0)
         self.pos2_embedding = nn.Embedding(2 * max_length + 1, self.position_size, padding_idx=0)
-        self.tokenizer = WordTokenizer(vocab = self.token2id, unk_token="[UNK]")
+        self.tokenizer = WordTokenizer(vocab=self.token2id, unk_token="[UNK]")
 
 
     def forward(self, token, pos1, pos2):
@@ -86,7 +85,7 @@ class BaseEncoder(nn.Module):
         # Check size of tensors
         pass
 
-    def tokenize(self, item, is_token = False):
+    def tokenize(self, item):
         """
         Args:
             item: input instance, including sentence, entity positions, etc.
@@ -94,7 +93,12 @@ class BaseEncoder(nn.Module):
         Return:
             index number of tokens and positions             
         """
-        sentence = item['token']
+        if 'text' in item:
+            sentence = item['text']
+            is_token = False
+        else:
+            sentence = item['token']
+            is_token = True
         pos_head = item['h']['pos']
         pos_tail = item['t']['pos']
 

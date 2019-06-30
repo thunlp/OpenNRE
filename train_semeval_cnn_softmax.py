@@ -5,8 +5,8 @@ import json
 import nrekit
 from nrekit import encoder, model, framework
 
-wordi2d = json.load(open('benchmark/word2id_glove50.json'))
-word2vec = np.load('benchmark/word2vec_glove50.npy')
+wordi2d = json.load(open('pretrain/glove/glove.6B.50d_word2id.json'))
+word2vec = np.load('pretrain/glove/glove.6B.50d_mat.npy')
 rel2id = json.load(open('benchmark/semeval/semeval_rel2id.json'))
 sentence_encoder = nrekit.encoder.CNNEncoder(token2id=wordi2d, 
                                              max_length=50, 
@@ -22,7 +22,7 @@ framework = nrekit.framework.SentenceRE(train_path='benchmark/semeval/semeval_tr
                                         val_path='benchmark/semeval/semeval_test.txt', 
                                         model=model,
                                         ckpt='ckpt/wiki80_cnn.pth.tar',
-                                        batch_size=128, 
+                                        batch_size=32, 
                                         max_epoch=20, 
                                         lr=0.5, 
                                         weight_decay=1e-5, 

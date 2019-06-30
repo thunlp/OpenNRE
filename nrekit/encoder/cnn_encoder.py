@@ -18,7 +18,7 @@ class CNNEncoder(BaseEncoder):
                  word2vec=None,
                  kernel_size=3, 
                  padding_size=1,
-                 dropout=0):
+                 dropout=0.5):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -59,5 +59,5 @@ class CNNEncoder(BaseEncoder):
         x = self.pool(x) # (B, EMBED)
         return x
 
-    def tokenize(self, item, is_token = False):
-        return super().tokenize(item, is_token)
+    def tokenize(self, item):
+        return super().tokenize(item)

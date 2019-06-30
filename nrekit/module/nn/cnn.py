@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class CNN(nn.Module):
 
-    def __init__(self, input_size=50, hidden_size=256, dropoutl=0, kernel_size=3, padding=1, activation_function=F.relu):
+    def __init__(self, input_size=50, hidden_size=256, dropout=0, kernel_size=3, padding=1, activation_function=F.relu):
         """
         Args:
             input_size: dimention of input embedding

@@ -3,6 +3,9 @@ from torch import nn, optim
 from .base_model import SentenceRE
 
 class SoftmaxNN(SentenceRE):
+    """
+    Softmax classifier for sentence-level relation extraction.
+    """
 
     def __init__(self, sentence_encoder, num_class, rel2id):
         """
@@ -10,7 +13,6 @@ class SoftmaxNN(SentenceRE):
             sentence_encoder: encoder for sentences
             num_class: number of classes
             id2rel: dictionary of id -> relation name mapping
-            hidden_size: hidden size of sentence encoder
         """
         super().__init__()
         self.sentence_encoder = sentence_encoder
@@ -22,7 +24,7 @@ class SoftmaxNN(SentenceRE):
         for rel, id in rel2id.items():
             self.id2rel[id] = rel
 
-    def infer(self, item, is_token = False):
+    def infer(self, item, is_token=False):
         token, pos1, pos2 = self.sentence_encoder.tokenize(item, is_token)
         logits = self.forward(token, pos1, pos2)
         logits = self.softmax(logits)
@@ -31,15 +33,13 @@ class SoftmaxNN(SentenceRE):
         pred = pred.item()
         return self.id2rel[pred], score
     
-    def forward(self, token, pos1, pos2):
+    def forward(self, *args):
         """
         Args:
-            token: (B, L), index of tokens
-            pos1: (B, L), relative position to head entity
-            pos2: (B, L), relative position to tail entity
+            args: depends on the encoder
         Return:
             logits, (B, N)
         """
-        rep = self.sentence_encoder(token, pos1, pos2) # (B, H)
+        rep = self.sentence_encoder(*args) # (B, H)
         logits = self.fc(rep) # (B, N)
         return logits
