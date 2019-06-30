@@ -106,11 +106,6 @@ venv.bak/
 # test
 test.py
 
-# data
-data
-benchmark
-pretrain
-
 # ckpt
 ckpt
 
