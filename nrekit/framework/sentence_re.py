@@ -110,8 +110,7 @@ class SentenceRE(nn.Module):
                 # Log
                 avg_loss.update(loss.item(), 1)
                 avg_acc.update(acc, 1)
-                if iter % 10 == 0:
-                    t.set_postfix(loss=avg_loss.avg, acc=avg_acc.avg)
+                t.set_postfix(loss=avg_loss.avg, acc=avg_acc.avg)
                 # Optimize
                 if warmup == True:
                     warmup_step = 300
