@@ -1,0 +1,7 @@
+benchmark/nyt10 filter=lfs diff=lfs merge=lfs -text
+benchmark/semeval filter=lfs diff=lfs merge=lfs -text
+benchmark/tacred filter=lfs diff=lfs merge=lfs -text
+benchmark/wiki80 filter=lfs diff=lfs merge=lfs -text
+benchmark/fewrel filter=lfs diff=lfs merge=lfs -text
+pretrain/bert-base-uncased filter=lfs diff=lfs merge=lfs -text
+pretrain/glove filter=lfs diff=lfs merge=lfs -text
