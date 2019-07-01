@@ -124,7 +124,7 @@ class BERTEntityEncoder(nn.Module):
         self.hidden_size = 768 * 2
         self.bert = BertModel.from_pretrained(pretrain_path)
         self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
-        # self.linear = nn.Linear(self.hidden_size, self.hidden_size)
+        self.linear = nn.Linear(self.hidden_size, self.hidden_size)
 
     def forward(self, token, att_mask, pos1, pos2):
         """
@@ -147,6 +147,7 @@ class BERTEntityEncoder(nn.Module):
         head_hidden = (onehot_head.unsqueeze(2) * hidden).sum(1)  # (B, H)
         tail_hidden = (onehot_tail.unsqueeze(2) * hidden).sum(1)  # (B, H)
         x = torch.cat([head_hidden, tail_hidden], 1)  # (B, 2H)
+        x = self.linear(x)
         return x
 
     def tokenize(self, item):

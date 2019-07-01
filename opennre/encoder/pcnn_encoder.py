@@ -15,6 +15,7 @@ class PCNNEncoder(BaseEncoder):
                  word_size=50,
                  position_size=5,
                  blank_padding=True,
+                 padding=True,
                  word2vec=None,
                  kernel_size=3, 
                  padding_size=1,
