@@ -92,7 +92,7 @@ class BagAttention(BagRE):
                 softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]]) # (n)
                 bag_rep.append(torch.matmul(softmax_att_score.unsqueeze(0), bag_mat).squeeze(0)) # (1, n) * (n, H) -> (1, H) -> (H)
             bag_rep = torch.stack(bag_rep, 0) # (B, H)
-            bag_rep = self.drop(bag_rep)
+            # bag_rep = self.drop(bag_rep)
             bag_logits = self.fc(bag_rep) # (B, N)
         else:
             bag_logits = []
