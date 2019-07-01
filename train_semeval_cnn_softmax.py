@@ -32,8 +32,11 @@ framework = nrekit.framework.SentenceRE(
     weight_decay=1e-5,
     opt='sgd')
 # Train
-framework.train_model()
+framework.train_model(metric='micro_f1')
 # Test
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
 result = framework.eval_model(framework.test_loader)
 print('Accuracy on test set: {}'.format(result['acc']))
+print('Micro Precision: {}'.format(result['micro_p']))
+print('Micro Recall: {}'.format(result['micro_r']))
+print('Micro F1: {}'.format(result['micro_f1']))

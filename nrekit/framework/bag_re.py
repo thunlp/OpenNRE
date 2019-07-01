@@ -139,7 +139,7 @@ class BagRE(nn.Module):
             print("f1: %.4f" % (result['f1']))
             if result['auc'] > best_auc:
                 print("Best ckpt and saved.")
-                torch.save({'state_dict': self.state_dict()}, self.ckpt)
+                torch.save({'state_dict': self.parallel_model.state_dict()}, self.ckpt)
                 best_auc = result['auc']
         print("Best auc on val set: %f" % (best_auc))
 
