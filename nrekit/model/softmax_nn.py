@@ -24,8 +24,8 @@ class SoftmaxNN(SentenceRE):
         for rel, id in rel2id.items():
             self.id2rel[id] = rel
 
-    def infer(self, item, is_token=False):
-        token, pos1, pos2 = self.sentence_encoder.tokenize(item, is_token)
+    def infer(self, item):
+        token, pos1, pos2 = self.sentence_encoder.tokenize(item)
         logits = self.forward(token, pos1, pos2)
         logits = self.softmax(logits)
         score, pred = logits.max(-1)

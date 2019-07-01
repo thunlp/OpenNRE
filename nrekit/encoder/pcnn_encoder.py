@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from ..module.nn import CNN
 from ..module.pool import MaxPool
@@ -13,6 +14,7 @@ class PCNNEncoder(BaseEncoder):
                  hidden_size=230, 
                  word_size=50,
                  position_size=5,
+                 blank_padding=True,
                  padding=True,
                  word2vec=None,
                  kernel_size=3, 
@@ -36,7 +38,7 @@ class PCNNEncoder(BaseEncoder):
         self.kernel_size = kernel_size
         self.padding_size = padding_size
 
-        self.conv = CNN(self.input_size, self.hidden_size, self.dropout, self.kernel_size, self.padding_size, activation_function = F.relu())
+        self.conv = CNN(self.input_size, self.hidden_size, self.dropout, self.kernel_size, self.padding_size, activation_function=F.relu)
         self.pool = MaxPool(self.max_length, 3)
 
     def forward(self, token, pos1, pos2, mask):
