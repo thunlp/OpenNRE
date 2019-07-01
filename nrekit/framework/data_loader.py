@@ -62,6 +62,17 @@ class SentenceREDataset(data.Dataset):
         """
         correct = 0
         total = len(self.data)
+        correct_positive = 0
+        pred_positive = 0
+        gold_positive = 0
+        neg = -1
+        for name in ['NA', 'na', 'no_relation', 'Other', 'Others']:
+            if name in self.rel2id:
+                if use_name:
+                    neg = name
+                else:
+                    neg = self.rel2id[name]
+                break
         for i in range(total):
             if use_name:
                 golden = self.data[i]['relation']
@@ -69,8 +80,17 @@ class SentenceREDataset(data.Dataset):
                 golden = self.rel2id[self.data[i]['relation']]
             if golden == pred_result[i]:
                 correct += 1
+                if golden != neg:
+                    correct_positive += 1
+            if golden != neg:
+                gold_positive +=1
+            if pred_result[i] != neg:
+                pred_positive += 1
         acc = float(correct) / float(total)
-        return {'acc': acc}
+        micro_p = float(correct_positive) / float(pred_positive)
+        micro_r = float(correct_positive) / float(gold_positive)
+        micro_f1 = 2 * micro_p * micro_r / (micro_p + micro_r)
+        return {'acc': acc, 'micro_p': micro_p, 'micro_r': micro_r, 'micro_f1': micro_f1}
     
 def SentenceRELoader(path, rel2id, tokenizer, batch_size, 
         shuffle, num_workers=4, collate_fn=SentenceREDataset.collate_fn, **kwargs):
