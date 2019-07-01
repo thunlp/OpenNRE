@@ -56,9 +56,9 @@ class WordTokenizer(object):
         output_tokens = []
         token_list = split_on_whitespace(text)
         for chars in token_list:
-            current_positions.append([])
+            # current_positions.append([])
             if chars in self.vocab:
-                output_tokens.extend(sub_tokens)
+                output_tokens.append(chars)
             else:
                 output_tokens.append(self.unk_token)                
         return output_tokens

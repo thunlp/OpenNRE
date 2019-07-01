@@ -83,133 +83,131 @@ def SentenceRELoader(path, rel2id, tokenizer, batch_size,
             collate_fn=collate_fn)
     return data_loader
 
-# class BagREDataset(data.Dataset):
-#     """
-#     Bag-level relation extraction dataset. Note that relation of NA should be named as 'NA'.
-#     """
-#     def __init__(self, path, rel2id, tokenizer, entpair_as_bag = False, mode = None):
-#         """
-#         Args:
-#             path: path of the input file
-#             rel2id: dictionary of relation->id mapping
-#             tokenizer: function of tokenizing
-#             entpair_as_bag: if True, bags are constructed based on same
-#                 entity pairs instead of same relation facts (ignoring 
-#                 relation labels)
-#         """
-#         super().__init__()
-#         self.tokenizer = tokenizer
-#         self.rel2id = rel2id
-#         self.entpair_as_bag = entpair_as_bag
-# 
-#         # Load the file
-#         f = open(path)
-#         self.data = []
-#         for line in f.readlines():
-#             line = line.rstrip()
-#             if len(line) > 0:
-#                 self.data.append(eval(line))
-#         f.close()
-# 
-#         # Construct bag-level dataset (a bag contains instances sharing the same relation fact)
-#         if mode == None:
-#             self.bag_scope = []
-#             self.name2id = {}
-#             self.bag_name = []
-#             self.facts = {}
-#             for idx, item in enumerate(self.data):
-#                 fact = (item['h']['id'], item['t']['id'], item['relation'])
-#                 if item['relation'] != 'NA':
-#                     self.facts[fact] = 1
-#                 if entpair_as_bag:
-#                     name = (item['h']['id'], item['t']['id'])
-#                 else:
-#                     name = fact
-#                 if name not in self.name2id:
-#                     self.name2id[name] = len(self.name2id)
-#                     self.bag_scope.append([])
-#                     self.bag_name.append(name)
-#                 self.bag_scope[self.name2id[name]].append(idx)
-#         else:
-#   
-#     def __len__(self):
-#         return len(self.bag_scope)
-# 
-#     def __getitem__(self, index):
-#         bag = self.bag_scope[index]
-#         seqs = None
-#         rel = self.rel2id[self.data[bag[0]]['relation']]
-#         for sent_id in bag:
-#             item = self.data[sent_id]
-#             if 'text' in item:
-#                 seq = list(self.tokenizer(item['text'], 
-#                     item['h']['pos'], item['t']['pos'], is_token=False, padding=True))
-#             else:
-#                 seq = list(self.tokenizer(item['token'], 
-#                     item['h']['pos'], item['t']['pos'], is_token=True, padding=True))
-#             if seqs is None:
-#                 seqs = []
-#                 for i in range(len(seq)):
-#                     seqs.append([])
-#             for i in range(len(seq)):
-#                 seqs[i].append(seq[i])
-#         for i in range(len(seqs)):
-#             seqs[i] = torch.cat(seqs[i], 0) # (n, L), n is the size of bag
-# 
-#         return [rel, self.bag_name[index], len(bag)] + seqs
-#   
-#     def collate_fn(data):
-#         data = list(zip(*data))
-#         label, bag_name, count = data[:3]
-#         seqs = data[3:]
-#         for i in range(len(seqs)):
-#             seqs[i] = torch.cat(seqs[i], 0) # (sumn, L)
-#         scope = [] # (B, 2)
-#         start = 0
-#         for c in count:
-#             scope.append((start, start + c))
-#             start += c
-#         assert(start == seqs[0].size(0))
-#         label = torch.tensor(label).long() # (B)
-#         return [label, bag_name, scope] + seqs
-#   
-#     def eval(self, pred_result):
-#         """
-#         Args:
-#             pred_result: a list with dict {'entpair': (head_id, tail_id), 'relation': rel, 'score': score}.
-#                 Note that relation of NA should be excluded.
-#         Return:
-#             {'prec': narray[...], 'rec': narray[...], 'mean_prec': xx, 'f1': xx, 'auc': xx}
-#                 prec (precision) and rec (recall) are in micro style.
-#                 prec (precision) and rec (recall) are sorted in the decreasing order of the score.
-#                 f1 is the max f1 score of those precison-recall points
-#         """
-#         sorted_pred_result = sorted(pred_result, key=lambda x: x['score'], reverse=True)
-#         prec = []
-#         rec = []
-#         correct = 0
-#         total = len(self.facts)
-#         for i, item in enumerate(sorted_pred_result):
-#             if (item['entpair'][0], item['entpair'][1], item['relation']) in self.facts:
-#                 correct += 1
-#             prec.append(float(correct) / float(i + 1))
-#             rec.append(float(correct) / float(total))
-#         auc = sklearn.metrics.auc(x=rec, y=prec)
-#         np_prec = np.array(prec)
-#         np_rec = np.array(rec) 
-#         f1 = (2 * np_prec * np_rec / (np_prec + np_rec + 1e-20)).max()
-#         mean_prec = np_prec.mean()
-#         return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
-# 
-# def get_bag_re_loader(path, rel2id, tokenizer, batch_size, 
-#         shuffle, entpair_as_bag=False, num_workers=4, 
-#         collate_fn=BagREDataset.collate_fn):
-#     dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag)
-#     data_loader = data.DataLoader(dataset=dataset,
-#             batch_size=batch_size,
-#             shuffle=shuffle,
-#             pin_memory=True,
-#             num_workers=num_workers,
-#             collate_fn=collate_fn)
-#     return data_loader
-# 
+class BagREDataset(data.Dataset):
+    """
+    Bag-level relation extraction dataset. Note that relation of NA should be named as 'NA'.
+    """
+    def __init__(self, path, rel2id, tokenizer, entpair_as_bag=False, mode=None):
+        """
+        Args:
+            path: path of the input file
+            rel2id: dictionary of relation->id mapping
+            tokenizer: function of tokenizing
+            entpair_as_bag: if True, bags are constructed based on same
+                entity pairs instead of same relation facts (ignoring 
+                relation labels)
+        """
+        super().__init__()
+        self.tokenizer = tokenizer
+        self.rel2id = rel2id
+        self.entpair_as_bag = entpair_as_bag
+
+        # Load the file
+        f = open(path)
+        self.data = []
+        for line in f.readlines():
+            line = line.rstrip()
+            if len(line) > 0:
+                self.data.append(eval(line))
+        f.close()
+
+        # Construct bag-level dataset (a bag contains instances sharing the same relation fact)
+        if mode == None:
+            self.bag_scope = []
+            self.name2id = {}
+            self.bag_name = []
+            self.facts = {}
+            for idx, item in enumerate(self.data):
+                fact = (item['h']['id'], item['t']['id'], item['relation'])
+                if item['relation'] != 'NA':
+                    self.facts[fact] = 1
+                if entpair_as_bag:
+                    name = (item['h']['id'], item['t']['id'])
+                else:
+                    name = fact
+                if name not in self.name2id:
+                    self.name2id[name] = len(self.name2id)
+                    self.bag_scope.append([])
+                    self.bag_name.append(name)
+                self.bag_scope[self.name2id[name]].append(idx)
+        else:
+            pass
+  
+    def __len__(self):
+        return len(self.bag_scope)
+
+    def __getitem__(self, index):
+        bag = self.bag_scope[index]
+        seqs = None
+        rel = self.rel2id[self.data[bag[0]]['relation']]
+        for sent_id in bag:
+            item = self.data[sent_id]
+            if 'text' in item:
+                seq = list(self.tokenizer(item))
+            else:
+                seq = list(self.tokenizer(item))
+            if seqs is None:
+                seqs = []
+                for i in range(len(seq)):
+                    seqs.append([])
+            for i in range(len(seq)):
+                seqs[i].append(seq[i])
+        for i in range(len(seqs)):
+            seqs[i] = torch.cat(seqs[i], 0) # (n, L), n is the size of bag
+
+        return [rel, self.bag_name[index], len(bag)] + seqs
+  
+    def collate_fn(data):
+        data = list(zip(*data))
+        label, bag_name, count = data[:3]
+        seqs = data[3:]
+        for i in range(len(seqs)):
+            seqs[i] = torch.cat(seqs[i], 0) # (sumn, L)
+        scope = [] # (B, 2)
+        start = 0
+        for c in count:
+            scope.append((start, start + c))
+            start += c
+        assert(start == seqs[0].size(0))
+        label = torch.tensor(label).long() # (B)
+        return [label, bag_name, scope] + seqs
+  
+    def eval(self, pred_result):
+        """
+        Args:
+            pred_result: a list with dict {'entpair': (head_id, tail_id), 'relation': rel, 'score': score}.
+                Note that relation of NA should be excluded.
+        Return:
+            {'prec': narray[...], 'rec': narray[...], 'mean_prec': xx, 'f1': xx, 'auc': xx}
+                prec (precision) and rec (recall) are in micro style.
+                prec (precision) and rec (recall) are sorted in the decreasing order of the score.
+                f1 is the max f1 score of those precison-recall points
+        """
+        sorted_pred_result = sorted(pred_result, key=lambda x: x['score'], reverse=True)
+        prec = []
+        rec = []
+        correct = 0
+        total = len(self.facts)
+        for i, item in enumerate(sorted_pred_result):
+            if (item['entpair'][0], item['entpair'][1], item['relation']) in self.facts:
+                correct += 1
+            prec.append(float(correct) / float(i + 1))
+            rec.append(float(correct) / float(total))
+        auc = sklearn.metrics.auc(x=rec, y=prec)
+        np_prec = np.array(prec)
+        np_rec = np.array(rec) 
+        f1 = (2 * np_prec * np_rec / (np_prec + np_rec + 1e-20)).max()
+        mean_prec = np_prec.mean()
+        return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
+
+def BagRELoader(path, rel2id, tokenizer, batch_size, 
+        shuffle, entpair_as_bag=False, num_workers=4, 
+        collate_fn=BagREDataset.collate_fn):
+    dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag)
+    data_loader = data.DataLoader(dataset=dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            pin_memory=True,
+            num_workers=num_workers,
+            collate_fn=collate_fn)
+    return data_loader

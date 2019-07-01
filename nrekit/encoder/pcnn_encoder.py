@@ -15,7 +15,6 @@ class PCNNEncoder(BaseEncoder):
                  word_size=50,
                  position_size=5,
                  blank_padding=True,
-                 padding=True,
                  word2vec=None,
                  kernel_size=3, 
                  padding_size=1,
@@ -27,13 +26,13 @@ class PCNNEncoder(BaseEncoder):
             hidden_size: hidden size
             word_size: size of word embedding
             position_size: size of position embedding
-            padding: padding for CNN
+            blank_padding: padding for CNN
             word2vec: pretrained word2vec numpy
             kernel_size: kernel_size size for CNN
             padding_size: padding_size for CNN
         """
         # hyperparameters
-        super().__init__(token2id, max_length, hidden_size, word_size, position_size, padding, word2vec)
+        super().__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
         self.dropout = dropout
         self.kernel_size = kernel_size
         self.padding_size = padding_size
@@ -71,7 +70,7 @@ class PCNNEncoder(BaseEncoder):
             Name of the relation of the sentence
         """
         # Sentence -> token
-        indexed_tokens, pos1, pos2 = super.tokenize(tokenize, is_token)
+        indexed_tokens, pos1, pos2 = super().tokenize(item)
         sentence = item['text']
         pos_head = item['h']['pos']
         pos_tail = item['t']['pos']        
@@ -91,13 +90,10 @@ class PCNNEncoder(BaseEncoder):
             else:
                 mask.append(3)
         # Padding
-        if self.padding:
+        if self.blank_padding:
             while len(mask) < self.max_length:
                 mask.append(0)
             mask = mask[:self.max_length]
 
-        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0) # (1, L)
-        pos1 = torch.tensor(pos1).long().unsqueeze(0) # (1, L)
-        pos2 = torch.tensor(pos2).long().unsqueeze(0) # (1, L)
         mask = torch.tensor(mask).long().unsqueeze(0) # (1, L)
         return indexed_tokens, pos1, pos2, mask
