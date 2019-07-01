@@ -17,7 +17,7 @@ class MaxPool(nn.Module):
         self.segment_num = segment_num
         if self.segment_num != None:
             self.mask_embedding = nn.Embedding(segment_num + 1, segment_num)
-            self.mask_embedding.weight.data.copy_(torch.FloatTensor(np.concatenate([np.zeros(segment_num), np.identity(segment_num)], axis = 0)))
+            self.mask_embedding.weight.data.copy_(torch.FloatTensor(np.concatenate([np.zeros((1, segment_num)), np.identity(segment_num)], axis=0)))
             self.mask_embedding.weight.requires_grad = False
             self._minus = -100
         self.pool = nn.MaxPool1d(kernel_size)
