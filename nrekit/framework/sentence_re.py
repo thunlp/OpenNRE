@@ -85,8 +85,8 @@ class SentenceRE(nn.Module):
         # Ckpt
         self.ckpt = ckpt
 
-    def train_model(self, warmup=True):
-        best_acc = 0
+    def train_model(self, warmup=True, metric='acc'):
+        best_metric = 0
         global_step = 0
         for epoch in range(self.max_epoch):
             self.train()
@@ -127,14 +127,14 @@ class SentenceRE(nn.Module):
             # Val 
             print("=== Epoch %d val ===" % epoch)
             result = self.eval_model(self.val_loader) 
-            if result['acc'] > best_acc:
+            if result[metric] > best_metric:
                 print("Best ckpt and saved.")
                 folder_path = '/'.join(self.ckpt.split('/')[:-1])
                 if not os.path.exists(folder_path):
                     os.mkdir(folder_path)
                 torch.save({'state_dict': self.parallel_model.state_dict()}, self.ckpt)
-                best_acc = result['acc']
-        print("Best acc on val set: %f" % (best_acc))
+                best_metric = result[metric]
+        print("Best %s on val set: %f" % (metric, best_metric))
 
     def eval_model(self, eval_loader):
         self.eval()
