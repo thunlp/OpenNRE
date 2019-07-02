@@ -1,5 +1,9 @@
 # OpenNRE
 
+*** **UPDATE** ***
+
+**We are now developing a new version of OpenNRE including sentence-level, bag-level(distant supervision) and few-shot RE on branch [nrekit](https://github.com/thunlp/OpenNRE/tree/nrekit). Refer to the `nrekit` branch if you are interested.**
+
 An open-source framework for neural relation extraction.
 
 Contributed by [Tianyu Gao](https://github.com/gaotianyu1350), [Xu Han](https://github.com/THUCSTHanxu13), [Shulian Cao](https://github.com/ShulinCao), [Lumin Tang](https://github.com/Tsingularity), [Yankai Lin](https://github.com/Mrlyk423), [Zhiyuan Liu](http://nlp.csai.tsinghua.edu.cn/~lzy/)
