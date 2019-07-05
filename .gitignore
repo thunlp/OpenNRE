@@ -111,3 +111,6 @@ ckpt
 
 # vscode
 .vscode
+
+# tacred
+benchmark/tacred
