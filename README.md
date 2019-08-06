@@ -46,12 +46,17 @@ This project is under MIT license.
 
 ## Requirements
 
+
+``` pip install -r requirements.txt ```
+
 - Python (>=2.7)
 - Numpy (>=1.13.3)
 - TensorFlow (>=1.4.1)
     - CUDA (>=8.0) if you are using gpu
 - Matplotlib (>=2.0.0)
 - scikit-learn (>=0.18)
+
+
 
 ## Data Format
 
