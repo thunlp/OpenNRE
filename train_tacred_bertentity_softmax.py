@@ -2,15 +2,15 @@
 import torch
 import numpy as np
 import json
-import nrekit
-from nrekit import encoder, model, framework
+import opennre
+from opennre import encoder, model, framework
 
 ckpt = 'ckpt/tacred_bertentity_softmax.pth.tar'
 rel2id = json.load(open('benchmark/tacred/tacred_rel2id.json'))
-sentence_encoder = nrekit.encoder.BERTEntityEncoder(
+sentence_encoder = opennre.encoder.BERTEntityEncoder(
     max_length=80, pretrain_path='pretrain/bert-base-uncased')
-model = nrekit.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
-framework = nrekit.framework.SentenceRE(
+model = opennre.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+framework = opennre.framework.SentenceRE(
     train_path='benchmark/tacred/tacred_train.txt',
     val_path='benchmark/tacred/tacred_val.txt',
     test_path='benchmark/tacred/tacred_test.txt',

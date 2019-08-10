@@ -2,14 +2,14 @@
 import torch
 import numpy as np
 import json
-import nrekit
-from nrekit import encoder, model, framework
+import opennre
+from opennre import encoder, model, framework
 
 ckpt = 'ckpt/nyt10_pcnn_att.pth.tar'
 wordi2d = json.load(open('pretrain/glove/glove.6B.50d_word2id.json'))
 word2vec = np.load('pretrain/glove/glove.6B.50d_mat.npy')
 rel2id = json.load(open('benchmark/nyt10/nyt10_rel2id.json'))
-sentence_encoder = nrekit.encoder.PCNNEncoder(token2id=wordi2d,
+sentence_encoder = opennre.encoder.PCNNEncoder(token2id=wordi2d,
                                              max_length=120,
                                              word_size=50,
                                              position_size=5,
@@ -19,8 +19,8 @@ sentence_encoder = nrekit.encoder.PCNNEncoder(token2id=wordi2d,
                                              padding_size=1,
                                              word2vec=word2vec,
                                              dropout=0.5)
-model = nrekit.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
-framework = nrekit.framework.BagRE(
+model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
+framework = opennre.framework.BagRE(
     train_path='benchmark/nyt10/nyt10_train.txt',
     val_path='benchmark/nyt10/nyt10_val.txt',
     test_path='benchmark/nyt10/nyt10_test.txt',
