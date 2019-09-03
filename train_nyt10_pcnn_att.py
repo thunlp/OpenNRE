@@ -28,11 +28,11 @@ framework = opennre.framework.BagRE(
     ckpt=ckpt,
     batch_size=160,
     max_epoch=60,
-    lr=0.5,
+    lr=0.001,
     weight_decay=0,
-    opt='sgd')
+    opt='adam')
 # Train
-# framework.train_model()
+framework.train_model()
 # Test
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
 result = framework.eval_model(framework.test_loader)
