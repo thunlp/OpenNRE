@@ -22,15 +22,15 @@ sentence_encoder = opennre.encoder.PCNNEncoder(token2id=wordi2d,
 model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
 framework = opennre.framework.BagRE(
     train_path='benchmark/nyt10/nyt10_train.txt',
-    val_path='benchmark/nyt10/nyt10_val.txt',
+    val_path='benchmark/nyt10/nyt10_test.txt',
     test_path='benchmark/nyt10/nyt10_test.txt',
     model=model,
     ckpt=ckpt,
     batch_size=160,
     max_epoch=60,
-    lr=0.001,
+    lr=0.5,
     weight_decay=0,
-    opt='adam')
+    opt='sgd')
 # Train
 framework.train_model()
 # Test
