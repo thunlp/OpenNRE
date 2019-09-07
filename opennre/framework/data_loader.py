@@ -162,10 +162,7 @@ class BagREDataset(data.Dataset):
         rel = self.rel2id[self.data[bag[0]]['relation']]
         for sent_id in bag:
             item = self.data[sent_id]
-            if 'text' in item:
-                seq = list(self.tokenizer(item))
-            else:
-                seq = list(self.tokenizer(item))
+            seq = list(self.tokenizer(item))
             if seqs is None:
                 seqs = []
                 for i in range(len(seq)):

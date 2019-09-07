@@ -56,7 +56,7 @@ class BagRE(nn.Module):
         # Criterion
         self.criterion = nn.CrossEntropyLoss()
         # Params and optimizer
-        params = self.parameters()
+        params = self.model.parameters()
         self.lr = lr
         if opt == 'sgd':
             self.optimizer = optim.SGD(params, lr, weight_decay=weight_decay)
