@@ -63,8 +63,8 @@ class WordTokenizer(object):
                 output_tokens.append(self.unk_token)                
         return output_tokens
 
-    def convert_tokens_to_ids(self, tokens, max_seq_length = None, blank_id = 0, unk_id = 1):
-        return convert_by_vocab(self.vocab, tokens, max_seq_length, blank_id, unk_id)
+    def convert_tokens_to_ids(self, tokens, max_seq_length = None, blank_id = 0, unk_id = 1, uncased = True):
+        return convert_by_vocab(self.vocab, tokens, max_seq_length, blank_id, unk_id, uncased=uncased)
 
     def convert_ids_to_tokens(self, ids):
         return convert_by_vocab(self.inv_vocab, ids)

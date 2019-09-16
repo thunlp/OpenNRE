@@ -112,7 +112,7 @@ class BaseEncoder(nn.Module):
             rev = False
             sent_0 = self.tokenizer.tokenize(sentence[:pos_min[0]])
             sent_1 = self.tokenizer.tokenize(sentence[pos_min[1]:pos_max[0]])
-            sent_2 = self.tokenizer.tokenize(sentence[pos_min[0]:pos_min[1]])
+            sent_2 = self.tokenizer.tokenize(sentence[pos_max[1]:])
             ent_0 = self.tokenizer.tokenize(sentence[pos_min[0]:pos_min[1]])
             ent_1 = self.tokenizer.tokenize(sentence[pos_max[0]:pos_max[1]])
             tokens = sent_0 + ent_0 + sent_1 + ent_1 + sent_2
@@ -136,7 +136,7 @@ class BaseEncoder(nn.Module):
         pos2 = []
         pos1_in_index = min(pos_head[0], self.max_length)
         pos2_in_index = min(pos_tail[0], self.max_length)
-        for i in range(len(indexed_tokens)):
+        for i in range(len(tokens)):
             pos1.append(min(i - pos1_in_index + self.max_length, 2 * self.max_length - 1))
             pos2.append(min(i - pos2_in_index + self.max_length, 2 * self.max_length - 1))
 
@@ -152,5 +152,5 @@ class BaseEncoder(nn.Module):
         indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0) # (1, L)
         pos1 = torch.tensor(pos1).long().unsqueeze(0) # (1, L)
         pos2 = torch.tensor(pos2).long().unsqueeze(0) # (1, L)
-
+        
         return indexed_tokens, pos1, pos2

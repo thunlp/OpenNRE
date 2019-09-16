@@ -125,7 +125,7 @@ class BagREDataset(data.Dataset):
         # Load the file
         f = open(path)
         self.data = []
-        for line in f.readlines():
+        for line in f:
             line = line.rstrip()
             if len(line) > 0:
                 self.data.append(eval(line))
@@ -218,7 +218,7 @@ class BagREDataset(data.Dataset):
         return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
 
 def BagRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, entpair_as_bag=False, num_workers=4, 
+        shuffle, entpair_as_bag=False, num_workers=10, 
         collate_fn=BagREDataset.collate_fn):
     dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag)
     data_loader = data.DataLoader(dataset=dataset,

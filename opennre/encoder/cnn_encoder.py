@@ -32,7 +32,7 @@ class CNNEncoder(BaseEncoder):
             padding_size: padding_size for CNN
         """
         # Hyperparameters
-        super().__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
+        super(CNNEncoder, self).__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
         self.dropout = dropout
         self.kernel_size = kernel_size
         self.padding_size = padding_size

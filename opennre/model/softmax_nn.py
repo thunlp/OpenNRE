@@ -21,6 +21,7 @@ class SoftmaxNN(SentenceRE):
         self.softmax = nn.Softmax(-1)
         self.rel2id = rel2id
         self.id2rel = {}
+        self.drop = nn.Dropout()
         for rel, id in rel2id.items():
             self.id2rel[id] = rel
 
@@ -42,5 +43,6 @@ class SoftmaxNN(SentenceRE):
             logits, (B, N)
         """
         rep = self.sentence_encoder(*args) # (B, H)
+        rep = self.drop(rep)
         logits = self.fc(rep) # (B, N)
         return logits

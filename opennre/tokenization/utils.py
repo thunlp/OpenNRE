@@ -183,10 +183,12 @@ def printable_text(text):
     else:
         raise ValueError("Not running on Python2 or Python 3?")
 
-def convert_by_vocab(vocab, items, max_seq_length = None, blank_id = 0, unk_id = 1):
+def convert_by_vocab(vocab, items, max_seq_length = None, blank_id = 0, unk_id = 1, uncased = True):
     """Converts a sequence of [tokens|ids] using the vocab."""
     output = []
     for item in items:
+        if uncased:
+            item = item.lower()
         if item in vocab:
             output.append(vocab[item])
         else:
