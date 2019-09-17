@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import math
 import numpy as np
 from ..tokenization import WordTokenizer
+
 class BaseEncoder(nn.Module):
 
     def __init__(self, 
@@ -53,10 +54,10 @@ class BaseEncoder(nn.Module):
         print('Finished!')
 
         # Word embedding
-        print("Initializing word embedding with word2vec...")
 
         self.word_embedding = nn.Embedding(self.num_token, self.word_size, padding_idx=0)
         if word2vec is not None:
+            print("Initializing word embedding with word2vec...")
             word2vec = torch.from_numpy(word2vec)
             if self.num_token == len(word2vec) + 2:            
                 unk = torch.randn(1, self.word_size) / math.sqrt(self.word_size)
@@ -64,8 +65,7 @@ class BaseEncoder(nn.Module):
                 self.word_embedding.weight.data.copy_(torch.cat([word2vec, unk, blk], 0))
             else:
                 self.word_embedding.weight.data.copy_(word2vec)
-
-        print('Finished!')
+            print('Finished!')
 
         # Position Embedding
         self.pos1_embedding = nn.Embedding(2 * max_length + 1, self.position_size, padding_idx=0)
@@ -84,7 +84,7 @@ class BaseEncoder(nn.Module):
         """
         # Check size of tensors
         pass
-
+    
     def tokenize(self, item):
         """
         Args:
@@ -109,7 +109,7 @@ class BaseEncoder(nn.Module):
                 rev = True
             else:
                 pos_min, pos_max = [pos_head, pos_tail]
-            rev = False
+                rev = False
             sent_0 = self.tokenizer.tokenize(sentence[:pos_min[0]])
             sent_1 = self.tokenizer.tokenize(sentence[pos_min[1]:pos_max[0]])
             sent_2 = self.tokenizer.tokenize(sentence[pos_max[1]:])

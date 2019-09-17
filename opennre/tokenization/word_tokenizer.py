@@ -53,15 +53,15 @@ class WordTokenizer(object):
         text = convert_to_unicode(text)
         text = clean_text(text)
         text = tokenize_chinese_chars(text)
-        output_tokens = []
+        # output_tokens = []
         token_list = split_on_whitespace(text)
-        for chars in token_list:
-            # current_positions.append([])
-            if chars in self.vocab:
-                output_tokens.append(chars)
-            else:
-                output_tokens.append(self.unk_token)                
-        return output_tokens
+        # for chars in token_list:
+        #     # current_positions.append([])
+        #     if chars in self.vocab:
+        #         output_tokens.append(chars)
+        #     else:
+        #         output_tokens.append(self.unk_token)                
+        return token_list
 
     def convert_tokens_to_ids(self, tokens, max_seq_length = None, blank_id = 0, unk_id = 1, uncased = True):
         return convert_by_vocab(self.vocab, tokens, max_seq_length, blank_id, unk_id, uncased=uncased)
