@@ -18,10 +18,13 @@ class BagRE(nn.Module):
                  max_epoch=100, 
                  lr=0.1, 
                  weight_decay=1e-5, 
-                 opt='sgd'):
+                 opt='sgd',
+                 bag_size=None,
+                 loss_weight=False):
     
         super().__init__()
         self.max_epoch = max_epoch
+        self.bag_size = bag_size
         # Load data
         if train_path != None:
             self.train_loader = BagRELoader(
@@ -30,6 +33,7 @@ class BagRE(nn.Module):
                 model.sentence_encoder.tokenize,
                 batch_size,
                 True,
+                bag_size=bag_size,
                 entpair_as_bag=False)
 
         if val_path != None:
@@ -39,6 +43,7 @@ class BagRE(nn.Module):
                 model.sentence_encoder.tokenize,
                 batch_size,
                 False,
+                bag_size=None,
                 entpair_as_bag=True)
         
         if test_path != None:
@@ -48,13 +53,16 @@ class BagRE(nn.Module):
                 model.sentence_encoder.tokenize,
                 batch_size,
                 False,
+                bag_size=None,
                 entpair_as_bag=True
             )
         # Model
-        self.model = model
-        self.parallel_model = nn.DataParallel(self.model)
+        self.model = nn.DataParallel(model)
         # Criterion
-        self.criterion = nn.CrossEntropyLoss()
+        if loss_weight:
+            self.criterion = nn.CrossEntropyLoss(weight=self.train_loader.dataset.weight)
+        else:
+            self.criterion = nn.CrossEntropyLoss()
         # Params and optimizer
         params = self.model.parameters()
         self.lr = lr
@@ -110,7 +118,7 @@ class BagRE(nn.Module):
                 bag_name = data[1]
                 scope = data[2]
                 args = data[3:]
-                logits = self.model(label, scope, *args)
+                logits = self.model(label, scope, *args, bag_size=self.bag_size)
                 loss = self.criterion(logits, label)
                 score, pred = logits.max(-1) # (B)
                 acc = float((pred == label).long().sum()) / label.size(0)
@@ -139,7 +147,7 @@ class BagRE(nn.Module):
             print("f1: %.4f" % (result['f1']))
             if result['auc'] > best_auc:
                 print("Best ckpt and saved.")
-                torch.save({'state_dict': self.parallel_model.state_dict()}, self.ckpt)
+                torch.save({'state_dict': self.model.module.state_dict()}, self.ckpt)
                 best_auc = result['auc']
         print("Best auc on val set: %f" % (best_auc))
 
@@ -161,15 +169,15 @@ class BagRE(nn.Module):
                 args = data[3:]
                 logits = self.model(None, scope, *args, train=False) # results after softmax
                 for i in range(logits.size(0)):
-                    for relid in range(self.model.num_class):
-                        if self.model.id2rel[relid] != 'NA':
+                    for relid in range(self.model.module.num_class):
+                        if self.model.module.id2rel[relid] != 'NA':
                             pred_result.append({
                                 'entpair': bag_name[i][:2], 
-                                'relation': self.model.id2rel[relid], 
+                                'relation': self.model.module.id2rel[relid], 
                                 'score': logits[i][relid].item()
                             })
             result = eval_loader.dataset.eval(pred_result)
         return result
 
     def load_state_dict(self, state_dict):
-        self.parallel_model.load_state_dict(state_dict)
+        self.model.module.load_state_dict(state_dict)

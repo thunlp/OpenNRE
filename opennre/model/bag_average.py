@@ -68,7 +68,7 @@ class BagAverage(BagRE):
         return (rel, score)
         """
     
-    def forward(self, label, scope, token, pos1, pos2, mask=None, train=True):
+    def forward(self, label, scope, token, pos1, pos2, mask=None, train=True, bag_size=None):
         """
         Args:
             label: (B), label of the bag
@@ -87,9 +87,14 @@ class BagAverage(BagRE):
 
         # Average
         bag_rep = []
-        for i in range(len(scope)):
-            bag_rep.append(rep[scope[i][0]:scope[i][1]].mean(0))
-        bag_rep = torch.stack(bag_rep, 0) # (B, H)
+        if bag_size is None:
+            for i in range(len(scope)):
+                bag_rep.append(rep[scope[i][0]:scope[i][1]].mean(0))
+            bag_rep = torch.stack(bag_rep, 0) # (B, H)
+        else:
+            batch_size = label.size(0)
+            rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
+            bag_rep = rep.mean(1) # (B, H)
         bag_rep = self.drop(bag_rep)
         bag_logits = self.fc(bag_rep) # (B, N)
 

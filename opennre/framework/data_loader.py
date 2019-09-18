@@ -107,7 +107,7 @@ class BagREDataset(data.Dataset):
     """
     Bag-level relation extraction dataset. Note that relation of NA should be named as 'NA'.
     """
-    def __init__(self, path, rel2id, tokenizer, entpair_as_bag=False, mode=None):
+    def __init__(self, path, rel2id, tokenizer, entpair_as_bag=False, bag_size=None, mode=None):
         """
         Args:
             path: path of the input file
@@ -121,6 +121,7 @@ class BagREDataset(data.Dataset):
         self.tokenizer = tokenizer
         self.rel2id = rel2id
         self.entpair_as_bag = entpair_as_bag
+        self.bag_size = bag_size
 
         # Load the file
         f = open(path)
@@ -133,6 +134,7 @@ class BagREDataset(data.Dataset):
 
         # Construct bag-level dataset (a bag contains instances sharing the same relation fact)
         if mode == None:
+            self.weight = np.zeros((len(self.rel2id)), dtype=np.float32)
             self.bag_scope = []
             self.name2id = {}
             self.bag_name = []
@@ -150,6 +152,9 @@ class BagREDataset(data.Dataset):
                     self.bag_scope.append([])
                     self.bag_name.append(name)
                 self.bag_scope[self.name2id[name]].append(idx)
+                self.weight[self.rel2id[item['relation']]] += 1.0
+            self.weight = 1.0 / (self.weight ** 0.05)
+            self.weight = torch.from_numpy(self.weight)
         else:
             pass
   
@@ -158,6 +163,13 @@ class BagREDataset(data.Dataset):
 
     def __getitem__(self, index):
         bag = self.bag_scope[index]
+        if self.bag_size is not None:
+            if self.bag_size <= len(bag):
+                resize_bag = random.sample(bag, self.bag_size)
+            else:
+                resize_bag = bag + list(np.random.choice(bag, self.bag_size - len(bag)))
+            bag = resize_bag
+            
         seqs = None
         rel = self.rel2id[self.data[bag[0]]['relation']]
         for sent_id in bag:
@@ -171,7 +183,7 @@ class BagREDataset(data.Dataset):
                 seqs[i].append(seq[i])
         for i in range(len(seqs)):
             seqs[i] = torch.cat(seqs[i], 0) # (n, L), n is the size of bag
-
+    
         return [rel, self.bag_name[index], len(bag)] + seqs
   
     def collate_fn(data):
@@ -218,9 +230,9 @@ class BagREDataset(data.Dataset):
         return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
 
 def BagRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, entpair_as_bag=False, num_workers=10, 
+        shuffle, entpair_as_bag=False, bag_size=None, num_workers=10, 
         collate_fn=BagREDataset.collate_fn):
-    dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag)
+    dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag, bag_size=bag_size)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,
             shuffle=shuffle,

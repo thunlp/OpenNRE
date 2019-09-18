@@ -21,6 +21,7 @@ class BagAttention(BagRE):
         self.softmax = nn.Softmax(-1)
         self.rel2id = rel2id
         self.id2rel = {}
+        self.drop = nn.Dropout()
         for rel, id in rel2id.items():
             self.id2rel[id] = rel
 
@@ -63,7 +64,7 @@ class BagAttention(BagRE):
         rel = self.id2rel[pred]
         return (rel, score)
     
-    def forward(self, label, scope, token, pos1, pos2, mask=None, train=True):
+    def forward(self, label, scope, token, pos1, pos2, mask=None, train=True, bag_size=None):
         """
         Args:
             label: (B), label of the bag
@@ -75,7 +76,7 @@ class BagAttention(BagRE):
         Return:
             logits, (B, N)
         """
-        if mask:
+        if mask is not None:
             rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H)
         else:
             rep = self.sentence_encoder(token, pos1, pos2) # (nsum, H)
@@ -90,12 +91,20 @@ class BagAttention(BagRE):
                 query[scope[i][0]:scope[i][1]] = label[i]
             att_mat = self.fc.weight.data[query] # (nsum, H)
             att_score = (rep * att_mat).sum(-1) # (nsum)
-            for i in range(len(scope)):
-                bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
-                softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]]) # (n)
-                bag_rep.append(torch.matmul(softmax_att_score.unsqueeze(0), bag_mat).squeeze(0)) # (1, n) * (n, H) -> (1, H) -> (H)
-            bag_rep = torch.stack(bag_rep, 0) # (B, H)
-            # bag_rep = self.drop(bag_rep)
+            if bag_size is None:
+                for i in range(len(scope)):
+                    bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
+                    softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]]) # (n)
+                    bag_rep.append((softmax_att_score.unsqueeze(-1) * bag_mat).sum(0)) # (n, 1) * (n, H) -> (n, H) -> (H)
+                bag_rep = torch.stack(bag_rep, 0) # (B, H)
+            else:
+                batch_size = label.size(0)
+                rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
+                att_mat = att_mat.view(batch_size, bag_size, -1) # (B, bag, H)
+                att_score = att_score.view(batch_size, bag_size) # (B, bag)
+                softmax_att_score = self.softmax(att_score) # (B, bag)
+                bag_rep = (softmax_att_score.unsqueeze(-1) * rep).sum(1) # (B, bag, 1) * (B, bag, H) -> (B, bag, H) -> (B, H)
+            bag_rep = self.drop(bag_rep)
             bag_logits = self.fc(bag_rep) # (B, N)
         else:
             bag_logits = []

@@ -83,6 +83,8 @@ class PCNNEncoder(BaseEncoder):
         pos_min = min(pos1_in_index, pos2_in_index)
         pos_max = max(pos1_in_index, pos2_in_index)
         for i in range(len(indexed_tokens)):
+            if pos1[0][i] == 0:
+                break
             if i <= pos_min:
                 mask.append(1)
             elif i <= pos_max:
