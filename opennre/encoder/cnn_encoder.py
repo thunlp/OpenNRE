@@ -18,7 +18,8 @@ class CNNEncoder(BaseEncoder):
                  word2vec=None,
                  kernel_size=3, 
                  padding_size=1,
-                 dropout=0.5):
+                 dropout=0,
+                 activation_function=F.relu):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -33,12 +34,13 @@ class CNNEncoder(BaseEncoder):
         """
         # Hyperparameters
         super(CNNEncoder, self).__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
-        self.dropout = dropout
+        self.drop = nn.Dropout(dropout)
         self.kernel_size = kernel_size
         self.padding_size = padding_size
+        self.act = activation_function
 
-        self.conv = CNN(self.input_size, self.hidden_size, self.dropout, self.kernel_size, self.padding_size, activation_function = F.relu)
-        self.pool = MaxPool(self.max_length)
+        self.conv = nn.Conv1d(self.input_size, self.hidden_size, self.kernel_size, padding=self.padding)
+        self.pool = nn.MaxPool1d(self.max_length)
 
     def forward(self, token, pos1, pos2):
         """
@@ -55,8 +57,10 @@ class CNNEncoder(BaseEncoder):
         x = torch.cat([self.word_embedding(token), 
                        self.pos1_embedding(pos1), 
                        self.pos2_embedding(pos2)], 2) # (B, L, EMBED)
-        x = self.conv(x) # (B, L, EMBED)
-        x = self.pool(x) # (B, EMBED)
+        x = x.transpose(1, 2) # (B, EMBED, L)
+        x = self.act(self.conv(x)) # (B, H, L)
+        x = self.pool(x).squeeze(-1)
+        x = self.drop(x)
         return x
 
     def tokenize(self, item):

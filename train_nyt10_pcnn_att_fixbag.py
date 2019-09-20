@@ -2,10 +2,10 @@
 import torch
 import numpy as np
 import json
-import nrekit
-from nrekit import encoder, model, framework
+import opennre
+from opennre import encoder, model, framework
 
-ckpt = 'ckpt/nyt10_pcnn_att.pth.tar'
+ckpt = 'ckpt/nyt10_pcnn_att_fixbag.pth.tar'
 word2id = json.load(open('pretrain/glove/glove.6B.50d_word2id.json'))
 word2vec = np.load('pretrain/glove/glove.6B.50d_mat.npy')
 rel2id = json.load(open('benchmark/nyt10/nyt10_rel2id.json'))
@@ -27,12 +27,13 @@ framework = opennre.framework.BagRE(
     model=model,
     ckpt=ckpt,
     batch_size=160,
-    max_epoch=25,
+    max_epoch=60,
     lr=0.5,
     weight_decay=0,
-    opt='sgd')
+    opt='sgd',
+    bag_size=3)
 # Train
-# framework.train_model()
+framework.train_model()
 # Test
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
 result = framework.eval_model(framework.test_loader)

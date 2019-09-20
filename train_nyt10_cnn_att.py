@@ -18,7 +18,7 @@ sentence_encoder = opennre.encoder.CNNEncoder(token2id=word2id,
                                              kernel_size=3,
                                              padding_size=1,
                                              word2vec=word2vec,
-                                             dropout=0.5)
+                                             dropout=0.0)
 model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
 framework = opennre.framework.BagRE(
     train_path='benchmark/nyt10/nyt10_train.txt',
@@ -32,7 +32,7 @@ framework = opennre.framework.BagRE(
     weight_decay=0,
     opt='sgd')
 # Train
-framework.train_model()
+# framework.train_model()
 # Test
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
 result = framework.eval_model(framework.test_loader)
