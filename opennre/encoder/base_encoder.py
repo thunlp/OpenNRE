@@ -32,7 +32,7 @@ class BaseEncoder(nn.Module):
         self.token2id = token2id
         self.max_length = max_length
         self.num_token = len(token2id)
-        self.num_position = max_length * 2 + 1
+        self.num_position = max_length * 2
 
         if word2vec is None:
             self.word_size = word_size
@@ -55,7 +55,7 @@ class BaseEncoder(nn.Module):
 
         # Word embedding
 
-        self.word_embedding = nn.Embedding(self.num_token, self.word_size, padding_idx=0)
+        self.word_embedding = nn.Embedding(self.num_token, self.word_size)
         if word2vec is not None:
             print("Initializing word embedding with word2vec...")
             word2vec = torch.from_numpy(word2vec)
@@ -68,10 +68,9 @@ class BaseEncoder(nn.Module):
             print('Finished!')
 
         # Position Embedding
-        self.pos1_embedding = nn.Embedding(2 * max_length + 1, self.position_size, padding_idx=0)
-        self.pos2_embedding = nn.Embedding(2 * max_length + 1, self.position_size, padding_idx=0)
+        self.pos1_embedding = nn.Embedding(2 * max_length, self.position_size, padding_idx=0)
+        self.pos2_embedding = nn.Embedding(2 * max_length, self.position_size, padding_idx=0)
         self.tokenizer = WordTokenizer(vocab=self.token2id, unk_token="[UNK]")
-
 
     def forward(self, token, pos1, pos2):
         """

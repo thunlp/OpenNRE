@@ -6,6 +6,8 @@ from ..module.nn import CNN
 from ..module.pool import MaxPool
 from .base_encoder import BaseEncoder
 
+from nltk import word_tokenize
+
 class PCNNEncoder(BaseEncoder):
 
     def __init__(self, 
@@ -148,10 +150,12 @@ class PCNNEncoder(BaseEncoder):
         
         # Mask
         mask = []
+        pos_min = min(pos1_in_index, pos2_in_index)
+        pos_max = max(pos1_in_index, pos2_in_index)
         for i in range(len(tokens)):
-            if i <= pos_min[0]:
+            if i <= pos_min:
                 mask.append(1)
-            elif i <= pos_max[0]:
+            elif i <= pos_max:
                 mask.append(2)
             else:
                 mask.append(3)
