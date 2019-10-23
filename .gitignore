@@ -115,3 +115,6 @@ ckpt
 # tacred
 benchmark/tacred
 *.swp
+
+# data and pretrain
+
