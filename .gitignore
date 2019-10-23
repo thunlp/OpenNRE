@@ -117,4 +117,5 @@ benchmark/tacred
 *.swp
 
 # data and pretrain
-
+pretrain
+benchmark
