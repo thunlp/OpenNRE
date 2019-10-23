@@ -119,3 +119,4 @@ benchmark/tacred
 # data and pretrain
 pretrain
 benchmark
+!benchmark/*.sh
