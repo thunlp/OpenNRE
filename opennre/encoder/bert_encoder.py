@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from .base_encoder import BaseEncoder
-from pytorch_pretrained_bert import BertModel, BertTokenizer
+from transformers import BertModel, BertTokenizer
 
 
 class BERTEncoder(nn.Module):
@@ -82,14 +82,14 @@ class BERTEncoder(nn.Module):
         for token in tokens:
             token = token.lower()
             if cur_pos == pos_head[0]:
-                re_tokens.append('[HEADSTART]')
+                re_tokens.append('[unused0]')
             if cur_pos == pos_tail[0]:
-                re_tokens.append('[TAILSTART]')
+                re_tokens.append('[unused1]')
             re_tokens += self.tokenizer.tokenize(token)
             if cur_pos == pos_head[1] - 1:
-                re_tokens.append('[HEADEND]')
+                re_tokens.append('[unused2]')
             if cur_pos == pos_tail[1] - 1:
-                re_tokens.append('[TAILEND]')
+                re_tokens.append('[unused3]')
             cur_pos += 1
         re_tokens.append('[SEP]')
 
@@ -205,15 +205,15 @@ class BERTEntityEncoder(nn.Module):
             token = token.lower()
             if cur_pos == pos_head[0]:
                 pos1 = len(re_tokens)
-                re_tokens.append('[HEADSTART]')
+                re_tokens.append('[unused0]')
             if cur_pos == pos_tail[0]:
                 pos2 = len(re_tokens)
-                re_tokens.append('[TAILSTART]')
+                re_tokens.append('[unused1]')
             re_tokens += self.tokenizer.tokenize(token)
             if cur_pos == pos_head[1] - 1:
-                re_tokens.append('[HEADEND]')
+                re_tokens.append('[unused2]')
             if cur_pos == pos_tail[1] - 1:
-                re_tokens.append('[TAILEND]')
+                re_tokens.append('[unused3]')
             cur_pos += 1
         re_tokens.append('[SEP]')
         pos1 = min(self.max_length - 1, pos1)

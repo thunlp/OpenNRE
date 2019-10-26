@@ -62,8 +62,8 @@ class BagRE(nn.Module):
             self.optimizer = optim.SGD(params, lr, weight_decay=weight_decay)
         elif opt == 'adam':
             self.optimizer = optim.Adam(params, lr, weight_decay=weight_decay)
-        elif opt == 'bert_adam':
-            from pytorch_pretrained_bert import BertAdam
+        elif opt == 'adamw':
+            from transformers import AdamW
             params = list(self.named_parameters())
             no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
             grouped_params = [
@@ -80,7 +80,7 @@ class BagRE(nn.Module):
                     'ori_lr': lr
                 }
             ]
-            self.optimizer = BertAdam(grouped_params)
+            self.optimizer = AdamW(grouped_params, correct_bias=False)
         else:
             raise Exception("Invalid optimizer. Must be 'sgd' or 'adam' or 'bert_adam'.")
         # Cuda

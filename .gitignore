@@ -120,3 +120,4 @@ benchmark/tacred
 pretrain
 benchmark
 !benchmark/*.sh
+!pretrain/*.sh

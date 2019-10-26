@@ -1,4 +1,7 @@
 # coding:utf-8
+import sys
+sys.path.append('.')
+
 import torch
 import numpy as np
 import json
@@ -19,7 +22,7 @@ framework = opennre.framework.SentenceRE(
     batch_size=64,
     max_epoch=10,
     lr=2e-5,
-    opt='bert_adam')
+    opt='adamw')
 # Train
 framework.train_model()
 # Test

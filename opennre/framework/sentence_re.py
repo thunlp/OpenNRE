@@ -58,8 +58,8 @@ class SentenceRE(nn.Module):
             self.optimizer = optim.SGD(params, lr, weight_decay=weight_decay)
         elif opt == 'adam':
             self.optimizer = optim.Adam(params, lr, weight_decay=weight_decay)
-        elif opt == 'bert_adam':
-            from pytorch_pretrained_bert import BertAdam
+        elif opt == 'adamw': # Optimizer for BERT
+            from transformers import AdamW
             params = list(self.named_parameters())
             no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
             grouped_params = [
@@ -76,9 +76,9 @@ class SentenceRE(nn.Module):
                     'ori_lr': lr
                 }
             ]
-            self.optimizer = BertAdam(grouped_params)
+            self.optimizer = AdamW(grouped_params, correct_bias=False)
         else:
-            raise Exception("Invalid optimizer. Must be 'sgd' or 'adam'.")
+            raise Exception("Invalid optimizer. Must be 'sgd' or 'adam' or 'adamw'.")
         # Cuda
         if torch.cuda.is_available():
             self.cuda()
@@ -132,7 +132,7 @@ class SentenceRE(nn.Module):
                 folder_path = '/'.join(self.ckpt.split('/')[:-1])
                 if not os.path.exists(folder_path):
                     os.mkdir(folder_path)
-                torch.save({'state_dict': self.parallel_model.state_dict()}, self.ckpt)
+                torch.save({'state_dict': self.model.state_dict()}, self.ckpt)
                 best_metric = result[metric]
         print("Best %s on val set: %f" % (metric, best_metric))
 
@@ -164,4 +164,5 @@ class SentenceRE(nn.Module):
         return result
 
     def load_state_dict(self, state_dict):
-        self.parallel_model.load_state_dict(state_dict)
+        self.model.load_state_dict(state_dict)
+
