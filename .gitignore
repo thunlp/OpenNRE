@@ -121,3 +121,6 @@ pretrain
 benchmark
 !benchmark/*.sh
 !pretrain/*.sh
+
+# test env
+.test
