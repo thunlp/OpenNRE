@@ -35,17 +35,18 @@ def download_bert_base_uncased():
     check_root()
     if not os.path.exists(os.path.join(root_path, 'pretrain/bert-base-uncased')):
         os.mkdir(os.path.join(root_path, 'pretrain/bert-base-uncased'))
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/bert_config.json')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/config.json')
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/pytorch_model.bin')
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/vocab.txt')
 
 def download_pretrain(model_name):
     ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
     if not os.path.exists(ckpt):
-        os.system('wget -P ' + ckpt + ' http://193.112.16.83:8080/opennre/pretrain/nre/' + model_name + '.pth.tar')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/nre')  + ' http://193.112.16.83:8080/opennre/pretrain/nre/' + model_name + '.pth.tar')
 
 def get_model(model_name):
     check_root()
+    ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
     if model_name == 'wiki80_cnn_softmax':
         download_pretrain(model_name)
         download_glove()
@@ -72,7 +73,7 @@ def get_model(model_name):
         download_wiki80()
         rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
         sentence_encoder = encoder.BERTEncoder(
-            max_length=80, pretrain_path='pretrain/bert-base-uncased')
+            max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt)['state_dict'])
         return m
