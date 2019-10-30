@@ -7,23 +7,52 @@ import sys
 import json
 import numpy as np
 
+root_path = os.path.join(os.getenv('HOME'), '.opennre')
+
+def check_root():
+    if not os.path.exists(root_path):
+        os.mkdir(root_path)
+        os.mkdir(os.path.join(root_path, 'benchmark'))
+        os.mkdir(os.path.join(root_path, 'pretrain'))
+        os.mkdir(os.path.join(root_path, 'pretrain/nre'))
+
+def download_wiki80():
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/wiki80')):
+        os.mkdir(os.path.join(root_path, 'benchmark/wiki80'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_val.txt')
+
+def download_glove():
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'pretrain/glove')):
+        os.mkdir(os.path.join(root_path, 'pretrain/glove'))
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_mat.npy')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_word2id.json')
+
+def download_bert_base_uncased():
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'pretrain/bert-base-uncased')):
+        os.mkdir(os.path.join(root_path, 'pretrain/bert-base-uncased'))
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/bert_config.json')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/pytorch_model.bin')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/vocab.txt')
+
+def download_pretrain(model_name):
+    ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
+    if not os.path.exists(ckpt):
+        os.system('wget -P ' + ckpt + ' http://193.112.16.83:8080/opennre/pretrain/nre/' + model_name + '.pth.tar')
+
 def get_model(model_name):
+    check_root()
     if model_name == 'wiki80_cnn_softmax':
-        ckpt = 'pretrain/nre/wiki80_cnn_softmax.pth.tar'
-        if not os.path.exists(ckpt):
-            os.system('wget -P pretrain/nre wiki80_cnn_softmax.pth.tar http://193.112.16.83:8080/opennre/pretrain/nre/wiki80_cnn_softmax.pth.tar')
-        if not os.path.exists('pretrain/glove'):
-            os.system('mkdir pretrain/glove')
-            os.system('wget -P pretrain/glove http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_mat.npy')
-            os.system('wget -P pretrain/glove http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_word2id.json')
-        if not os.path.exists('benchmark/wiki80'):
-            os.system('mkdir benchmark/wiki80')
-            os.system('wget -P benchmark/wiki80 http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_rel2id.json')
-            os.system('wget -P benchmark/wiki80 http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_train.txt')
-            os.system('wget -P benchmark/wiki80 http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_val.txt')
-        wordi2d = json.load(open('pretrain/glove/glove.6B.50d_word2id.json'))
-        word2vec = np.load('pretrain/glove/glove.6B.50d_mat.npy')
-        rel2id = json.load(open('benchmark/wiki80/wiki80_rel2id.json'))
+        download_pretrain(model_name)
+        download_glove()
+        download_wiki80()
+        wordi2d = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_word2id.json')))
+        word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))
+        rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
         sentence_encoder = encoder.CNNEncoder(token2id=wordi2d,
                                                      max_length=40,
                                                      word_size=50,
@@ -34,6 +63,16 @@ def get_model(model_name):
                                                      padding_size=1,
                                                      word2vec=word2vec,
                                                      dropout=0.5)
+        m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+        m.load_state_dict(torch.load(ckpt)['state_dict'])
+        return m
+    elif model_name == 'wiki80_bert_softmax':
+        download_pretrain(model_name)
+        download_bert_base_uncased()
+        download_wiki80()
+        rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
+        sentence_encoder = encoder.BERTEncoder(
+            max_length=80, pretrain_path='pretrain/bert-base-uncased')
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt)['state_dict'])
         return m
