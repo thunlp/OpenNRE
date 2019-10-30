@@ -7,16 +7,16 @@ import sys
 import json
 import numpy as np
 
-root_path = os.path.join(os.getenv('HOME'), '.opennre')
+default_root_path = os.path.join(os.getenv('HOME'), '.opennre')
 
-def check_root():
+def check_root(root_path=default_root_path):
     if not os.path.exists(root_path):
         os.mkdir(root_path)
         os.mkdir(os.path.join(root_path, 'benchmark'))
         os.mkdir(os.path.join(root_path, 'pretrain'))
         os.mkdir(os.path.join(root_path, 'pretrain/nre'))
 
-def download_wiki80():
+def download_wiki80(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'benchmark/wiki80')):
         os.mkdir(os.path.join(root_path, 'benchmark/wiki80'))
@@ -24,14 +24,14 @@ def download_wiki80():
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_train.txt')
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_val.txt')
 
-def download_glove():
+def download_glove(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'pretrain/glove')):
         os.mkdir(os.path.join(root_path, 'pretrain/glove'))
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_mat.npy')
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_word2id.json')
 
-def download_bert_base_uncased():
+def download_bert_base_uncased(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'pretrain/bert-base-uncased')):
         os.mkdir(os.path.join(root_path, 'pretrain/bert-base-uncased'))
@@ -39,12 +39,12 @@ def download_bert_base_uncased():
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/pytorch_model.bin')
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/vocab.txt')
 
-def download_pretrain(model_name):
+def download_pretrain(model_name, root_path=default_root_path):
     ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
     if not os.path.exists(ckpt):
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/nre')  + ' http://193.112.16.83:8080/opennre/pretrain/nre/' + model_name + '.pth.tar')
 
-def get_model(model_name):
+def get_model(model_name, root_path=default_root_path):
     check_root()
     ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
     if model_name == 'wiki80_cnn_softmax':

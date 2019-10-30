@@ -137,7 +137,6 @@ class BERTEntityEncoder(nn.Module):
             (B, 2H), representations for sentences
         """
         hidden, _ = self.bert(token, attention_mask=att_mask)
-        hidden = hidden[-1]  # the last hidden layer, (B, L, H)
         # Get entity start hidden state
         onehot = torch.zeros(hidden.size()[:2]).float()  # (B, L)
         if torch.cuda.is_available():
