@@ -62,3 +62,26 @@ Note that we have excluded all data and pretrain files for fast deployment. You 
 bash benchmark/download_fewrel.sh
 ```
 
+## Easy Start
+
+Add `OpenNRE` directory to the `PYTHONPATH` environment variable, or open a python session under the `OpenNRE` folder. Then import our package and load pre-trained models.
+
+```python
+>>> import opennre
+>>> model = opennre.get_model('wiki80_cnn_softmax')
+```
+
+Note that it may take a few minutes to download checkpoint and data for the first time. Then use `infer` to do sentence-level relation extraction
+
+```python
+>>> model.infer({'text': 'He was the son of Máel Dúin mac Máele Fithrich, and grandson of the high king Áed Uaridnach (died 612).', 'h': {'pos': (18, 46)}, 't': {'pos': (78, 91)}})
+('father', 0.5108704566955566)
+```
+
+You will get the relation result and its confidence score.
+
+For higher-level usage, you can refer to our [document](https://opennre-docs.readthedocs.io/en/latest/).
+
+## Google Group
+
+If you want to receive our update news or take part in discussions, please join our [Google Group](https://groups.google.com/forum/#!forum/opennre/join)
