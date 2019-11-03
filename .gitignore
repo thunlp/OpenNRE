@@ -124,3 +124,6 @@ benchmark
 
 # test env
 .test
+
+# package
+opennre-egg.info
