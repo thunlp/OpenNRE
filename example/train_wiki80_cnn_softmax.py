@@ -7,7 +7,6 @@ from opennre import encoder, model, framework
 
 # Some basic settings
 root_path = '.'
-sys.path.append(root_path)
 if not os.path.exists('ckpt'):
     os.mkdir('ckpt')
 ckpt = 'ckpt/wiki80_cnn_softmax.pth.tar'

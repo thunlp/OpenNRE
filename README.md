@@ -56,6 +56,16 @@ Then install all the requirements:
 pip install -r requirements.txt
 ```
 
+Then install the package with 
+```
+python setup.py install 
+```
+
+If you also want to modify the code, run this:
+```
+python setup.py develop
+```
+
 Note that we have excluded all data and pretrain files for fast deployment. You can manually download them by running scripts in the ``benchmark`` and ``pretrain`` folders. For example, if you want to download FewRel dataset, you can run
 
 ```bash
