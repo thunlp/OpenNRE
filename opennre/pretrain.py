@@ -24,6 +24,15 @@ def download_wiki80(root_path=default_root_path):
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_train.txt')
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_val.txt')
 
+def download_nyt10(root_path=default_root_path):
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/nyt10')):
+        os.mkdir(os.path.join(root_path, 'benchmark/nyt10'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_test.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_val.txt')
+
 def download_glove(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'pretrain/glove')):
