@@ -50,6 +50,11 @@ Clone the repository from our github page (don't forget to star us!)
 git clone https://github.com/thunlp/OpenNRE.git
 ```
 
+If it is too slow, you can try
+```
+git clone https://github.com/thunlp/OpenNRE.git --depth 1
+```
+
 Then install all the requirements:
 
 ```
