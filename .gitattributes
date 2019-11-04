@@ -1,3 +1,0 @@
-benchmark/*/* filter=lfs diff=lfs merge=lfs -text
-pretrain/*/* filter=lfs diff=lfs merge=lfs -text
-pretrain/*/*/* filter=lfs diff=lfs merge=lfs -text
