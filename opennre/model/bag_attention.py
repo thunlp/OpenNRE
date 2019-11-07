@@ -37,6 +37,7 @@ class BagAttention(BagRE):
         Return:
             (relation, score)
         """
+        self.eval()
         tokens = []
         pos1s = []
         pos2s = []

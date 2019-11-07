@@ -97,37 +97,6 @@ class BagRE(nn.Module):
         # Ckpt
         self.ckpt = ckpt
 
-    def infer(self, bag):
-        """
-        Args:
-            bag: bag of sentences with the same entity pair
-                [{
-                  'text' or 'token': ..., 
-                  'h': {'pos': [start, end], ...}, 
-                  't': {'pos': [start, end], ...}
-                }]
-        Return:
-            (relation, score)
-        """
-        self.model.eval()
-        bag_seq = []
-        for item in bag:
-            seq = list(self.model.module.sentence_encoder.tokenize(item))
-            if len(bag_seq) == 0:
-                for data in seq:
-                    bag_seq.append([data])
-            else:
-                for i in range(len(seq)):
-                    bag_seq[i].append(seq[i])
-        for i in range(len(bag_seq)):
-            bag_seq[i] = torch.cat(bag_seq[i], 0)
-        logits = self.model(None, [[0, len(bag)]], *bag_seq, train=False)
-        score, pred = logits.squeeze(0).max(-1)
-        score = score.item()
-        pred = pred.item()
-        rel = self.model.module.id2rel[pred]
-        return (rel, score)
-
     def train_model(self):
         best_auc = 0
         for epoch in range(self.max_epoch):
