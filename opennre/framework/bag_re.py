@@ -109,6 +109,7 @@ class BagRE(nn.Module):
         Return:
             (relation, score)
         """
+        self.model.eval()
         bag_seq = []
         for item in bag:
             seq = list(self.model.module.sentence_encoder.tokenize(item))
