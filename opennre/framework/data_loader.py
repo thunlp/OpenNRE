@@ -93,7 +93,7 @@ class SentenceREDataset(data.Dataset):
         return {'acc': acc, 'micro_p': micro_p, 'micro_r': micro_r, 'micro_f1': micro_f1}
     
 def SentenceRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, num_workers=4, collate_fn=SentenceREDataset.collate_fn, **kwargs):
+        shuffle, num_workers=8, collate_fn=SentenceREDataset.collate_fn, **kwargs):
     dataset = SentenceREDataset(path = path, rel2id = rel2id, tokenizer = tokenizer, kwargs=kwargs)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,
@@ -230,7 +230,7 @@ class BagREDataset(data.Dataset):
         return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
 
 def BagRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, entpair_as_bag=False, bag_size=None, num_workers=10, 
+        shuffle, entpair_as_bag=False, bag_size=None, num_workers=8, 
         collate_fn=BagREDataset.collate_fn):
     dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag, bag_size=bag_size)
     data_loader = data.DataLoader(dataset=dataset,

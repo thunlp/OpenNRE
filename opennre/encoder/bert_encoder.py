@@ -6,7 +6,7 @@ from transformers import BertModel, BertTokenizer
 
 
 class BERTEncoder(nn.Module):
-    def __init__(self, max_length, pretrain_path, blank_padding=True):
+    def __init__(self, max_length, pretrain_path, blank_padding=True, mask_entity=False):
         """
         Args:
             max_length: max length of sentence
@@ -16,6 +16,7 @@ class BERTEncoder(nn.Module):
         self.max_length = max_length
         self.blank_padding = blank_padding
         self.hidden_size = 768
+        self.mask_entity = mask_entity
         self.bert = BertModel.from_pretrained(pretrain_path)
         self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
 
@@ -61,6 +62,12 @@ class BERTEncoder(nn.Module):
             sent1 = self.tokenizer.tokenize(sentence[pos_min[1]:pos_max[0]])
             ent1 = self.tokenizer.tokenize(sentence[pos_max[0]:pos_max[1]])
             sent2 = self.tokenizer.tokenize(sentence[pos_max[1]:])
+            if self.mask_entity:
+                ent0 = ['[unused4]']
+                ent1 = ['[unused5]']
+                if rev:
+                    ent0 = ['[unused5]']
+                    ent1 = ['[unused4]']
             pos_head = [len(sent0), len(sent0) + len(ent0)]
             pos_tail = [
                 len(sent0) + len(ent0) + len(sent1),
@@ -81,14 +88,14 @@ class BERTEncoder(nn.Module):
         cur_pos = 0
         for token in tokens:
             token = token.lower()
-            if cur_pos == pos_head[0]:
+            if cur_pos == pos_head[0] and not self.mask_entity:
                 re_tokens.append('[unused0]')
-            if cur_pos == pos_tail[0]:
+            if cur_pos == pos_tail[0] and not self.mask_entity:
                 re_tokens.append('[unused1]')
             re_tokens += self.tokenizer.tokenize(token)
-            if cur_pos == pos_head[1] - 1:
+            if cur_pos == pos_head[1] - 1 and not self.mask_entity:
                 re_tokens.append('[unused2]')
-            if cur_pos == pos_tail[1] - 1:
+            if cur_pos == pos_tail[1] - 1 and not self.mask_entity:
                 re_tokens.append('[unused3]')
             cur_pos += 1
         re_tokens.append('[SEP]')
@@ -101,8 +108,7 @@ class BERTEncoder(nn.Module):
             while len(indexed_tokens) < self.max_length:
                 indexed_tokens.append(0)  # 0 is id for [PAD]
             indexed_tokens = indexed_tokens[:self.max_length]
-        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(
-            0)  # (1, L)
+        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0)  # (1, L)
 
         # Attention mask
         att_mask = torch.zeros(indexed_tokens.size()).long()  # (1, L)
