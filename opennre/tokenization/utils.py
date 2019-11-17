@@ -87,7 +87,7 @@ def split_on_punctuation(text):
 
 def tokenize_chinese_chars(text):
     """Adds whitespace around any CJK character."""
-    return "".join(" " + char + " " if s_chinese_char(ord(char)) else char for char in text)
+    return "".join(" " + char + " " if is_chinese_char(ord(char)) else char for char in text)
 
 def strip_accents(text):
     """Strips accents from a piece of text."""
