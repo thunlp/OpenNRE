@@ -5,29 +5,22 @@ from __future__ import print_function
 import collections
 import unicodedata
 import six
+import tensorflow as tf
 
 def is_whitespace(char):
     """    Checks whether `chars` is a whitespace character.
         \t, \n, and \r are technically contorl characters but we treat them
         as whitespace since they are generally considered as such.
     """
-    if char == " " or char == "\t" or char == "\n" or char == "\r":
-        return True
-    cat = unicodedata.category(char)
-    if cat == "Zs":
-        return True
-    return False
+    return char in (" ", "\t", "\n", "\r") or unicodedata.category(char) == "Zs"
 
 def is_control(char):
     """    Checks whether `chars` is a control character.
         These are technically control characters but we count them as whitespace characters.
     """
-    if char == "\t" or char == "\n" or char == "\r":
+    if char in ("\t", "\n", "\r"):
         return False
-    cat = unicodedata.category(char)
-    if cat.startswith("C"):
-        return True
-    return False
+    return not unicodedata.category(char).startswith("C")
 
 def is_punctuation(char):
     """ Checks whether `chars` is a punctuation character.
@@ -35,12 +28,9 @@ def is_punctuation(char):
         Punctuation class but we treat them as punctuation anyways, for consistency.
     """
     cp = ord(char)
-    if ((cp >= 33 and cp <= 47) or (cp >= 58 and cp <= 64) or (cp >= 91 and cp <= 96) or (cp >= 123 and cp <= 126)):
+    if 33 <= cp <= 47 or 58 <= cp <= 64 or 91 <= cp <= 96 or 123 <= cp <= 126:
         return True
-    cat = unicodedata.category(char)
-    if cat.startswith("P"):
-        return True
-    return False
+    return unicodedata.category(char).startswith("P"):
 
 def is_chinese_char(cp):
     """    Checks whether CP is the codepoint of a CJK character.
@@ -52,56 +42,33 @@ def is_chinese_char(cp):
         space-separated words, so they are not treated specially and handled
         like the all of the other languages.
     """
-    if ((cp >= 0x4E00 and cp <= 0x9FFF) or
-        (cp >= 0x3400 and cp <= 0x4DBF) or
-        (cp >= 0x20000 and cp <= 0x2A6DF) or
-        (cp >= 0x2A700 and cp <= 0x2B73F) or
-        (cp >= 0x2B740 and cp <= 0x2B81F) or
-        (cp >= 0x2B820 and cp <= 0x2CEAF) or
-        (cp >= 0xF900 and cp <= 0xFAFF) or
-        (cp >= 0x2F800 and cp <= 0x2FA1F)):
-        return True
-    return False
+    return (0x4E00 <= cp <= 0x9FFF or
+            0x3400 <= cp <= 0x4DBF or
+            0x20000 <= cp <= 0x2A6DF or
+            0x2A700 <= cp <= 0x2B73F or
+            0x2B740 <= cp <= 0x2B81F or
+            0x2B820 <= cp <= 0x2CEAF or
+            0xF900 <= cp <= 0xFAFF or
+            0x2F800 <= cp <= 0x2FA1F)
 
 def convert_to_unicode(text):
     """Converts `text` to Unicode (if it's not already), assuming utf-8 input."""
-    if six.PY3:
-        if isinstance(text, str):
-            return text
-        elif isinstance(text, bytes):
-            return text.decode("utf-8", "ignore")
-        else:
-            raise ValueError("Unsupported string type: %s" % (type(text)))
-    elif six.PY2:
-        if isinstance(text, str):
-            return text.decode("utf-8", "ignore")
-        elif isinstance(text, unicode):
-            return text
-        else:
-            raise ValueError("Unsupported string type: %s" % (type(text)))
+    if isinstance(text, six.text_type):
+        return text
+    elif isinstance(text, six.binary_type):
+        return text.decode("utf-8", "ignore")
     else:
-        raise ValueError("Not running on Python2 or Python 3?")
+        raise ValueError("Unsupported string type: %s" % (type(text)))
 
 def clean_text(text):
-    output = []
-    for char in text:
-        cp = ord(char)
-        if cp == 0 or cp == 0xfffd or is_control(char):
-            continue
-        if is_whitespace(char):
-            output.append(" ")
-        else:
-            output.append(char)
-    return "".join(output)
+    return "".join(" " if is_whitespace(char) else char for char in text
+                   if ord(char) not in (0, 0xfffd) and not is_control(char))
 
 def split_on_whitespace(text):
     """ Runs basic whitespace cleaning and splitting on a peice of text.
     e.g, 'a b c' -> ['a', 'b', 'c']
     """
-    text = text.strip()
-    if not text:
-        return []
-    return text.split()
+    return text.strip().split()
 
 def split_on_punctuation(text):
     """Splits punctuation on a piece of text."""
@@ -120,27 +87,12 @@ def split_on_punctuation(text):
 
 def tokenize_chinese_chars(text):
     """Adds whitespace around any CJK character."""
-    output = []
-    for char in text:
-        cp = ord(char)
-        if is_chinese_char(cp):
-            output.append(" ")
-            output.append(char)
-            output.append(" ")
-        else:
-            output.append(char)
-    return "".join(output)
+    return "".join(" " + char + " " if s_chinese_char(ord(char)) else char for char in text)
 
 def strip_accents(text):
     """Strips accents from a piece of text."""
     text = unicodedata.normalize("NFD", text)
-    output = []
-    for char in text:
-        cat = unicodedata.category(char)
-        if cat == "Mn":
-            continue
-        output.append(char)
-    return "".join(output)
+    return "".join(char for char in text if unicodedata.category(char) != "Mn")
 
 def load_vocab(vocab_file):
     """Loads a vocabulary file into a dictionary."""
