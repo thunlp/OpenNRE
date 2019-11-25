@@ -38,7 +38,7 @@ model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
 # Define the whole training framework
 framework = opennre.framework.BagRE(
     train_path='benchmark/nyt10/nyt10_train.txt',
-    val_path='benchmark/nyt10/nyt10_test.txt',
+    val_path='benchmark/nyt10/nyt10_val.txt',
     test_path='benchmark/nyt10/nyt10_test.txt',
     model=model,
     ckpt=ckpt,
