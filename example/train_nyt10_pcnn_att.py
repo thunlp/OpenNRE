@@ -4,6 +4,11 @@ import os
 import numpy as np
 import opennre
 from opennre import encoder, model, framework
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--bag_size', type=int, default=0)
+args = parser.parse_args()
 
 # Some basic settings
 root_path = '.'
@@ -46,7 +51,8 @@ framework = opennre.framework.BagRE(
     max_epoch=60,
     lr=0.5,
     weight_decay=0,
-    opt='sgd')
+    opt='sgd',
+    bag_size=args.bag_size)
 
 # Train the model
 framework.train_model()

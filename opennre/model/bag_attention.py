@@ -65,7 +65,7 @@ class BagAttention(BagRE):
         rel = self.id2rel[pred]
         return (rel, score)
     
-    def forward(self, label, scope, token, pos1, pos2, mask=None, train=True, bag_size=None):
+    def forward(self, label, scope, token, pos1, pos2, mask=None, train=True, bag_size=0):
         """
         Args:
             label: (B), label of the bag
@@ -77,22 +77,30 @@ class BagAttention(BagRE):
         Return:
             logits, (B, N)
         """
+        if bag_size > 0:
+            token = token.view(-1, token.size(-1))
+            pos1 = pos1.view(-1, pos1.size(-1))
+            pos2 = pos2.view(-1, pos2.size(-1))
+            if mask is not None:
+                mask = mask.view(-1, mask.size(-1))
+
         if mask is not None:
-            rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H)
+            rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H) 
         else:
-            rep = self.sentence_encoder(token, pos1, pos2) # (nsum, H)
+            rep = self.sentence_encoder(token, pos1, pos2) # (nsum, H) 
 
         # Attention
         if train:
-            bag_rep = []
-            query = torch.zeros((rep.size(0))).long()
-            if torch.cuda.is_available():
-                query = query.cuda()
-            for i in range(len(scope)):
-                query[scope[i][0]:scope[i][1]] = label[i]
-            att_mat = self.fc.weight.data[query] # (nsum, H)
-            att_score = (rep * att_mat).sum(-1) # (nsum)
-            if bag_size is None:
+            if bag_size == 0:
+                bag_rep = []
+                query = torch.zeros((rep.size(0))).long()
+                if torch.cuda.is_available():
+                    query = query.cuda()
+                for i in range(len(scope)):
+                    query[scope[i][0]:scope[i][1]] = label[i]
+                att_mat = self.fc.weight.data[query] # (nsum, H)
+                att_score = (rep * att_mat).sum(-1) # (nsum)
+
                 for i in range(len(scope)):
                     bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
                     softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]]) # (n)
@@ -100,24 +108,34 @@ class BagAttention(BagRE):
                 bag_rep = torch.stack(bag_rep, 0) # (B, H)
             else:
                 batch_size = label.size(0)
-                rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
-                att_mat = att_mat.view(batch_size, bag_size, -1) # (B, bag, H)
-                att_score = att_score.view(batch_size, bag_size) # (B, bag)
+                query = label.unsqueeze(1) # (B, 1)
+                att_mat = self.fc.weight.data[query] # (B, 1, H)
+                rep = rep.view(batch_size, bag_size, -1)
+                att_score = (rep * att_mat).sum(-1) # (B, bag)
                 softmax_att_score = self.softmax(att_score) # (B, bag)
                 bag_rep = (softmax_att_score.unsqueeze(-1) * rep).sum(1) # (B, bag, 1) * (B, bag, H) -> (B, bag, H) -> (B, H)
             bag_rep = self.drop(bag_rep)
             bag_logits = self.fc(bag_rep) # (B, N)
         else:
-            bag_logits = []
-            att_score = torch.matmul(rep, self.fc.weight.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
-            for i in range(len(scope)):
-                bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
-                softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]].transpose(0, 1)) # (N, (softmax)n) 
-                rep_for_each_rel = torch.matmul(softmax_att_score, bag_mat) # (N, n) * (n, H) -> (N, H)
-                logit_for_each_rel = self.softmax(self.fc(rep_for_each_rel)) # ((each rel)N, (logit)N)
-                logit_for_each_rel = logit_for_each_rel.diag() # (N)
-                bag_logits.append(logit_for_each_rel)
-            bag_logits = torch.stack(bag_logits,0) # after **softmax**
+            if bag_size == 0:
+                bag_logits = []
+                att_score = torch.matmul(rep, self.fc.weight.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
+                for i in range(len(scope)):
+                    bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
+                    softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]].transpose(0, 1)) # (N, (softmax)n) 
+                    rep_for_each_rel = torch.matmul(softmax_att_score, bag_mat) # (N, n) * (n, H) -> (N, H)
+                    logit_for_each_rel = self.softmax(self.fc(rep_for_each_rel)) # ((each rel)N, (logit)N)
+                    logit_for_each_rel = logit_for_each_rel.diag() # (N)
+                    bag_logits.append(logit_for_each_rel)
+                bag_logits = torch.stack(bag_logits,0) # after **softmax**
+            else:
+                batch_size = rep.size(0) // bag_size
+                att_score = torch.matmul(rep, self.fc.weight.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
+                att_score = att_score.view(batch_size, bag_size, -1) # (B, bag, N)
+                rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
+                softmax_att_score = self.softmax(att_score.transpose(1, 2)) # (B, N, (softmax)bag)
+                rep_for_each_rel = torch.matmul(softmax_att_score, rep) # (B, N, bag) * (B, bag, H) -> (B, N, H)
+                bag_logits = self.softmax(self.fc(rep_for_each_rel)).diagonal(dim1=1, dim2=2) # (B, (each rel)N)
 
         return bag_logits
 

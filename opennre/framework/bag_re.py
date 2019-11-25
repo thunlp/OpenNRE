@@ -19,7 +19,7 @@ class BagRE(nn.Module):
                  lr=0.1, 
                  weight_decay=1e-5, 
                  opt='sgd',
-                 bag_size=None,
+                 bag_size=0,
                  loss_weight=False):
     
         super().__init__()
@@ -43,7 +43,7 @@ class BagRE(nn.Module):
                 model.sentence_encoder.tokenize,
                 batch_size,
                 False,
-                bag_size=None,
+                bag_size=bag_size,
                 entpair_as_bag=True)
         
         if test_path != None:
@@ -53,7 +53,7 @@ class BagRE(nn.Module):
                 model.sentence_encoder.tokenize,
                 batch_size,
                 False,
-                bag_size=None,
+                bag_size=bag_size,
                 entpair_as_bag=True
             )
         # Model
@@ -167,7 +167,7 @@ class BagRE(nn.Module):
                 bag_name = data[1]
                 scope = data[2]
                 args = data[3:]
-                logits = self.model(None, scope, *args, train=False) # results after softmax
+                logits = self.model(None, scope, *args, train=False, bag_size=self.bag_size) # results after softmax
                 for i in range(logits.size(0)):
                     for relid in range(self.model.module.num_class):
                         if self.model.module.id2rel[relid] != 'NA':

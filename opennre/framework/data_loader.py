@@ -107,7 +107,7 @@ class BagREDataset(data.Dataset):
     """
     Bag-level relation extraction dataset. Note that relation of NA should be named as 'NA'.
     """
-    def __init__(self, path, rel2id, tokenizer, entpair_as_bag=False, bag_size=None, mode=None):
+    def __init__(self, path, rel2id, tokenizer, entpair_as_bag=False, bag_size=0, mode=None):
         """
         Args:
             path: path of the input file
@@ -163,7 +163,7 @@ class BagREDataset(data.Dataset):
 
     def __getitem__(self, index):
         bag = self.bag_scope[index]
-        if self.bag_size is not None:
+        if self.bag_size > 0:
             if self.bag_size <= len(bag):
                 resize_bag = random.sample(bag, self.bag_size)
             else:
@@ -183,7 +183,6 @@ class BagREDataset(data.Dataset):
                 seqs[i].append(seq[i])
         for i in range(len(seqs)):
             seqs[i] = torch.cat(seqs[i], 0) # (n, L), n is the size of bag
-    
         return [rel, self.bag_name[index], len(bag)] + seqs
   
     def collate_fn(data):
@@ -200,6 +199,21 @@ class BagREDataset(data.Dataset):
         assert(start == seqs[0].size(0))
         label = torch.tensor(label).long() # (B)
         return [label, bag_name, scope] + seqs
+
+    def collate_bag_size_fn(data):
+        data = list(zip(*data))
+        label, bag_name, count = data[:3]
+        seqs = data[3:]
+        for i in range(len(seqs)):
+            seqs[i] = torch.stack(seqs[i], 0) # (batch, bag, L)
+        scope = [] # (B, 2)
+        start = 0
+        for c in count:
+            scope.append((start, start + c))
+            start += c
+        label = torch.tensor(label).long() # (B)
+        return [label, bag_name, scope] + seqs
+
   
     def eval(self, pred_result):
         """
@@ -230,8 +244,12 @@ class BagREDataset(data.Dataset):
         return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
 
 def BagRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, entpair_as_bag=False, bag_size=None, num_workers=8, 
+        shuffle, entpair_as_bag=False, bag_size=0, num_workers=8, 
         collate_fn=BagREDataset.collate_fn):
+    if bag_size == 0:
+        collate_fn = BagREDataset.collate_fn
+    else:
+        collate_fn = BagREDataset.collate_bag_size_fn
     dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag, bag_size=bag_size)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,
