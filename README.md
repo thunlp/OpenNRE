@@ -32,6 +32,23 @@ Accuracy on test set: 0.986
 >>> model.infer({'text': '名旦吴菱仙是位列“同治十三绝”的名旦时小福的弟子，算得梅兰芳的开蒙老师，早年曾搭过梅巧玲的四喜班，旧谊', 'h': {'pos': (2, 4)}, 't': {'pos': (27, 29)}})
 ('师生', 0.996309220790863)
 
+# 使用前准备
+1.bert模型下载：在./pretrain/下面放置chinese_wwm_pytorch模型，下载地址：https://github.com/ymcui/Chinese-BERT-wwm
+2.数据下载：在./benchmark/people-relation/下执行gen.py,生产中文人物关系数据，具体脚本中有说明。
+3.配置环境变量：vim ~/.bash_profile  添加
+    # openNRE
+    export openNRE=项目位置
+    
+
+# 注意事项
+ 如果自己训练了tensorflow 的bert，可以通过https://github.com/huggingface/transformers 里面的convert_bert_original_tf_checkpoint_to_pytorch.py 脚本转换为pytorch版。
+踩坑：
+1.安装tensorflow 2.0，最终用的都是PyTorch模型，但TensorFlow也得安装
+2.构造checkpoint文件
+3.报错：Embedding' object has no attribute 'shape' ，解决：将报错位置assert那几行直接删除
+
+
+
 # OpenNRE
 
 OpenNRE is an open-source and extensible toolkit that provides a unified framework to implement relation extraction models. This package is designed for the following groups:
