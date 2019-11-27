@@ -7,14 +7,14 @@ import sys
 import json
 import numpy as np
 
-default_root_path = os.path.join(os.getenv('HOME'), '.opennre')
+default_root_path = os.path.join(os.getenv('openNRE'), '.')
 
 def check_root(root_path=default_root_path):
     if not os.path.exists(root_path):
         os.mkdir(root_path)
         os.mkdir(os.path.join(root_path, 'benchmark'))
         os.mkdir(os.path.join(root_path, 'pretrain'))
-        os.mkdir(os.path.join(root_path, 'pretrain/nre'))
+        os.mkdir(os.path.join(root_path, 'ckpt'))
 
 def download_wiki80(root_path=default_root_path):
     check_root()
@@ -49,14 +49,18 @@ def download_bert_base_uncased(root_path=default_root_path):
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/vocab.txt')
 
 def download_pretrain(model_name, root_path=default_root_path):
-    ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
+    ckpt = os.path.join(root_path, 'ckpt/' + model_name + '.pth.tar')
     if not os.path.exists(ckpt):
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/nre')  + ' http://193.112.16.83:8080/opennre/pretrain/nre/' + model_name + '.pth.tar')
+        print("*"*20)
+        print("下载ckpt")
+        os.system('wget -P ' + os.path.join(root_path, 'ckpt/')  + ' http://193.112.16.83:8080/opennre/ckpt/' + model_name + '.pth.tar')
 
 def get_model(model_name, root_path=default_root_path):
     check_root()
-    ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
+    ckpt = os.path.join(root_path, 'ckpt/' + model_name + '.pth.tar')
+    
     if model_name == 'wiki80_cnn_softmax':
+        print("*"*20+"taorui")
         download_pretrain(model_name)
         download_glove()
         download_wiki80()
@@ -86,5 +90,38 @@ def get_model(model_name, root_path=default_root_path):
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt)['state_dict'])
         return m
+    elif model_name == 'test_chinese_bert_softmax':
+        download_pretrain(model_name)
+        download_bert_base_uncased()
+        download_wiki80()
+        rel2id = json.load(open(os.path.join(root_path, 'benchmark/test_chinese/test_chinese_rel2id.json')))
+        sentence_encoder = encoder.BERTEncoder(
+            max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/chinese_wwm_pytorch'))
+        m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+        m.load_state_dict(torch.load(ckpt)['state_dict'])
+        return m
+
+    elif model_name == 'people_chinese_bert_softmax':
+        download_pretrain(model_name)
+        download_bert_base_uncased()
+        download_wiki80()
+        rel2id = json.load(open(os.path.join(root_path, 'benchmark/people-relation/people-relation_rel2id.json')))
+        sentence_encoder = encoder.BERTEncoder(
+            max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/chinese_wwm_pytorch'))
+        m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+        m.load_state_dict(torch.load(ckpt)['state_dict'])
+        return m 
+
+    elif model_name == 'people_delunknown_chinese_bert_softmax':
+        download_pretrain(model_name)
+        download_bert_base_uncased()
+        download_wiki80()
+        rel2id = json.load(open(os.path.join(root_path, 'benchmark/people-relation-delunknow/people-relation_rel2id.json')))
+        sentence_encoder = encoder.BERTEncoder(
+            max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/chinese_wwm_pytorch'))
+        m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+        m.load_state_dict(torch.load(ckpt)['state_dict'])
+        return m
+    
     else:
         raise NotImplementedError

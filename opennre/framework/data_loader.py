@@ -140,7 +140,9 @@ class BagREDataset(data.Dataset):
             self.bag_name = []
             self.facts = {}
             for idx, item in enumerate(self.data):
+               
                 fact = (item['h']['id'], item['t']['id'], item['relation'])
+
                 if item['relation'] != 'NA':
                     self.facts[fact] = 1
                 if entpair_as_bag:
