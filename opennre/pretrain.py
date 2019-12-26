@@ -74,7 +74,7 @@ def get_model(model_name, root_path=default_root_path):
                                                      word2vec=word2vec,
                                                      dropout=0.5)
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
-        m.load_state_dict(torch.load(ckpt)['state_dict'])
+        m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
         return m
     elif model_name == 'wiki80_bert_softmax':
         download_pretrain(model_name)
@@ -84,7 +84,7 @@ def get_model(model_name, root_path=default_root_path):
         sentence_encoder = encoder.BERTEncoder(
             max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
-        m.load_state_dict(torch.load(ckpt)['state_dict'])
+        m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
         return m
     else:
         raise NotImplementedError
