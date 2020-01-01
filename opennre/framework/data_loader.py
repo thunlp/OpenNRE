@@ -197,6 +197,7 @@ class BagREDataset(data.Dataset):
             scope.append((start, start + c))
             start += c
         assert(start == seqs[0].size(0))
+        scope = torch.tensor(scope).long()
         label = torch.tensor(label).long() # (B)
         return [label, bag_name, scope] + seqs
 
@@ -211,6 +212,7 @@ class BagREDataset(data.Dataset):
         for c in count:
             scope.append((start, start + c))
             start += c
+        scope = torch.tensor(scope).long()
         label = torch.tensor(label).long() # (B)
         return [label, bag_name, scope] + seqs
 
