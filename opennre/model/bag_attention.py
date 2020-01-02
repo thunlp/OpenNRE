@@ -83,6 +83,14 @@ class BagAttention(BagRE):
             pos2 = pos2.view(-1, pos2.size(-1))
             if mask is not None:
                 mask = mask.view(-1, mask.size(-1))
+        else:
+            begin, end = scope[0][0], scope[-1][1]
+            token = token[:, begin:end, :].view(-1, token.size(-1))
+            pos1 = pos1[:, begin:end, :].view(-1, pos1.size(-1))
+            pos2 = pos2[:, begin:end, :].view(-1, pos2.size(-1))
+            if mask is not None:
+                mask = mask[:, begin:end, :].view(-1, mask.size(-1))
+            scope = torch.sub(scope, torch.zeros_like(scope).fill_(begin))
 
         if mask is not None:
             rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H) 
