@@ -22,12 +22,15 @@ Relation extraction is a crucial technique in automatic knowledge graph construc
 A good research work is always accompanied by a thorough and faithful reference. If you use or extend our work, please cite the following paper:
 
 ```
-    @inproceedings{han2019opennre,
-      title={OpenNRE: An Open and Extensible Toolkit for Neural Relation Extraction},
-      author={Han, Xu and Gao, Tianyu and Yao, Yuan and Ye, Deming and Liu, Zhiyuan and Sun, Maosong },
-      booktitle={Proceedings of EMNLP},
-      year={2019}
-    }
+@inproceedings{han-etal-2019-opennre,
+    title = "{O}pen{NRE}: An Open and Extensible Toolkit for Neural Relation Extraction",
+    author = "Han, Xu and Gao, Tianyu and Yao, Yuan and Ye, Deming and Liu, Zhiyuan and Sun, Maosong",
+    booktitle = "Proceedings of EMNLP-IJCNLP: System Demonstrations",
+    year = "2019",
+    url = "https://www.aclweb.org/anthology/D19-3029",
+    doi = "10.18653/v1/D19-3029",
+    pages = "169--174"
+}
 ```
 
 It's our honor to help you better explore relation extraction with our OpenNRE toolkit!
