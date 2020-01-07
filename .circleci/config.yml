@@ -43,6 +43,7 @@ jobs:
           name: Test
           command: |
               . venv/bin/activate
+              python setup.py develop
               pytest
 
       - store_artifacts:
