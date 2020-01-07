@@ -1,9 +1,8 @@
+import logging
 import torch
 import torch.nn as nn
-
-from .base_encoder import BaseEncoder
 from transformers import BertModel, BertTokenizer
-
+from .base_encoder import BaseEncoder
 
 class BERTEncoder(nn.Module):
     def __init__(self, max_length, pretrain_path, blank_padding=True, mask_entity=False):
@@ -17,6 +16,7 @@ class BERTEncoder(nn.Module):
         self.blank_padding = blank_padding
         self.hidden_size = 768
         self.mask_entity = mask_entity
+        logging.info('Loading BERT pre-trained checkpoint.')
         self.bert = BertModel.from_pretrained(pretrain_path)
         self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
 
@@ -118,7 +118,7 @@ class BERTEncoder(nn.Module):
 
 
 class BERTEntityEncoder(nn.Module):
-    def __init__(self, max_length, pretrain_path, blank_padding=True):
+    def __init__(self, max_length, pretrain_path, blank_padding=True, mask_entity=False):
         """
         Args:
             max_length: max length of sentence
@@ -128,6 +128,8 @@ class BERTEntityEncoder(nn.Module):
         self.max_length = max_length
         self.blank_padding = blank_padding
         self.hidden_size = 768 * 2
+        self.mask_entity = mask_entity
+        logging.info('Loading BERT pre-trained checkpoint.')
         self.bert = BertModel.from_pretrained(pretrain_path)
         self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
         self.linear = nn.Linear(self.hidden_size, self.hidden_size)
@@ -186,6 +188,12 @@ class BERTEntityEncoder(nn.Module):
             sent1 = self.tokenizer.tokenize(sentence[pos_min[1]:pos_max[0]])
             ent1 = self.tokenizer.tokenize(sentence[pos_max[0]:pos_max[1]])
             sent2 = self.tokenizer.tokenize(sentence[pos_max[1]:])
+            if self.mask_entity:
+                ent0 = ['[unused4]']
+                ent1 = ['[unused5]']
+                if rev:
+                    ent0 = ['[unused5]']
+                    ent1 = ['[unused4]']
             pos_head = [len(sent0), len(sent0) + len(ent0)]
             pos_tail = [
                 len(sent0) + len(ent0) + len(sent1),

@@ -1,7 +1,7 @@
+import math, logging
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 import numpy as np
 from ..tokenization import WordTokenizer
 
@@ -14,7 +14,8 @@ class BaseEncoder(nn.Module):
                  word_size=50,
                  position_size=5,
                  blank_padding=True,
-                 word2vec=None):
+                 word2vec=None,
+                 mask_entity=False):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -25,14 +26,14 @@ class BaseEncoder(nn.Module):
             blank_padding: padding for CNN
             word2vec: pretrained word2vec numpy
         """
-        # hyperparameters
+        # Hyperparameters
         super().__init__()
-        print("Initializing hyperparameters...")
 
         self.token2id = token2id
         self.max_length = max_length
         self.num_token = len(token2id)
         self.num_position = max_length * 2
+        self.mask_entity = mask_entity
 
         if word2vec is None:
             self.word_size = word_size
@@ -51,13 +52,10 @@ class BaseEncoder(nn.Module):
             self.token2id['[PAD]'] = len(self.token2id)
             self.num_token += 1
 
-        print('Finished!')
-
         # Word embedding
-
         self.word_embedding = nn.Embedding(self.num_token, self.word_size)
         if word2vec is not None:
-            print("Initializing word embedding with word2vec...")
+            logging.info("Initializing word embedding with word2vec.")
             word2vec = torch.from_numpy(word2vec)
             if self.num_token == len(word2vec) + 2:            
                 unk = torch.randn(1, self.word_size) / math.sqrt(self.word_size)
@@ -65,7 +63,6 @@ class BaseEncoder(nn.Module):
                 self.word_embedding.weight.data.copy_(torch.cat([word2vec, unk, blk], 0))
             else:
                 self.word_embedding.weight.data.copy_(word2vec)
-            print('Finished!')
 
         # Position Embedding
         self.pos1_embedding = nn.Embedding(2 * max_length, self.position_size, padding_idx=0)
@@ -114,6 +111,9 @@ class BaseEncoder(nn.Module):
             sent_2 = self.tokenizer.tokenize(sentence[pos_max[1]:])
             ent_0 = self.tokenizer.tokenize(sentence[pos_min[0]:pos_min[1]])
             ent_1 = self.tokenizer.tokenize(sentence[pos_max[0]:pos_max[1]])
+            if self.mask_entity:
+                ent_0 = ['[UNK]']
+                ent_1 = ['[UNK]']
             tokens = sent_0 + ent_0 + sent_1 + ent_1 + sent_2
             if rev:
                 pos_tail = [len(sent_0), len(sent_0) + len(ent_0)]

@@ -19,7 +19,8 @@ class CNNEncoder(BaseEncoder):
                  kernel_size=3, 
                  padding_size=1,
                  dropout=0,
-                 activation_function=F.relu):
+                 activation_function=F.relu,
+                 mask_entity=False):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -33,7 +34,7 @@ class CNNEncoder(BaseEncoder):
             padding_size: padding_size for CNN
         """
         # Hyperparameters
-        super(CNNEncoder, self).__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
+        super(CNNEncoder, self).__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec, mask_entity=mask_entity)
         self.drop = nn.Dropout(dropout)
         self.kernel_size = kernel_size
         self.padding_size = padding_size

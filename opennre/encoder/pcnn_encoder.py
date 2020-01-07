@@ -21,7 +21,8 @@ class PCNNEncoder(BaseEncoder):
                  kernel_size=3, 
                  padding_size=1,
                  dropout=0.0,
-                 activation_function=F.relu):
+                 activation_function=F.relu,
+                 mask_entity=False):
         """
         Args:
             token2id: dictionary of token->idx mapping
@@ -35,7 +36,7 @@ class PCNNEncoder(BaseEncoder):
             padding_size: padding_size for CNN
         """
         # hyperparameters
-        super().__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec)
+        super().__init__(token2id, max_length, hidden_size, word_size, position_size, blank_padding, word2vec, mask_entity=mask_entity)
         self.drop = nn.Dropout(dropout)
         self.kernel_size = kernel_size
         self.padding_size = padding_size
@@ -110,6 +111,9 @@ class PCNNEncoder(BaseEncoder):
             sent_2 = self.tokenizer.tokenize(sentence[pos_max[1]:])
             ent_0 = self.tokenizer.tokenize(sentence[pos_min[0]:pos_min[1]])
             ent_1 = self.tokenizer.tokenize(sentence[pos_max[0]:pos_max[1]])
+            if self.mask_entity:
+                ent_0 = ['[UNK]']
+                ent_1 = ['[UNK]']
             tokens = sent_0 + ent_0 + sent_1 + ent_1 + sent_2
             if rev:
                 pos_tail = [len(sent_0), len(sent_0) + len(ent_0)]

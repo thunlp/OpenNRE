@@ -1,9 +1,7 @@
 import torch
 import torch.utils.data as data
-import os
+import os, random, json, logging
 import numpy as np
-import random
-import json
 import sklearn.metrics
 
 class SentenceREDataset(data.Dataset):
@@ -31,6 +29,7 @@ class SentenceREDataset(data.Dataset):
             if len(line) > 0:
                 self.data.append(eval(line))
         f.close()
+        logging.info("Loaded sentence RE dataset {} with {} lines and {} relations.".format(path, len(self.data), len(self.rel2id)))
         
     def __len__(self):
         return len(self.data)
@@ -87,10 +86,21 @@ class SentenceREDataset(data.Dataset):
             if pred_result[i] != neg:
                 pred_positive += 1
         acc = float(correct) / float(total)
-        micro_p = float(correct_positive) / float(pred_positive)
-        micro_r = float(correct_positive) / float(gold_positive)
-        micro_f1 = 2 * micro_p * micro_r / (micro_p + micro_r)
-        return {'acc': acc, 'micro_p': micro_p, 'micro_r': micro_r, 'micro_f1': micro_f1}
+        try:
+            micro_p = float(correct_positive) / float(pred_positive)
+        except:
+            micro_p = 0
+        try:
+            micro_r = float(correct_positive) / float(gold_positive)
+        except:
+            micro_r = 0
+        try:
+            micro_f1 = 2 * micro_p * micro_r / (micro_p + micro_r)
+        except:
+            micro_f1 = 0
+        result = {'acc': acc, 'micro_p': micro_p, 'micro_r': micro_r, 'micro_f1': micro_f1}
+        logging.info('Evaluation result: {}.'.format(result))
+        return result
     
 def SentenceRELoader(path, rel2id, tokenizer, batch_size, 
         shuffle, num_workers=8, collate_fn=SentenceREDataset.collate_fn, **kwargs):

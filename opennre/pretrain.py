@@ -7,6 +7,7 @@ import sys
 import json
 import numpy as np
 
+root_url = "http://193.112.16.83:8080/"
 default_root_path = os.path.join(os.getenv('HOME'), '.opennre')
 
 def check_root(root_path=default_root_path):
@@ -20,38 +21,61 @@ def download_wiki80(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'benchmark/wiki80')):
         os.mkdir(os.path.join(root_path, 'benchmark/wiki80'))
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_rel2id.json')
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_train.txt')
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' http://193.112.16.83:8080/opennre/benchmark/wiki80/wiki80_val.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' ' + root_url + 'opennre/benchmark/wiki80/wiki80_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' ' + root_url + 'opennre/benchmark/wiki80/wiki80_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' ' + root_url + 'opennre/benchmark/wiki80/wiki80_val.txt')
 
 def download_nyt10(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'benchmark/nyt10')):
         os.mkdir(os.path.join(root_path, 'benchmark/nyt10'))
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_rel2id.json')
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_train.txt')
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_test.txt')
-        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' http://193.112.16.83:8080/opennre/benchmark/nyt10/nyt10_val.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_test.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_val.txt')
+
+def download_semeval(root_path=default_root_path):
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/semeval')):
+        os.mkdir(os.path.join(root_path, 'benchmark/semeval'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/semeval') + ' ' + root_url + 'opennre/benchmark/semeval/semeval_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/semeval') + ' ' + root_url + 'opennre/benchmark/semeval/semeval_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/semeval') + ' ' + root_url + 'opennre/benchmark/semeval/semeval_test.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/semeval') + ' ' + root_url + 'opennre/benchmark/semeval/semeval_val.txt')
 
 def download_glove(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'pretrain/glove')):
         os.mkdir(os.path.join(root_path, 'pretrain/glove'))
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_mat.npy')
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' http://193.112.16.83:8080/opennre/pretrain/glove/glove.6B.50d_word2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' ' + root_url + 'opennre/pretrain/glove/glove.6B.50d_mat.npy')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/glove') +  ' ' + root_url + 'opennre/pretrain/glove/glove.6B.50d_word2id.json')
 
 def download_bert_base_uncased(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'pretrain/bert-base-uncased')):
         os.mkdir(os.path.join(root_path, 'pretrain/bert-base-uncased'))
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/config.json')
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/pytorch_model.bin')
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' http://193.112.16.83:8080/opennre/pretrain/bert-base-uncased/vocab.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' ' + root_url + 'opennre/pretrain/bert-base-uncased/config.json')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' ' + root_url + 'opennre/pretrain/bert-base-uncased/pytorch_model.bin')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/bert-base-uncased') + ' ' + root_url + 'opennre/pretrain/bert-base-uncased/vocab.txt')
 
 def download_pretrain(model_name, root_path=default_root_path):
     ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
     if not os.path.exists(ckpt):
-        os.system('wget -P ' + os.path.join(root_path, 'pretrain/nre')  + ' http://193.112.16.83:8080/opennre/pretrain/nre/' + model_name + '.pth.tar')
+        os.system('wget -P ' + os.path.join(root_path, 'pretrain/nre')  + ' ' + root_url + 'opennre/pretrain/nre/' + model_name + '.pth.tar')
+
+def download(name, root_path=default_root_path):
+    if name == 'nyt10':
+        download_nyt10(root_path=root_path)
+    elif name == 'semeval':
+        download_semeval(root_path=root_path)
+    elif name == 'wiki80':
+        download_wiki80(root_path=root_path)
+    elif name == 'glove':
+        download_glove(root_path=root_path)
+    elif name == 'bert_base_uncased':
+        download_bert_base_uncased(root_path=root_path)
+    else:
+        raise Exception('Cannot find corresponding data.')
 
 def get_model(model_name, root_path=default_root_path):
     check_root()

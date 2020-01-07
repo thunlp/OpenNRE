@@ -1,10 +1,10 @@
+import os, logging, json
+from tqdm import tqdm
 import torch
 from torch import nn, optim
-import json
 from .data_loader import SentenceRELoader
 from .utils import AverageMeter
-from tqdm import tqdm
-import os
+
 class SentenceRE(nn.Module):
 
     def __init__(self, 
@@ -98,7 +98,7 @@ class SentenceRE(nn.Module):
         global_step = 0
         for epoch in range(self.max_epoch):
             self.train()
-            print("=== Epoch %d train ===" % epoch)
+            logging.info("=== Epoch %d train ===" % epoch)
             avg_loss = AverageMeter()
             avg_acc = AverageMeter()
             t = tqdm(self.train_loader)
@@ -127,16 +127,17 @@ class SentenceRE(nn.Module):
                 self.optimizer.zero_grad()
                 global_step += 1
             # Val 
-            print("=== Epoch %d val ===" % epoch)
+            logging.info("=== Epoch %d val ===" % epoch)
             result = self.eval_model(self.val_loader) 
+            logging.info('Metric {} current / best: {} / {}'.format(metric, result[metric], best_metric))
             if result[metric] > best_metric:
-                print("Best ckpt and saved.")
+                logging.info("Best ckpt and saved.")
                 folder_path = '/'.join(self.ckpt.split('/')[:-1])
                 if not os.path.exists(folder_path):
                     os.mkdir(folder_path)
                 torch.save({'state_dict': self.model.state_dict()}, self.ckpt)
                 best_metric = result[metric]
-        print("Best %s on val set: %f" % (metric, best_metric))
+        logging.info("Best %s on val set: %f" % (metric, best_metric))
 
     def eval_model(self, eval_loader):
         self.eval()
