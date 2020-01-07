@@ -13,4 +13,5 @@ with open("README.md", "r") as fh:
             "License :: OSI Approved :: MIT License",
             "Operating System :: OS Independent",
         ],
+        setup_requires=['wheel']
      )
