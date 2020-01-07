@@ -9,7 +9,6 @@ idna==2.8
 jmespath==0.9.4
 joblib==0.14.1
 numpy==1.18.0
-pkg-resources==0.0.0
 python-dateutil==2.8.1
 regex==2019.12.20
 requests==2.22.0
