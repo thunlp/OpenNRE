@@ -23,3 +23,4 @@ tqdm==4.41.1
 transformers==2.3.0
 urllib3==1.25.7
 pytest==5.3.2
+nltk==3.4
