@@ -81,9 +81,9 @@ def get_model(model_name, root_path=default_root_path):
     check_root()
     ckpt = os.path.join(root_path, 'pretrain/nre/' + model_name + '.pth.tar')
     if model_name == 'wiki80_cnn_softmax':
-        download_pretrain(model_name)
-        download_glove()
-        download_wiki80()
+        download_pretrain(model_name, root_path=root_path)
+        download('glove', root_path=root_path)
+        download('wiki80', root_path=root_path)
         wordi2d = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_word2id.json')))
         word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))
         rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
@@ -101,9 +101,9 @@ def get_model(model_name, root_path=default_root_path):
         m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
         return m
     elif model_name == 'wiki80_bert_softmax':
-        download_pretrain(model_name)
-        download_bert_base_uncased()
-        download_wiki80()
+        download_pretrain(model_name, root_path=root_path)
+        download('bert_base_uncased', root_path=root_path)
+        download('wiki80', root_path=root_path)
         rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
         sentence_encoder = encoder.BERTEncoder(
             max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
