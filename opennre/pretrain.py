@@ -7,7 +7,7 @@ import sys
 import json
 import numpy as np
 
-root_url = "https://thunlp.s3.cn-north-1.amazonaws.com.cn/"
+root_url = "https://thunlp.oss-cn-qingdao.aliyuncs.com/"
 default_root_path = os.path.join(os.getenv('HOME'), '.opennre')
 
 def check_root(root_path=default_root_path):
