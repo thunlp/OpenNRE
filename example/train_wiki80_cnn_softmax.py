@@ -12,8 +12,8 @@ if not os.path.exists('ckpt'):
 ckpt = 'ckpt/wiki80_cnn_softmax.pth.tar'
 
 # Check data
-opennre.download_wiki80(root_path=root_path)
-opennre.download_glove(root_path=root_path)
+opennre.download('wiki80', root_path=root_path)
+opennre.download('glove', root_path=root_path)
 rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
 wordi2d = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_word2id.json')))
 word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))

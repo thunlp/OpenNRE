@@ -13,8 +13,8 @@ if not os.path.exists('ckpt'):
 ckpt = 'ckpt/wiki80_bertentity_softmax.pth.tar'
 
 # Check data
-opennre.download_wiki80(root_path=root_path)
-opennre.download_bert_base_uncased(root_path=root_path)
+opennre.download('wiki80', root_path=root_path)
+opennre.download('bert_base_uncased', root_path=root_path)
 rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
 
 # Define the sentence encoder

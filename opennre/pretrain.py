@@ -64,6 +64,10 @@ def download_pretrain(model_name, root_path=default_root_path):
         os.system('wget -P ' + os.path.join(root_path, 'pretrain/nre')  + ' ' + root_url + 'opennre/pretrain/nre/' + model_name + '.pth.tar')
 
 def download(name, root_path=default_root_path):
+    if not os.path.exists(os.path.join(root_path, 'benchmark')):
+        os.mkdir(os.path.join(root_path, 'benchmark'))
+    if not os.path.exists(os.path.join(root_path, 'pretrain')):
+        os.mkdir(os.path.join(root_path, 'pretrain'))
     if name == 'nyt10':
         download_nyt10(root_path=root_path)
     elif name == 'semeval':

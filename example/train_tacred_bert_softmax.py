@@ -19,7 +19,7 @@ if not os.path.exists('ckpt'):
     os.mkdir('ckpt')
 ckpt = 'ckpt/tacred_bert_softmax.pth.tar'
 
-opennre.download_bert_base_uncased(root_path=root_path)
+opennre.download('bert_base_uncased', root_path=root_path)
 rel2id = json.load(open(os.path.join(root_path, 'benchmark/tacred/tacred_rel2id.json')))
 
 # Define the sentence encoder
@@ -36,7 +36,7 @@ model = opennre.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
 framework = opennre.framework.SentenceRE(
     train_path=os.path.join(root_path, 'benchmark/tacred/tacred_train.txt'),
     val_path=os.path.join(root_path, 'benchmark/tacred/tacred_val.txt'),
-    test_path=os.path.join(root_path, 'benchmark/tacred/tacred_val.txt'),
+    test_path=os.path.join(root_path, 'benchmark/tacred/tacred_test.txt'),
     model=model,
     ckpt=ckpt,
     batch_size=64, # Modify the batch size w.r.t. your device
