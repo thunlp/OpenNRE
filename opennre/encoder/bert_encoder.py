@@ -92,7 +92,10 @@ class BERTEncoder(nn.Module):
                 re_tokens.append('[unused0]')
             if cur_pos == pos_tail[0] and not self.mask_entity:
                 re_tokens.append('[unused1]')
-            re_tokens += self.tokenizer.tokenize(token)
+            if is_token:
+                re_tokens += self.tokenizer.tokenize(token)
+            else:
+                re_tokens.append(token)
             if cur_pos == pos_head[1] - 1 and not self.mask_entity:
                 re_tokens.append('[unused2]')
             if cur_pos == pos_tail[1] - 1 and not self.mask_entity:
@@ -222,7 +225,10 @@ class BERTEntityEncoder(nn.Module):
             if cur_pos == pos_tail[0]:
                 pos2 = len(re_tokens)
                 re_tokens.append('[unused1]')
-            re_tokens += self.tokenizer.tokenize(token)
+            if is_token:
+                re_tokens += self.tokenizer.tokenize(token)
+            else:
+                re_tokens.append(token)
             if cur_pos == pos_head[1] - 1:
                 re_tokens.append('[unused2]')
             if cur_pos == pos_tail[1] - 1:
