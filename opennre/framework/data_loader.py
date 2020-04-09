@@ -144,7 +144,7 @@ class BagREDataset(data.Dataset):
 
         # Construct bag-level dataset (a bag contains instances sharing the same relation fact)
         if mode == None:
-            self.weight = np.zeros((len(self.rel2id)), dtype=np.float32)
+            self.weight = np.ones((len(self.rel2id)), dtype=np.float32)
             self.bag_scope = []
             self.name2id = {}
             self.bag_name = []
