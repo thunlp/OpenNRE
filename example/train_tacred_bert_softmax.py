@@ -10,6 +10,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mask_entity', action='store_true', help='Mask entity mentions')
+parser.add_argument('--pretrain_path', default='bert-base-uncased', help='Pre-trained ckpt path (hugginface)')
+parser.add_argument('--ckpt', default='tacred_bert_softmax', help='Checkpoint name')
 args = parser.parse_args()
 
 # Some basic settings
@@ -17,7 +19,7 @@ root_path = '.'
 sys.path.append(root_path)
 if not os.path.exists('ckpt'):
     os.mkdir('ckpt')
-ckpt = 'ckpt/tacred_bert_softmax.pth.tar'
+ckpt = 'ckpt/{}.pth.tar'.format(args.ckpt)
 
 opennre.download('bert_base_uncased', root_path=root_path)
 rel2id = json.load(open(os.path.join(root_path, 'benchmark/tacred/tacred_rel2id.json')))
@@ -25,7 +27,7 @@ rel2id = json.load(open(os.path.join(root_path, 'benchmark/tacred/tacred_rel2id.
 # Define the sentence encoder
 sentence_encoder = opennre.encoder.BERTEncoder(
     max_length=128, 
-    pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'),
+    pretrain_path=args.pretrain_path,
     mask_entity=args.mask_entity
 )
 
@@ -46,7 +48,7 @@ framework = opennre.framework.SentenceRE(
 )
 
 # Train the model
-framework.train_model()
+framework.train_model('micro_f1')
 
 # Test
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
