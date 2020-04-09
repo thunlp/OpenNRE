@@ -201,7 +201,7 @@ class BagREDataset(data.Dataset):
         seqs = data[3:]
         for i in range(len(seqs)):
             seqs[i] = torch.cat(seqs[i], 0) # (sumn, L)
-            seqs[i] = seqs[i].expand((torch.cuda.device_count(), ) + seqs[i].size())
+            seqs[i] = seqs[i].expand((torch.cuda.device_count() if torch.cuda.device_count() > 0 else 1, ) + seqs[i].size())
         scope = [] # (B, 2)
         start = 0
         for c in count:
