@@ -4,6 +4,11 @@ import os
 import numpy as np
 import opennre
 from opennre import encoder, model, framework
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--mask_entity', action='store_true', help='Mask entity mentions')
+args = parser.parse_args()
 
 # Some basic settings
 root_path = '.'
@@ -20,7 +25,8 @@ rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.
 # Define the sentence encoder
 sentence_encoder = opennre.encoder.BERTEntityEncoder(
     max_length=80, 
-    pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased')
+    pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'),
+    mask_entity=args.mask_entity
 )
 
 # Define the model
