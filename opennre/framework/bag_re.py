@@ -168,13 +168,14 @@ class BagRE(nn.Module):
                 scope = data[2]
                 args = data[3:]
                 logits = self.model(None, scope, *args, train=False, bag_size=self.bag_size) # results after softmax
-                for i in range(logits.size(0)):
+                logits = logits.cpu().numpy()
+                for i in range(len(logits)):
                     for relid in range(self.model.module.num_class):
                         if self.model.module.id2rel[relid] != 'NA':
                             pred_result.append({
                                 'entpair': bag_name[i][:2], 
                                 'relation': self.model.module.id2rel[relid], 
-                                'score': logits[i][relid].item()
+                                'score': logits[i][relid]
                             })
             result = eval_loader.dataset.eval(pred_result)
         return result
