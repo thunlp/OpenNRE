@@ -127,8 +127,7 @@ class BagAttention(BagRE):
         else:
             if bag_size == 0:
                 bag_logits = []
-                att_score = torch.matmul(rep, 
-                                         t.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
+                att_score = torch.matmul(rep, self.fc.weight.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
                 for i in range(len(scope)):
                     bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
                     softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]].transpose(0, 1)) # (N, (softmax)n) 
