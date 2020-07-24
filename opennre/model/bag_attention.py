@@ -106,7 +106,7 @@ class BagAttention(BagRE):
                     query = query.cuda()
                 for i in range(len(scope)):
                     query[scope[i][0]:scope[i][1]] = label[i]
-                att_mat = self.fc.weight.data[query] # (nsum, H)
+                att_mat = self.fc.weight[query] # (nsum, H)
                 att_score = (rep * att_mat).sum(-1) # (nsum)
 
                 for i in range(len(scope)):
@@ -117,7 +117,7 @@ class BagAttention(BagRE):
             else:
                 batch_size = label.size(0)
                 query = label.unsqueeze(1) # (B, 1)
-                att_mat = self.fc.weight.data[query] # (B, 1, H)
+                att_mat = self.fc.weight[query] # (B, 1, H)
                 rep = rep.view(batch_size, bag_size, -1)
                 att_score = (rep * att_mat).sum(-1) # (B, bag)
                 softmax_att_score = self.softmax(att_score) # (B, bag)
@@ -127,7 +127,8 @@ class BagAttention(BagRE):
         else:
             if bag_size == 0:
                 bag_logits = []
-                att_score = torch.matmul(rep, self.fc.weight.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
+                att_score = torch.matmul(rep, 
+                                         t.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
                 for i in range(len(scope)):
                     bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
                     softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]].transpose(0, 1)) # (N, (softmax)n) 
@@ -138,7 +139,7 @@ class BagAttention(BagRE):
                 bag_logits = torch.stack(bag_logits,0) # after **softmax**
             else:
                 batch_size = rep.size(0) // bag_size
-                att_score = torch.matmul(rep, self.fc.weight.data.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
+                att_score = torch.matmul(rep, self.fc.weight.transpose(0, 1)) # (nsum, H) * (H, N) -> (nsum, N)
                 att_score = att_score.view(batch_size, bag_size, -1) # (B, bag, N)
                 rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
                 softmax_att_score = self.softmax(att_score.transpose(1, 2)) # (B, N, (softmax)bag)
