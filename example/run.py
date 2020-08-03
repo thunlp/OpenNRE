@@ -12,6 +12,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--mask_entity', action='store_true', help='Mask entity mentions')
 parser.add_argument('--pretrain_path', default='bert-base-uncased', help='Pre-trained ckpt path (hugginface)')
 parser.add_argument('--ckpt', default='tacred_bert_softmax', help='Checkpoint name')
+parser.add_argument('--only_test', action='store_true', help='Only run test')
+parser.add_argument('--pooler', default='entity', choices=['cls', 'entity'], help='Sentence representation pooler')
+
+# Data
+parser.add_argument('--train_file', default='benchmark/tacred/tacred_train.txt', type=str,
+        help='Training data file')
+parser.add_argument('--val_file', default='benchmark/tacred/tacred_val.txt', type=str,
+        help='Validation data file')
+parser.add_argument('--test_file', default='benchmark/tacred/tacred_test.txt', type=str,
+        help='Test data file')
+
 args = parser.parse_args()
 
 # Some basic settings
@@ -25,30 +36,40 @@ opennre.download('bert_base_uncased', root_path=root_path)
 rel2id = json.load(open(os.path.join(root_path, 'benchmark/tacred/tacred_rel2id.json')))
 
 # Define the sentence encoder
-sentence_encoder = opennre.encoder.BERTEntityEncoder(
-    max_length=128, 
-    pretrain_path=args.pretrain_path,
-    mask_entity=args.mask_entity
-)
+if args.pooler == 'entity':
+    sentence_encoder = opennre.encoder.BERTEntityEncoder(
+        max_length=128, 
+        pretrain_path=args.pretrain_path,
+        mask_entity=args.mask_entity
+    )
+elif args.pooler == 'cls':
+    sentence_encoder = opennre.encoder.BERTEncoder(
+        max_length=128, 
+        pretrain_path=args.pretrain_path,
+        mask_entity=args.mask_entity
+    )
+else:
+    raise NotImplementedError
 
 # Define the model
 model = opennre.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
 
 # Define the whole training framework
 framework = opennre.framework.SentenceRE(
-    train_path=os.path.join(root_path, 'benchmark/tacred/tacred_train.txt'),
-    val_path=os.path.join(root_path, 'benchmark/tacred/tacred_val.txt'),
-    test_path=os.path.join(root_path, 'benchmark/tacred/tacred_test.txt'),
+    train_path=os.path.join(root_path, args.train_file),
+    val_path=os.path.join(root_path, args.val_file),
+    test_path=os.path.join(root_path, args.test_file),
     model=model,
     ckpt=ckpt,
     batch_size=64, # Modify the batch size w.r.t. your device
-    max_epoch=10,
+    max_epoch=3,
     lr=2e-5,
     opt='adamw'
 )
 
 # Train the model
-framework.train_model('micro_f1')
+if not args.only_test:
+    framework.train_model('micro_f1')
 
 # Test
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
