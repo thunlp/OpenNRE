@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import numpy as np
+import logging
 
 root_url = "https://thunlp.oss-cn-qingdao.aliyuncs.com/"
 default_root_path = os.path.join(os.getenv('HOME'), '.opennre')
@@ -74,6 +75,8 @@ def download(name, root_path=default_root_path):
         download_semeval(root_path=root_path)
     elif name == 'wiki80':
         download_wiki80(root_path=root_path)
+    elif name == 'tacred':
+        logging.info('Due to copyright limits, please download TACRED manually and convert the data to OpenNRE format')
     elif name == 'glove':
         download_glove(root_path=root_path)
     elif name == 'bert_base_uncased':
