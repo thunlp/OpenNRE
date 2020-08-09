@@ -1,7 +1,8 @@
 # coding:utf-8
+import sys, json
 import torch
+import os
 import numpy as np
-import json
 import opennre
 from opennre import encoder, model, framework
 import sys
@@ -16,9 +17,9 @@ parser.add_argument('--only_test', action='store_true',
         help='Only run test')
 
 # Data
-parser.add_argument('--metric', default='micro_f1', choices=['micro_f1', 'acc'],
+parser.add_argument('--metric', default='auc', choices=['micro_f1', 'auc'],
         help='Metric for picking up best checkpoint')
-parser.add_argument('--dataset', default='none', choices=['none', 'semeval', 'wiki80', 'tacred'], 
+parser.add_argument('--dataset', default='none', choices=['none', 'wiki_distant', 'nyt10'],
         help='Dataset. If not none, the following args can be ignored')
 parser.add_argument('--train_file', default='', type=str,
         help='Training data file')
@@ -29,14 +30,20 @@ parser.add_argument('--test_file', default='', type=str,
 parser.add_argument('--rel2id_file', default='', type=str,
         help='Relation to ID file')
 
+# Bag related
+parser.add_argument('--bag_size', type=int, default=0,
+        help='Fixed bag size. If set to 0, use original bag sizes')
+
 # Hyper-parameters
-parser.add_argument('--batch_size', default=32, type=int,
+parser.add_argument('--batch_size', default=160, type=int,
         help='Batch size')
-parser.add_argument('--lr', default=1e-1, type=float,
+parser.add_argument('--lr', default=0.1, type=float,
         help='Learning rate')
+parser.add_argument('--optim', default='sgd', type=str,
+        help='Optimizer')
 parser.add_argument('--weight_decay', default=1e-5, type=float,
         help='Weight decay')
-parser.add_argument('--max_length', default=40, type=int,
+parser.add_argument('--max_length', default=120, type=int,
         help='Maximum sentence length')
 parser.add_argument('--max_epoch', default=100, type=int,
         help='Max number of training epochs')
@@ -49,7 +56,7 @@ sys.path.append(root_path)
 if not os.path.exists('ckpt'):
     os.mkdir('ckpt')
 if len(args.ckpt) == 0:
-    args.ckpt = '{}_{}'.format(args.dataset, 'cnn')
+    args.ckpt = '{}_{}'.format(args.dataset, 'pcnn_att')
 ckpt = 'ckpt/{}.pth.tar'.format(args.ckpt)
 
 if args.dataset != 'none':
@@ -58,10 +65,6 @@ if args.dataset != 'none':
     args.val_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_val.txt'.format(args.dataset))
     args.test_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_test.txt'.format(args.dataset))
     args.rel2id_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_rel2id.json'.format(args.dataset))
-    if args.dataset == 'wiki80':
-        args.metric = 'acc'
-    else:
-        args.metric = 'micro_f1'
 else:
     if not (os.path.exists(args.train_file) and os.path.exists(args.val_file) and os.path.exists(args.test_file) and os.path.exists(args.rel2id_file)):
         raise Exception('--train_file, --val_file, --test_file and --rel2id_file are not specified or files do not exist. Or specify --dataset')
@@ -78,7 +81,7 @@ word2id = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_wo
 word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))
 
 # Define the sentence encoder
-sentence_encoder = opennre.encoder.CNNEncoder(
+sentence_encoder = opennre.encoder.PCNNEncoder(
     token2id=word2id,
     max_length=args.max_length,
     word_size=50,
@@ -91,12 +94,11 @@ sentence_encoder = opennre.encoder.CNNEncoder(
     dropout=0.5
 )
 
-
 # Define the model
-model = opennre.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
 
 # Define the whole training framework
-framework = opennre.framework.SentenceRE(
+framework = opennre.framework.BagRE(
     train_path=args.train_file,
     val_path=args.val_file,
     test_path=args.test_file,
@@ -106,22 +108,18 @@ framework = opennre.framework.SentenceRE(
     max_epoch=args.max_epoch,
     lr=args.lr,
     weight_decay=args.weight_decay,
-    opt='sgd'
-)
+    opt=args.optim,
+    bag_size=args.bag_size)
 
 # Train the model
 if not args.only_test:
     framework.train_model(args.metric)
 
-# Test
+# Test the model
 framework.load_state_dict(torch.load(ckpt)['state_dict'])
 result = framework.eval_model(framework.test_loader)
 
 # Print the result
 logging.info('Test set results:')
-if args.metric == 'acc':
-    logging.info('Accuracy: {}'.format(result['acc']))
-else:
-    logging.info('Micro precision: {}'.format(result['micro_p']))
-    logging.info('Micro recall: {}'.format(result['micro_r']))
-    logging.info('Micro F1: {}'.format(result['micro_f1']))
+logging.info('AUC: {}'.format(result['auc']))
+logging.info('Micro F1: {}'.format(result['micro_f1']))

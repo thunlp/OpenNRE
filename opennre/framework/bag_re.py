@@ -97,8 +97,8 @@ class BagRE(nn.Module):
         # Ckpt
         self.ckpt = ckpt
 
-    def train_model(self):
-        best_auc = 0
+    def train_model(self, metric='auc'):
+        best_metric = 0
         for epoch in range(self.max_epoch):
             # Train
             self.train()
@@ -143,13 +143,13 @@ class BagRE(nn.Module):
             # Val 
             print("=== Epoch %d val ===" % epoch)
             result = self.eval_model(self.val_loader)
-            print("auc: %.4f" % result['auc'])
-            print("f1: %.4f" % (result['f1']))
-            if result['auc'] > best_auc:
+            print("AUC: %.4f" % result['auc'])
+            print("Micro F1: %.4f" % (result['micro_f1']))
+            if result[metric] > best_metric:
                 print("Best ckpt and saved.")
                 torch.save({'state_dict': self.model.module.state_dict()}, self.ckpt)
-                best_auc = result['auc']
-        print("Best auc on val set: %f" % (best_auc))
+                best_metric = result[metric]
+        print("Best %s on val set: %f" % (metric, best_metric))
 
     def eval_model(self, eval_loader):
         self.model.eval()

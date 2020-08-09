@@ -253,7 +253,7 @@ class BagREDataset(data.Dataset):
         np_rec = np.array(rec) 
         f1 = (2 * np_prec * np_rec / (np_prec + np_rec + 1e-20)).max()
         mean_prec = np_prec.mean()
-        return {'prec': np_prec, 'rec': np_rec, 'mean_prec': mean_prec, 'f1': f1, 'auc': auc}
+        return {'micro_p': np_prec, 'micro_r': np_rec, 'micro_p_mean': mean_prec, 'micro_f1': f1, 'auc': auc}
 
 def BagRELoader(path, rel2id, tokenizer, batch_size, 
         shuffle, entpair_as_bag=False, bag_size=0, num_workers=8, 

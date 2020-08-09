@@ -35,6 +35,15 @@ def download_nyt10(root_path=default_root_path):
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_test.txt')
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_val.txt')
 
+def download_wiki_distant(root_path=default_root_path):
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/wiki_distant')):
+        os.mkdir(os.path.join(root_path, 'benchmark/wiki_distant'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki_distant') + ' ' + root_url + 'opennre/benchmark/wiki_distant/wiki_distant_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki_distant') + ' ' + root_url + 'opennre/benchmark/wiki_distant/wiki_distant_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki_distant') + ' ' + root_url + 'opennre/benchmark/wiki_distant/wiki_distant_test.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki_distant') + ' ' + root_url + 'opennre/benchmark/wiki_distant/wiki_distant_val.txt')
+
 def download_semeval(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'benchmark/semeval')):
@@ -71,6 +80,8 @@ def download(name, root_path=default_root_path):
         os.mkdir(os.path.join(root_path, 'pretrain'))
     if name == 'nyt10':
         download_nyt10(root_path=root_path)
+    elif name == 'wiki_distant':
+        download_wiki_distant(root_path=root_path)
     elif name == 'semeval':
         download_semeval(root_path=root_path)
     elif name == 'wiki80':

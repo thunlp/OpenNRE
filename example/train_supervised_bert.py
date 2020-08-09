@@ -34,8 +34,6 @@ parser.add_argument('--test_file', default='', type=str,
         help='Test data file')
 parser.add_argument('--rel2id_file', default='', type=str,
         help='Relation to ID file')
-parser.add_argument('--max_epoch', default=3, type=int,
-        help='Max number of training epochs')
 
 # Hyper-parameters
 parser.add_argument('--batch_size', default=64, type=int,
@@ -44,7 +42,8 @@ parser.add_argument('--lr', default=2e-5, type=float,
         help='Learning rate')
 parser.add_argument('--max_length', default=128, type=int,
         help='Maximum sentence length')
-
+parser.add_argument('--max_epoch', default=3, type=int,
+        help='Max number of training epochs')
 
 args = parser.parse_args()
 
