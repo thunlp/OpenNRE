@@ -10,16 +10,10 @@ import argparse
 import logging
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--pretrain_path', default='bert-base-uncased', 
-        help='Pre-trained ckpt path / model name (hugginface)')
 parser.add_argument('--ckpt', default='', 
         help='Checkpoint name')
-parser.add_argument('--pooler', default='entity', choices=['cls', 'entity'], 
-        help='Sentence representation pooler')
 parser.add_argument('--only_test', action='store_true', 
         help='Only run test')
-parser.add_argument('--mask_entity', action='store_true', 
-        help='Mask entity mentions')
 
 # Data
 parser.add_argument('--metric', default='micro_f1', choices=['micro_f1', 'acc'],
@@ -34,17 +28,18 @@ parser.add_argument('--test_file', default='', type=str,
         help='Test data file')
 parser.add_argument('--rel2id_file', default='', type=str,
         help='Relation to ID file')
-parser.add_argument('--max_epoch', default=3, type=int,
+parser.add_argument('--max_epoch', default=100, type=int,
         help='Max number of training epochs')
 
 # Hyper-parameters
-parser.add_argument('--batch_size', default=64, type=int,
+parser.add_argument('--batch_size', default=32, type=int,
         help='Batch size')
-parser.add_argument('--lr', default=2e-5, type=float,
+parser.add_argument('--lr', default=1e-1, type=float,
         help='Learning rate')
-parser.add_argument('--max_length', default=128, type=int,
+parser.add_argument('--weight_decay', default=1e-5, type=float,
+        help='Weight decay')
+parser.add_argument('--max_length', default=40, type=int,
         help='Maximum sentence length')
-
 
 args = parser.parse_args()
 
@@ -54,7 +49,7 @@ sys.path.append(root_path)
 if not os.path.exists('ckpt'):
     os.mkdir('ckpt')
 if len(args.ckpt) == 0:
-    args.ckpt = '{}_{}_{}'.format(args.dataset, args.pretrain_path, args.pooler)
+    args.ckpt = '{}_{}'.format(args.dataset, 'cnn')
 ckpt = 'ckpt/{}.pth.tar'.format(args.ckpt)
 
 if args.dataset != 'none':
@@ -77,21 +72,25 @@ for arg in vars(args):
 
 rel2id = json.load(open(args.rel2id_file))
 
+# Download glove
+opennre.download('glove', root_path=root_path)
+word2id = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_word2id.json')))
+word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))
+
 # Define the sentence encoder
-if args.pooler == 'entity':
-    sentence_encoder = opennre.encoder.BERTEntityEncoder(
-        max_length=args.max_length, 
-        pretrain_path=args.pretrain_path,
-        mask_entity=args.mask_entity
-    )
-elif args.pooler == 'cls':
-    sentence_encoder = opennre.encoder.BERTEncoder(
-        max_length=args.max_length, 
-        pretrain_path=args.pretrain_path,
-        mask_entity=args.mask_entity
-    )
-else:
-    raise NotImplementedError
+sentence_encoder = opennre.encoder.CNNEncoder(
+    token2id=word2id,
+    max_length=args.max_length,
+    word_size=50,
+    position_size=5,
+    hidden_size=230,
+    blank_padding=True,
+    kernel_size=3,
+    padding_size=1,
+    word2vec=word2vec,
+    dropout=0.5
+)
+
 
 # Define the model
 model = opennre.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
@@ -106,7 +105,7 @@ framework = opennre.framework.SentenceRE(
     batch_size=args.batch_size,
     max_epoch=args.max_epoch,
     lr=args.lr,
-    opt='adamw'
+    opt='sgd'
 )
 
 # Train the model
