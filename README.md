@@ -108,8 +108,13 @@ For now, we have the following available models:
 
 * `wiki80_cnn_softmax`: trained on `wiki80` dataset with a CNN encoder.
 * `wiki80_bert_softmax`: trained on `wiki80` dataset with a BERT encoder.
+* `wiki80_bertentity_softmax`: trained on `wiki80` dataset with a BERT encoder (using entity representation concatenation).
+* `tacred_bert_softmax`: trained on `TACRED` dataset with a BERT encoder.
+* `tacred_bertentity_softmax`: trained on `TACRED` dataset with a BERT encoder (using entity representation concatenation).
 
-For higher-level usage, you can refer to our [document](https://opennre-docs.readthedocs.io/en/latest/).
+## Training
+
+You can train your own models on your own data with OpenNRE. In `example` folder we give example training codes for supervised RE models and bag-level RE models. You can either use our provided datasets or your own datasets.
 
 ## Google Group
 
