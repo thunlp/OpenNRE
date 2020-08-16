@@ -61,6 +61,9 @@ if args.dataset != 'none':
     args.train_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_train.txt'.format(args.dataset))
     args.val_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_val.txt'.format(args.dataset))
     args.test_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_test.txt'.format(args.dataset))
+    if not os.path.exists(args.test_file):
+        logging.warn("Test file {} does not exist! Use val file instead".format(args.test_file))
+        args.test_file = args.val_file
     args.rel2id_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_rel2id.json'.format(args.dataset))
     if args.dataset == 'wiki80':
         args.metric = 'acc'

@@ -26,6 +26,13 @@ def download_wiki80(root_path=default_root_path):
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' ' + root_url + 'opennre/benchmark/wiki80/wiki80_train.txt')
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki80') + ' ' + root_url + 'opennre/benchmark/wiki80/wiki80_val.txt')
 
+def download_tacred(root_path=default_root_path):
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/tacred')):
+        os.mkdir(os.path.join(root_path, 'benchmark/tacred'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/tacred') + ' ' + root_url + 'opennre/benchmark/tacred/tacred_rel2id.json')
+        logging.info('Due to copyright limits, we only provide rel2id for TACRED. Please download TACRED manually and convert the data to OpenNRE format if needed.')
+
 def download_nyt10(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'benchmark/nyt10')):
@@ -87,7 +94,7 @@ def download(name, root_path=default_root_path):
     elif name == 'wiki80':
         download_wiki80(root_path=root_path)
     elif name == 'tacred':
-        logging.info('Due to copyright limits, please download TACRED manually and convert the data to OpenNRE format')
+        download_tacred(root_path=root_path)
     elif name == 'glove':
         download_glove(root_path=root_path)
     elif name == 'bert_base_uncased':
@@ -118,13 +125,31 @@ def get_model(model_name, root_path=default_root_path):
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
         return m
-    elif model_name == 'wiki80_bert_softmax':
+    elif model_name in ['wiki80_bert_softmax', 'wiki80_bertentity_softmax']:
         download_pretrain(model_name, root_path=root_path)
         download('bert_base_uncased', root_path=root_path)
         download('wiki80', root_path=root_path)
         rel2id = json.load(open(os.path.join(root_path, 'benchmark/wiki80/wiki80_rel2id.json')))
-        sentence_encoder = encoder.BERTEncoder(
-            max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
+        if 'entity' in model_name:
+            sentence_encoder = encoder.BERTEntityEncoder(
+                max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
+        else:
+            sentence_encoder = encoder.BERTEncoder(
+                max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
+        m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
+        m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
+        return m
+    elif model_name in ['tacred_bert_softmax', 'tacred_bertentity_softmax']:
+        download_pretrain(model_name, root_path=root_path)
+        download('bert_base_uncased', root_path=root_path)
+        download('tacred', root_path=root_path)
+        rel2id = json.load(open(os.path.join(root_path, 'benchmark/tacred/tacred_rel2id.json')))
+        if 'entity' in model_name:
+            sentence_encoder = encoder.BERTEntityEncoder(
+                max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
+        else:
+            sentence_encoder = encoder.BERTEncoder(
+                max_length=80, pretrain_path=os.path.join(root_path, 'pretrain/bert-base-uncased'))
         m = model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
         m.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
         return m
