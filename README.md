@@ -68,6 +68,8 @@ Then install all the requirements:
 pip install -r requirements.txt
 ```
 
+**Note**: Please choose appropriate PyTorch version based on your machine (related to your CUDA version). For details, refer to https://pytorch.org/. 
+
 Then install the package with 
 ```
 python setup.py install 
