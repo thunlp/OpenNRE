@@ -88,7 +88,7 @@ bash benchmark/download_fewrel.sh
 
 ## Easy Start
 
-Add `OpenNRE` directory to the `PYTHONPATH` environment variable, or open a python session under the `OpenNRE` folder. Then import our package and load pre-trained models.
+Make sure you have installed OpenNRE as instructed above. Then import our package and load pre-trained models.
 
 ```python
 >>> import opennre
@@ -103,6 +103,11 @@ Note that it may take a few minutes to download checkpoint and data for the firs
 ```
 
 You will get the relation result and its confidence score.
+
+For now, we have the following available models:
+
+* `wiki80_cnn_softmax`: trained on `wiki80` dataset with a CNN encoder.
+* `wiki80_bert_softmax`: trained on `wiki80` dataset with a BERT encoder.
 
 For higher-level usage, you can refer to our [document](https://opennre-docs.readthedocs.io/en/latest/).
 
