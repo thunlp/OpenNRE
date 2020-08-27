@@ -43,23 +43,18 @@ class BagAttention(BagRE):
         pos2s = []
         masks = []
         for item in bag:
-            if 'text' in item:
-                token, pos1, pos2, mask = self.tokenizer(item['text'], 
-                    item['h']['pos'], item['t']['pos'], is_token=False, padding=True)
-            else:
-                token, pos1, pos2, mask = self.tokenizer(item['token'], 
-                    item['h']['pos'], item['t']['pos'], is_token=True, padding=True)
+            token, pos1, pos2, mask = self.sentence_encoder.tokenize(item)
             tokens.append(token)
             pos1s.append(pos1)
             pos2s.append(pos2)
             masks.append(mask)
-        tokens = torch.cat(tokens, 0) # (n, L)
-        pos1s = torch.cat(pos1s, 0)
-        pos2s = torch.cat(pos2s, 0)
-        masks = torch.cat(masks, 0) 
+        tokens = torch.cat(tokens, 0).unsqueeze(0) # (n, L)
+        pos1s = torch.cat(pos1s, 0).unsqueeze(0)
+        pos2s = torch.cat(pos2s, 0).unsqueeze(0)
+        masks = torch.cat(masks, 0).unsqueeze(0)
         scope = torch.tensor([[0, len(bag)]]).long() # (1, 2)
         bag_logits = self.forward(None, scope, tokens, pos1s, pos2s, masks, train=False).squeeze(0) # (N) after softmax
-        score, pred = bag_logits.max()
+        score, pred = bag_logits.max(0)
         score = score.item()
         pred = pred.item()
         rel = self.id2rel[pred]
@@ -91,7 +86,6 @@ class BagAttention(BagRE):
             if mask is not None:
                 mask = mask[:, begin:end, :].view(-1, mask.size(-1))
             scope = torch.sub(scope, torch.zeros_like(scope).fill_(begin))
-
         if mask is not None:
             rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H) 
         else:
@@ -144,6 +138,5 @@ class BagAttention(BagRE):
                 softmax_att_score = self.softmax(att_score.transpose(1, 2)) # (B, N, (softmax)bag)
                 rep_for_each_rel = torch.matmul(softmax_att_score, rep) # (B, N, bag) * (B, bag, H) -> (B, N, H)
                 bag_logits = self.softmax(self.fc(rep_for_each_rel)).diagonal(dim1=1, dim2=2) # (B, (each rel)N)
-
         return bag_logits
 
