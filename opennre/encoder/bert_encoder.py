@@ -78,17 +78,9 @@ class BERTEncoder(nn.Module):
             ent1 = ['[unused2]'] + ent1 + ['[unused3]'] if not rev else ['[unused0]'] + ent1 + ['[unused1]']
 
         re_tokens = ['[CLS]'] + sent0 + ent0 + sent1 + ent1 + sent2 + ['[SEP]']
-        pos1 = 1 + len(sent0) if not rev else 1 + len(sent0 + ent0 + sent1)
-        pos2 = 1 + len(sent0 + ent0 + sent1) if not rev else 1 + len(sent0)
-        pos1 = min(self.max_length - 1, pos1)
-        pos2 = min(self.max_length - 1, pos2)
         
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(re_tokens)
         avai_len = len(indexed_tokens)
-
-        # Position
-        pos1 = torch.tensor([[pos1]]).long()
-        pos2 = torch.tensor([[pos2]]).long()
 
         # Padding
         if self.blank_padding:

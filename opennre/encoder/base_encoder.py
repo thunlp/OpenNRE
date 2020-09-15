@@ -85,7 +85,6 @@ class BaseEncoder(nn.Module):
         """
         Args:
             item: input instance, including sentence, entity positions, etc.
-            is_token: if is_token == True, sentence becomes an array of token
         Return:
             index number of tokens and positions             
         """
