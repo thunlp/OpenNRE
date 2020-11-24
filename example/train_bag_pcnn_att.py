@@ -9,6 +9,13 @@ import sys
 import os
 import argparse
 import logging
+import random
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ckpt', default='', 
@@ -48,7 +55,14 @@ parser.add_argument('--max_length', default=120, type=int,
 parser.add_argument('--max_epoch', default=100, type=int,
         help='Max number of training epochs')
 
+# Others
+parser.add_argument('--seed', default=42, type=int,
+        help='Random seed')
+
 args = parser.parse_args()
+
+# Set random seed
+set_seed(args.seed)
 
 # Some basic settings
 root_path = '.'
@@ -63,7 +77,7 @@ if args.dataset != 'none':
     opennre.download(args.dataset, root_path=root_path)
     args.train_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_train.txt'.format(args.dataset))
     args.val_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_val.txt'.format(args.dataset))
-    if not os.path.exists(args.val_fild):
+    if not os.path.exists(args.val_file):
         logging.info("Cannot find the validation file. Use the test file instead.")
         args.val_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_test.txt'.format(args.dataset))
     args.test_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_test.txt'.format(args.dataset))
