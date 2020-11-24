@@ -63,6 +63,9 @@ if args.dataset != 'none':
     opennre.download(args.dataset, root_path=root_path)
     args.train_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_train.txt'.format(args.dataset))
     args.val_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_val.txt'.format(args.dataset))
+    if not os.path.exists(args.val_fild):
+        logging.info("Cannot find the validation file. Use the test file instead.")
+        args.val_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_test.txt'.format(args.dataset))
     args.test_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_test.txt'.format(args.dataset))
     args.rel2id_file = os.path.join(root_path, 'benchmark', args.dataset, '{}_rel2id.json'.format(args.dataset))
 else:
