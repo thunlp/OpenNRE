@@ -3,6 +3,8 @@ import torch.utils.data as data
 import os, random, json, logging
 import numpy as np
 import sklearn.metrics
+from tqdm import tqdm
+import json
 
 class SentenceREDataset(data.Dataset):
     """
@@ -99,11 +101,183 @@ class SentenceREDataset(data.Dataset):
         except:
             micro_f1 = 0
         result = {'acc': acc, 'micro_p': micro_p, 'micro_r': micro_r, 'micro_f1': micro_f1}
+        logging.info('Evaluation result correct: {}, total: {}, correct_positive: {}, pred_positive: {}, gold_positive: {}'.format(correct, total, correct_positive, pred_positive, gold_positive))
+
         logging.info('Evaluation result: {}.'.format(result))
         return result
-    
-def SentenceRELoader(path, rel2id, tokenizer, batch_size, 
-        shuffle, num_workers=8, collate_fn=SentenceREDataset.collate_fn, **kwargs):
+
+    def eval2(self, pred_result):
+        correct = 0
+        total = len(self.data)
+        correct_positive = 0
+        pred_positive = 0
+        gold_positive = 0
+        neg = -1
+        rel_acc = {}
+        rel_tot = {}
+        # print(self.rel2id)
+        for value in self.rel2id.values():
+            rel_acc[value] = 0
+            rel_tot[value] = 0
+        for name in ['NA', 'na', 'no_relation', 'Other', 'Others']:
+            if name in self.rel2id:
+                neg = self.rel2id[name]
+                break
+        for i in range(total):
+            golden = self.rel2id[self.data[i]['relation']]
+            rel_tot[golden] = rel_tot[golden] + 1
+            if golden == pred_result[i]:
+                rel_acc[golden] = rel_acc[golden] + 1
+                correct += 1
+                if golden != neg:
+                    correct_positive += 1
+            if golden != neg:
+                gold_positive += 1
+            if pred_result[i] != neg:
+                pred_positive += 1
+        acc = float(correct) / float(total)
+        acc2 = 0.0
+        for key in rel_acc.keys():
+            if rel_tot[key] == 0:
+                print('Total number of key {} is 0!'.format(key))
+                continue
+            acc2 = acc2 + rel_acc[key] / rel_tot[key]
+            # logging.info('Acc for relation {} is: {}'.format(key, rel_acc[key]/rel_tot[key]))
+        acc2 = acc2 / len(rel_acc.keys())
+        # print('Rel_total:', rel_tot)
+        logging.info('Acc mean of realtions is: {}'.format(acc2))
+
+        try:
+            micro_p = float(correct_positive) / float(pred_positive)
+        except:
+            micro_p = 0
+        try:
+            micro_r = float(correct_positive) / float(gold_positive)
+        except:
+            micro_r = 0
+        try:
+            micro_f1 = 2 * micro_p * micro_r / (micro_p + micro_r)
+        except:
+            micro_f1 = 0
+        result = {'acc': acc, 'micro_p': micro_p, 'micro_r': micro_r, 'micro_f1': micro_f1}
+        logging.info('Evaluation result correct: {}, total: {}, correct_positive: {}, pred_positive: {}, gold_positive: {}'.format(correct, total, correct_positive, pred_positive, gold_positive))
+        logging.info('Evaluation result: {}.'.format(result))
+        return result
+
+    def eval_entity_model(self, pred, model_name):
+        total = len(self.data)
+        rel_acc = {}
+        rel_tot = {}
+        for value in self.rel2id.values():
+            rel_acc[value] = 0
+            rel_tot[value] = 0
+        for i in range(total):
+            golden = self.rel2id[self.data[i]['relation']]
+            rel_tot[golden] = rel_tot[golden] + 1
+            if golden == pred[i]:
+                rel_acc[golden] = rel_acc[golden] + 1
+        for value in self.rel2id.values():
+            rel_acc[value] = rel_acc[value] / rel_tot[value]
+        with open('../output/{}_acc_pre_relation.txt'.format(model_name), 'w') as f:
+            f.write(json.dumps(rel_acc))
+        return
+
+    def eval_our_model(self, pred, model_name):
+        total = len(self.data)
+        rel_acc = {}
+        rel_tot = {}
+        for value in self.rel2id.values():
+            rel_acc[value] = 0
+            rel_tot[value] = 0
+        for i in range(total):
+            golden = self.rel2id[self.data[i]['relation']]
+            rel_tot[golden] = rel_tot[golden] + 1
+            if golden == pred[i]:
+                rel_acc[golden] = rel_acc[golden] + 1
+        for value in self.rel2id.values():
+            rel_acc[value] = rel_acc[value] / rel_tot[value]
+        with open('../output/{}_acc_pre_relation_ourmodel.txt'.format(model_name), 'w') as f:
+            f.write(json.dumps(rel_acc))
+        return
+
+    def eval_te_model(self, pred, model_name):
+        total = len(self.data)
+        rel_acc = {}
+        rel_tot = {}
+        for value in self.rel2id.values():
+            rel_acc[value] = 0
+            rel_tot[value] = 0
+        for i in range(total):
+            golden = self.rel2id[self.data[i]['relation']]
+            rel_tot[golden] = rel_tot[golden] + 1
+            if golden == pred[i]:
+                rel_acc[golden] = rel_acc[golden] + 1
+        for value in self.rel2id.values():
+            rel_acc[value] = rel_acc[value] / rel_tot[value]
+        with open('../output/{}_acc_pre_relation_te.txt'.format(model_name), 'w') as f:
+            f.write(json.dumps(rel_acc))
+        return
+
+    def eval_nde_model(self, pred, model_name):
+        total = len(self.data)
+        rel_acc = {}
+        rel_tot = {}
+        for value in self.rel2id.values():
+            rel_acc[value] = 0
+            rel_tot[value] = 0
+        for i in range(total):
+            golden = self.rel2id[self.data[i]['relation']]
+            rel_tot[golden] = rel_tot[golden] + 1
+            if golden == pred[i]:
+                rel_acc[golden] = rel_acc[golden] + 1
+        for value in self.rel2id.values():
+            rel_acc[value] = rel_acc[value] / rel_tot[value]
+        with open('../output/{}_acc_pre_relation_nde.txt'.format(model_name), 'w') as f:
+            f.write(json.dumps(rel_acc))
+        return
+
+    def write_diff(self, pred1, pred2):
+        write_file1 = '../output/result_wrong_correct_fix_wiki80.txt'
+        write_file2 = '../output/result_correct_wrong_fix_wiki80.txt'
+
+        logging.info('Size of pred: {}'.format(len(pred1)))
+        logging.info('Size of label: {}'.format(len(self.data)))
+        cnt1 = 0
+        cnt2 = 0
+        with open(write_file1, 'w') as f1, open(write_file2, 'w') as f2:
+            for i in tqdm(range(len(pred1))):
+                golden = self.rel2id[self.data[i]['relation']]
+                if pred1[i] == golden and pred2[i] != golden:
+                    cnt1 = cnt1 + 1
+                    self.data[i]['pred1'] = pred1[i]
+                    self.data[i]['pred2'] = pred2[i]
+                    f1.write(json.dumps(self.data[i]))
+                    f1.write('\n')
+                elif pred2[i] == golden and pred1[i] != golden:
+                    cnt2 = cnt2 + 1
+                    self.data[i]['pred1'] = pred1[i]
+                    self.data[i]['pred2'] = pred2[i]
+                    f2.write(json.dumps(self.data[i]))
+                    f2.write('\n')
+        logging.info('File1 cnt is: {}'.format(cnt1))
+        logging.info('File2 cnt is: {}'.format(cnt2))
+        return
+
+    def get_relation_cnt(self, pt):
+        rel_tot = {}
+        for key in self.rel2id.keys():
+            rel_tot[key] = 0
+        for dt in self.data:
+            rel_tot[dt['relation']] += 1
+        with open(os.path.join('../output/', pt), 'w') as f:
+            f.write(json.dumps(rel_tot))
+        return
+
+
+
+
+def SentenceRELoader(path, rel2id, tokenizer, batch_size,
+        shuffle=False, num_workers=8, collate_fn=SentenceREDataset.collate_fn, **kwargs):
     dataset = SentenceREDataset(path = path, rel2id = rel2id, tokenizer = tokenizer, kwargs=kwargs)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,

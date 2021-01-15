@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from .data_loader import SentenceREDataset, SentenceRELoader, BagREDataset, BagRELoader
 from .sentence_re import SentenceRE
+from .sentence_entity_re import SentenceEntityRE
 from .bag_re import BagRE
 
 __all__ = [
@@ -12,5 +13,6 @@ __all__ = [
     'SentenceRE',
     'BagRE',
     'BagREDataset',
-    'BagRELoader'
+    'BagRELoader',
+    'SentenceEntityRE'
 ]

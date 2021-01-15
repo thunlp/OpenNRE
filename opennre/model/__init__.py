@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from .base_model import SentenceRE, BagRE, FewShotRE, NER
 from .softmax_nn import SoftmaxNN
+from .softmax_enn import SoftmaxENN
 from .bag_attention import BagAttention
 from .bag_average import BagAverage
 
@@ -13,5 +14,6 @@ __all__ = [
     'FewShotRE',
     'NER',
     'SoftmaxNN',
-    'BagAttention'
+    'BagAttention',
+    'SoftmaxENN'
 ]
