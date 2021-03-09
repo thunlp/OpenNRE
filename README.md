@@ -1,7 +1,5 @@
 # OpenNRE
 
-[![CircleCI](https://circleci.com/gh/thunlp/OpenNRE/tree/master.svg?style=svg)](https://circleci.com/gh/thunlp/OpenNRE/tree/master)
-
 **We have a DEMO website ([http://opennre.thunlp.ai/](http://opennre.thunlp.ai/)). Try it out!**
 
 OpenNRE is an open-source and extensible toolkit that provides a unified framework to implement relation extraction models. This package is designed for the following groups:
