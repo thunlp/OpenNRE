@@ -144,7 +144,7 @@ class BagRE(nn.Module):
             print("=== Epoch %d val ===" % epoch)
             result = self.eval_model(self.val_loader)
             print("AUC: %.4f" % result['auc'])
-            print("Micro F1: %.4f" % (result['micro_f1']))
+            print("Micro F1: %.4f" % (result['max_micro_f1']))
             if result[metric] > best_metric:
                 print("Best ckpt and saved.")
                 torch.save({'state_dict': self.model.module.state_dict()}, self.ckpt)
