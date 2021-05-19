@@ -80,23 +80,55 @@ class BagAverage(BagRE):
         Return:
             logits, (B, N)
         """
-        if mask:
-            rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H)
+        if bag_size > 0:
+            token = token.view(-1, token.size(-1))
+            pos1 = pos1.view(-1, pos1.size(-1))
+            pos2 = pos2.view(-1, pos2.size(-1))
+            if mask is not None:
+                mask = mask.view(-1, mask.size(-1))
         else:
-            rep = self.sentence_encoder(token, pos1, pos2) # (nsum, H)
+            begin, end = scope[0][0], scope[-1][1]
+            token = token[:, begin:end, :].view(-1, token.size(-1))
+            pos1 = pos1[:, begin:end, :].view(-1, pos1.size(-1))
+            pos2 = pos2[:, begin:end, :].view(-1, pos2.size(-1))
+            if mask is not None:
+                mask = mask[:, begin:end, :].view(-1, mask.size(-1))
+            scope = torch.sub(scope, torch.zeros_like(scope).fill_(begin))
+
+        if train or bag_size > 0:
+            if mask is not None:
+                rep = self.sentence_encoder(token, pos1, pos2, mask) # (nsum, H) 
+            else:
+                rep = self.sentence_encoder(token, pos1, pos2) # (nsum, H) 
+        else:
+            rep = []
+            bs = 256
+            total_bs = len(token) // bs + (1 if len(token) % bs != 0 else 0)
+            for b in range(total_bs):
+                with torch.no_grad():
+                    left = bs * b
+                    right = min(bs * (b + 1), len(token))
+                    if mask is not None:        
+                        rep.append(self.sentence_encoder(token[left:right], pos1[left:right], pos2[left:right], mask[left:right]).detach()) # (nsum, H) 
+                    else:
+                        rep.append(self.sentence_encoder(token[left:right], pos1[left:right], pos2[left:right]).detach()) # (nsum, H) 
+            rep = torch.cat(rep, 0)
 
         # Average
         bag_rep = []
-        if bag_size is None:
+        if bag_size is None or bag_size == 0:
             for i in range(len(scope)):
                 bag_rep.append(rep[scope[i][0]:scope[i][1]].mean(0))
             bag_rep = torch.stack(bag_rep, 0) # (B, H)
         else:
-            batch_size = label.size(0)
+            batch_size = len(scope)
             rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
             bag_rep = rep.mean(1) # (B, H)
         bag_rep = self.drop(bag_rep)
         bag_logits = self.fc(bag_rep) # (B, N)
+
+        if not train:
+            bag_logits = torch.softmax(bag_logits, -1) 
 
         return bag_logits
 
