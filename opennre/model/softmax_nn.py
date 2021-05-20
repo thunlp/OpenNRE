@@ -27,7 +27,10 @@ class SoftmaxNN(SentenceRE):
 
     def infer(self, item):
         self.eval()
-        item = self.sentence_encoder.tokenize(item)
+        _item = self.sentence_encoder.tokenize(item)
+        item = []
+        for x in _item:
+            item.append(x.to(next(self.parameters()).device))
         logits = self.forward(*item)
         logits = self.softmax(logits)
         score, pred = logits.max(-1)
