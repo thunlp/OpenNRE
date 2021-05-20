@@ -76,6 +76,11 @@ class BagAttention(BagRE):
             mask: (nsum, L), used for piece-wise CNN
         Return:
             logits, (B, N)
+
+        Dirty hack:
+            When the encoder is BERT, the input is actually token, att_mask, pos1, pos2, but
+            since the arguments are then fed into BERT encoder with the original order,
+            the encoder can actually work out correclty.
         """
         if bag_size > 0:
             token = token.view(-1, token.size(-1))
