@@ -133,7 +133,6 @@ Or use the following script to train a BERT model on the Wiki80 dataset:
 ```bash
 python example/train_supervised_bert.py \
     --pretrain_path bert-base-uncased \
-    --metric micro_f1 \
     --dataset wiki80
 ```
 
