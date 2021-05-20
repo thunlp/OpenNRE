@@ -49,7 +49,12 @@ class FewShotRE(nn.Module):
             query: same format as support
         Return:
             [(relation, score), ...]
+
+
+        For few-shot relation extraction, please refer to FewRel
+        https://github.com/thunlp/FewRel
         """
+        raise NotImplementedError
 
 class NER(nn.Module):
     def __init__(self):

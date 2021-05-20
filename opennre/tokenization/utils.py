@@ -145,7 +145,7 @@ def strip_accents(text):
 def load_vocab(vocab_file):
     """Loads a vocabulary file into a dictionary."""
     if vocab_file ==  None:
-        raise ValueError("Unsupported string type: %s" % (type(text)))
+        raise Exception("Vocab file not provided")
     if isinstance(vocab_file, str) or isinstance(vocab_file, bytes):
         vocab = collections.OrderedDict()
         index = 0
