@@ -100,6 +100,12 @@ Note that it may take a few minutes to download checkpoint and data for the firs
 
 You will get the relation result and its confidence score.
 
+If you want to use the model on your GPU, just run 
+```python
+>>> model = model.cuda()
+```
+before calling the inference function.
+
 For now, we have the following available models:
 
 * `wiki80_cnn_softmax`: trained on `wiki80` dataset with a CNN encoder.
