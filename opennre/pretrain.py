@@ -41,6 +41,24 @@ def download_nyt10(root_path=default_root_path):
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_train.txt')
         os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10') + ' ' + root_url + 'opennre/benchmark/nyt10/nyt10_test.txt')
 
+def download_nyt10m(root_path=default_root_path):
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/nyt10m')):
+        os.mkdir(os.path.join(root_path, 'benchmark/nyt10m'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10m') + ' ' + root_url + 'opennre/benchmark/nyt10m/nyt10m_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10m') + ' ' + root_url + 'opennre/benchmark/nyt10m/nyt10m_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10m') + ' ' + root_url + 'opennre/benchmark/nyt10m/nyt10m_test.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/nyt10m') + ' ' + root_url + 'opennre/benchmark/nyt10m/nyt10m_val.txt')
+
+def download_wiki20m(root_path=default_root_path):
+    check_root()
+    if not os.path.exists(os.path.join(root_path, 'benchmark/wiki20m')):
+        os.mkdir(os.path.join(root_path, 'benchmark/wiki20m'))
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki20m') + ' ' + root_url + 'opennre/benchmark/wiki20m/wiki20m_rel2id.json')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki20m') + ' ' + root_url + 'opennre/benchmark/wiki20m/wiki20m_train.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki20m') + ' ' + root_url + 'opennre/benchmark/wiki20m/wiki20m_test.txt')
+        os.system('wget -P ' + os.path.join(root_path, 'benchmark/wiki20m') + ' ' + root_url + 'opennre/benchmark/wiki20m/wiki20m_val.txt')
+
 def download_wiki_distant(root_path=default_root_path):
     check_root()
     if not os.path.exists(os.path.join(root_path, 'benchmark/wiki_distant')):
@@ -86,6 +104,10 @@ def download(name, root_path=default_root_path):
         os.mkdir(os.path.join(root_path, 'pretrain'))
     if name == 'nyt10':
         download_nyt10(root_path=root_path)
+    elif name == 'nyt10m':
+        download_nyt10m(root_path=root_path)
+    elif name == 'wiki20m':
+        download_wiki20m(root_path=root_path)
     elif name == 'wiki_distant':
         download_wiki_distant(root_path=root_path)
     elif name == 'semeval':
