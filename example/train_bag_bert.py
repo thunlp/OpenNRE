@@ -31,7 +31,7 @@ parser.add_argument('--mask_entity', action='store_true',
 # Data
 parser.add_argument('--metric', default='auc', choices=['micro_f1', 'auc'],
         help='Metric for picking up best checkpoint')
-parser.add_argument('--dataset', default='none', choices=['none', 'wiki_distant', 'nyt10'],
+parser.add_argument('--dataset', default='none', choices=['none', 'wiki_distant', 'nyt10', 'nyt10m', 'wiki20m'],
         help='Dataset. If not none, the following args can be ignored')
 parser.add_argument('--train_file', default='', type=str,
         help='Training data file')
@@ -58,7 +58,6 @@ parser.add_argument('--max_epoch', default=3, type=int,
 
 # Exp
 parser.add_argument('--aggr', default='att', choices=['one', 'att', 'avg'])
-parser.add_argument('--use_diag', action='store_true', help='Use diag embedding for ATT')
 
 
 # Seed
@@ -117,7 +116,7 @@ else:
 
 # Define the model
 if args.aggr == 'att':
-    model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id, use_diag=args.use_diag)
+    model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
 elif args.aggr == 'avg':
     model = opennre.model.BagAverage(sentence_encoder, len(rel2id), rel2id)
 elif args.aggr == 'one':
