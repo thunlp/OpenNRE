@@ -1,8 +1,5 @@
 # OpenNRE
 
-**We have a DEMO website ([http://opennre.thunlp.ai/](http://opennre.thunlp.ai/)). Try it out!**
-
-
 OpenNRE is an open-source and extensible toolkit that provides a unified framework to implement relation extraction models. This package is designed for the following groups:
 
 * **New to relation extraction**: We have hand-by-hand tutorials and detailed documents that can not only enable you to use relation extraction tools, but also help you better understand the research progress in this field.
@@ -111,10 +108,33 @@ For now, we have the following available models:
 * `tacred_bert_softmax`: trained on `TACRED` dataset with a BERT encoder.
 * `tacred_bertentity_softmax`: trained on `TACRED` dataset with a BERT encoder (using entity representation concatenation).
 
+## Datasets 
+
+You can go into the `benchmark` folder and download datasets using our scripts. We also list some of the information about the datasets in [this document](https://opennre-docs.readthedocs.io/en/latest/get_started/benchmark.html#bag-level-relation-extraction). 
+
 ## Training
 
-You can train your own models on your own data with OpenNRE. In `example` folder we give example training codes for supervised RE models and bag-level RE models. You can either use our provided datasets or your own datasets.
+You can train your own models on your own data with OpenNRE. In `example` folder we give example training codes for supervised RE models and bag-level RE models. You can either use our provided datasets or your own datasets. For example, you can use the following script to train a PCNN-ATT bag-level model on the NYT10 dataset with manual test set:
+```bash
+python example/train_bag_cnn.py \
+    --metric auc \
+    --dataset nyt10m \
+    --batch_size 160 \
+    --lr 0.1 \
+    --weight_decay 1e-5 \
+    --max_epoch 100 \
+    --max_length 128 \
+    --seed 42 \
+    --encoder pcnn \
+    --aggr att
+```
 
-## Google Group
+Or use the following script to train a BERT model on the Wiki80 dataset:
+```bash
+python example/train_supervised_bert.py \
+    --pretrain_path bert-base-uncased \
+    --metric micro_f1 \
+    --dataset wiki80
+```
 
-If you want to receive our update news or take part in discussions, please join our [Google Group](https://groups.google.com/forum/#!forum/opennre/join)
+We provide many options in the example training code and you can check them out for detailed instructions.
