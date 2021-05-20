@@ -205,7 +205,7 @@ def convert_tokens_to_ids(vocab, tokens, max_seq_length = None, blank_id = 0, un
     return convert_by_vocab(vocab, tokens, max_seq_length, blank_id, unk_id)
 
 def convert_ids_to_tokens(inv_vocab, ids):
-    return convert_by_vocab(inv_vocab, ids)
+    return convert_by_vocab(inv_vocab, ids, uncased=False)
 
 def truncate_seq_pair(tokens_a, tokens_b, max_num_tokens, rng):
     """Truncates a pair of sequences to a maximum sequence length."""
