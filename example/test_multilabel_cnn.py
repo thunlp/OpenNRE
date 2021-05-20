@@ -8,20 +8,12 @@ import sys
 import os
 import argparse
 import logging
-import random
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ckpt', default='', 
         help='Checkpoint name')
 parser.add_argument('--only_test', action='store_true', 
         help='Only run test')
-parser.add_argument('--encoder', default='pcnn', choices=['pcnn', 'cnn'])
 
 # Data
 parser.add_argument('--metric', default='micro_f1', choices=['micro_f1', 'acc'],
@@ -38,7 +30,7 @@ parser.add_argument('--rel2id_file', default='', type=str,
         help='Relation to ID file')
 
 # Hyper-parameters
-parser.add_argument('--batch_size', default=160, type=int,
+parser.add_argument('--batch_size', default=32, type=int,
         help='Batch size')
 parser.add_argument('--lr', default=1e-1, type=float,
         help='Learning rate')
@@ -49,14 +41,9 @@ parser.add_argument('--max_length', default=128, type=int,
 parser.add_argument('--max_epoch', default=100, type=int,
         help='Max number of training epochs')
 
-# Others
-parser.add_argument('--seed', default=42, type=int,
-        help='Random seed')
+parser.add_argument('--encoder', default='cnn', choices=['pcnn', 'cnn'])
 
 args = parser.parse_args()
-
-# Set random seed
-set_seed(args.seed)
 
 # Some basic settings
 root_path = '.'
@@ -93,8 +80,8 @@ word2id = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_wo
 word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))
 
 # Define the sentence encoder
-if args.encoder == 'pcnn':
-    sentence_encoder = opennre.encoder.PCNNEncoder(
+if args.encoder == 'cnn':
+    sentence_encoder = opennre.encoder.CNNEncoder(
         token2id=word2id,
         max_length=args.max_length,
         word_size=50,
@@ -106,8 +93,8 @@ if args.encoder == 'pcnn':
         word2vec=word2vec,
         dropout=0.5
     )
-elif args.encoder == 'cnn':
-    sentence_encoder = opennre.encoder.CNNEncoder(
+elif args.encoder == 'pcnn':
+    sentence_encoder = opennre.encoder.PCNNEncoder(
         token2id=word2id,
         max_length=args.max_length,
         word_size=50,
@@ -126,7 +113,7 @@ else:
 model = opennre.model.SoftmaxNN(sentence_encoder, len(rel2id), rel2id)
 
 # Define the whole training framework
-framework = opennre.framework.SentenceRE(
+framework = opennre.framework.MultiLabelSentenceRE(
     train_path=args.train_file,
     val_path=args.val_file,
     test_path=args.test_file,
@@ -149,9 +136,16 @@ result = framework.eval_model(framework.test_loader)
 
 # Print the result
 logging.info('Test set results:')
-if args.metric == 'acc':
-    logging.info('Accuracy: {}'.format(result['acc']))
-else:
-    logging.info('Micro precision: {}'.format(result['micro_p']))
-    logging.info('Micro recall: {}'.format(result['micro_r']))
-    logging.info('Micro F1: {}'.format(result['micro_f1']))
+logging.info('Accuracy: %.5f' % (result['acc']))
+logging.info('Micro precision: %.5f' % (result['micro_p']))
+logging.info('Micro recall: %.5f' % (result['micro_r']))
+logging.info('Micro F1: %.5f' % (result['micro_f1']))
+logging.info('Macro precision: %.5f' % (result['macro_p']))
+logging.info('Macro recall: %.5f' % (result['macro_r']))
+logging.info('Macro F1: %.5f' % (result['macro_f1']))
+logging.info("AUC: %.5f" % (result['auc']))
+logging.info('P@100: %.5f' % (result['p@100']))
+logging.info('P@200: %.5f' % (result['p@200']))
+logging.info('P@300: %.5f' % (result['p@300']))
+logging.info("Max micro F1: %.5f" % (result['max_micro_f1']))
+logging.info("| threshold: %.5f" % (result['max_micro_f1_threshold']))

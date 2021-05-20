@@ -8,6 +8,14 @@ import sys
 import os
 import argparse
 import logging
+import random
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrain_path', default='bert-base-uncased', 
@@ -45,7 +53,14 @@ parser.add_argument('--max_length', default=128, type=int,
 parser.add_argument('--max_epoch', default=3, type=int,
         help='Max number of training epochs')
 
+# Seed
+parser.add_argument('--seed', default=42, type=int,
+        help='Seed')
+
 args = parser.parse_args()
+
+# Set random seed
+set_seed(args.seed)
 
 # Some basic settings
 root_path = '.'

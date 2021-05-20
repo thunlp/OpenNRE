@@ -4,9 +4,6 @@ import torch
 import os
 import numpy as np
 import opennre
-from opennre import encoder, model, framework
-import sys
-import os
 import argparse
 import logging
 import random
@@ -20,6 +17,8 @@ def set_seed(seed):
 parser = argparse.ArgumentParser()
 parser.add_argument('--ckpt', default='', 
         help='Checkpoint name')
+parser.add_argument('--result', default='', 
+        help='Save result name')
 parser.add_argument('--only_test', action='store_true', 
         help='Only run test')
 
@@ -50,7 +49,7 @@ parser.add_argument('--optim', default='sgd', type=str,
         help='Optimizer')
 parser.add_argument('--weight_decay', default=1e-5, type=float,
         help='Weight decay')
-parser.add_argument('--max_length', default=120, type=int,
+parser.add_argument('--max_length', default=128, type=int,
         help='Maximum sentence length')
 parser.add_argument('--max_epoch', default=100, type=int,
         help='Max number of training epochs')
@@ -58,6 +57,11 @@ parser.add_argument('--max_epoch', default=100, type=int,
 # Others
 parser.add_argument('--seed', default=42, type=int,
         help='Random seed')
+
+# Exp
+parser.add_argument('--encoder', default='pcnn', choices=['pcnn', 'cnn'])
+parser.add_argument('--aggr', default='att', choices=['one', 'att', 'avg'])
+parser.add_argument('--use_diag', action='store_true', help='Use diag embedding for ATT')
 
 args = parser.parse_args()
 
@@ -98,21 +102,45 @@ word2id = json.load(open(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_wo
 word2vec = np.load(os.path.join(root_path, 'pretrain/glove/glove.6B.50d_mat.npy'))
 
 # Define the sentence encoder
-sentence_encoder = opennre.encoder.PCNNEncoder(
-    token2id=word2id,
-    max_length=args.max_length,
-    word_size=50,
-    position_size=5,
-    hidden_size=230,
-    blank_padding=True,
-    kernel_size=3,
-    padding_size=1,
-    word2vec=word2vec,
-    dropout=0.5
-)
+if args.encoder == 'pcnn':
+    sentence_encoder = opennre.encoder.PCNNEncoder(
+        token2id=word2id,
+        max_length=args.max_length,
+        word_size=50,
+        position_size=5,
+        hidden_size=230,
+        blank_padding=True,
+        kernel_size=3,
+        padding_size=1,
+        word2vec=word2vec,
+        dropout=0.5
+    )
+elif args.encoder == 'cnn':
+    sentence_encoder = opennre.encoder.CNNEncoder(
+        token2id=word2id,
+        max_length=args.max_length,
+        word_size=50,
+        position_size=5,
+        hidden_size=230,
+        blank_padding=True,
+        kernel_size=3,
+        padding_size=1,
+        word2vec=word2vec,
+        dropout=0.5
+    )
+else:
+    raise NotImplementedError
+
 
 # Define the model
-model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id)
+if args.aggr == 'att':
+    model = opennre.model.BagAttention(sentence_encoder, len(rel2id), rel2id, use_diag=args.use_diag)
+elif args.aggr == 'avg':
+    model = opennre.model.BagAverage(sentence_encoder, len(rel2id), rel2id)
+elif args.aggr == 'one':
+    model = opennre.model.BagOne(sentence_encoder, len(rel2id), rel2id)
+else:
+    raise NotImplementedError
 
 # Define the whole training framework
 framework = opennre.framework.BagRE(
@@ -138,5 +166,16 @@ result = framework.eval_model(framework.test_loader)
 
 # Print the result
 logging.info('Test set results:')
-logging.info('AUC: {}'.format(result['auc']))
-logging.info('Micro F1: {}'.format(result['micro_f1']))
+logging.info('AUC: %.5f' % (result['auc']))
+logging.info('Maximum micro F1: %.5f' % (result['max_micro_f1']))
+logging.info('Maximum macro F1: %.5f' % (result['max_macro_f1']))
+logging.info('Micro F1: %.5f' % (result['micro_f1']))
+logging.info('Macro F1: %.5f' % (result['macro_f1']))
+logging.info('P@100: %.5f' % (result['p@100']))
+logging.info('P@200: %.5f' % (result['p@200']))
+logging.info('P@300: %.5f' % (result['p@300']))
+
+# Save precision/recall points
+np.save('result/{}_p.npy'.format(args.result), result['np_prec'])
+np.save('result/{}_r.npy'.format(args.result), result['np_rec'])
+json.dump(result['max_micro_f1_each_relation'], open('result/{}_mmicrof1_rel.json'.format(args.result), 'w'), ensure_ascii=False)
