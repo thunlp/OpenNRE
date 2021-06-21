@@ -64,23 +64,13 @@ If it is too slow, you can try
 git clone https://github.com/thunlp/OpenNRE.git --depth 1
 ```
 
-Then install all the requirements:
+Then install the package with:
+```
+pip install -e .
+```
+if you don't want to modify the code, you can skip `-e ` flag.
 
-```
-pip install -r requirements.txt
-```
-
-**Note**: Please choose appropriate PyTorch version based on your machine (related to your CUDA version). For details, refer to https://pytorch.org/. 
-
-Then install the package with 
-```
-python setup.py install 
-```
-
-If you also want to modify the code, run this:
-```
-python setup.py develop
-```
+**Note**: Please install appropriate PyTorch version based on your machine (related to your CUDA version). For details, refer to https://pytorch.org/.
 
 Note that we have excluded all data and pretrain files for fast deployment. You can manually download them by running scripts in the ``benchmark`` and ``pretrain`` folders. For example, if you want to download FewRel dataset, you can run
 
