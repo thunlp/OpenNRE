@@ -112,11 +112,13 @@ ckpt
 # vscode
 .vscode
 
+# JetBrains PyCharm
+.idea
+
 # tacred
 benchmark/tacred
 *.swp
 
-<<<<<<< HEAD
 # data and pretrain
 pretrain
 benchmark
