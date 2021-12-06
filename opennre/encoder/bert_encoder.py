@@ -20,7 +20,7 @@ class BERTEncoder(nn.Module):
         self.bert = BertModel.from_pretrained(pretrain_path)
         self.tokenizer = BertTokenizer.from_pretrained(pretrain_path)
 
-    def forward(self, token, att_mask):
+    def forward(self, token, att_mask, pos1, pos2):
         """
         Args:
             token: (B, L), index of tokens
@@ -28,7 +28,7 @@ class BERTEncoder(nn.Module):
         Return:
             (B, H), representations for sentences
         """
-        _, x = self.bert(token, attention_mask=att_mask)
+        _, x = self.bert(token, attention_mask=att_mask, return_dict=False)
         return x
 
     def tokenize(self, item):
@@ -79,8 +79,14 @@ class BERTEncoder(nn.Module):
 
         re_tokens = ['[CLS]'] + sent0 + ent0 + sent1 + ent1 + sent2 + ['[SEP]']
         
+        pos1 = 1 + len(sent0) if not rev else 1 + len(sent0 + ent0 + sent1)
+        pos2 = 1 + len(sent0 + ent0 + sent1) if not rev else 1 + len(sent0)
+        pos1 = min(self.max_length - 1, pos1)
+        pos2 = min(self.max_length - 1, pos2)
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(re_tokens)
         avai_len = len(indexed_tokens)
+        pos1 = torch.tensor([[pos1]]).long()
+        pos2 = torch.tensor([[pos2]]).long()
 
         # Padding
         if self.blank_padding:
@@ -93,7 +99,7 @@ class BERTEncoder(nn.Module):
         att_mask = torch.zeros(indexed_tokens.size()).long()  # (1, L)
         att_mask[0, :avai_len] = 1
 
-        return indexed_tokens, att_mask
+        return indexed_tokens, att_mask, pos1, pos2
 
 
 class BERTEntityEncoder(nn.Module):
@@ -123,7 +129,7 @@ class BERTEntityEncoder(nn.Module):
         Return:
             (B, 2H), representations for sentences
         """
-        hidden, _ = self.bert(token, attention_mask=att_mask)
+        hidden, _ = self.bert(token, attention_mask=att_mask, return_dict=False)
         # Get entity start hidden state
         onehot_head = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
         onehot_tail = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
