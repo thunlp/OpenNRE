@@ -29,6 +29,7 @@ class BERTEncoder(nn.Module):
             (B, H), representations for sentences
         """
         _, x = self.bert(token, attention_mask=att_mask, return_dict=False)
+        #return_dict=fault is set to adapt to the new version of transformers
         return x
 
     def tokenize(self, item):
