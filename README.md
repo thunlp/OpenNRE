@@ -1,5 +1,15 @@
 # OpenNRE
 
+This repository is a subproject of THU-OpenSK, and all subprojects of THU-OpenSK are as follows.
+
+- [OpenNE](https://www.github.com/thunlp/OpenNE)
+- [OpenKE](https://www.github.com/thunlp/OpenKE)
+  - [KB2E](https://www.github.com/thunlp/KB2E)
+  - [TensorFlow-Transx](https://www.github.com/thunlp/TensorFlow-Transx)
+  - [Fast-TransX](https://www.github.com/thunlp/Fast-TransX)
+- [OpenNRE](https://www.github.com/thunlp/OpenNRE)
+  - [JointNRE](https://www.github.com/thunlp/JointNRE)
+
 ****** Update ******
 
 We provide two distantly-supervised datasets with human-annotated test sets, **NYT10m** and **Wiki20m**. Check the [datasets](#datasets) section for details.
