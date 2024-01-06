@@ -1,6 +1,6 @@
-# OpenNRE (sub-project of THU-OpenSKL)
+# OpenNRE (sub-project of OpenSKL)
  
-OpenNRE is a sub-project of THU-OpenSKL, providing an **Open**-source **N**eural **R**elation **E**xtraction toolkit for extracting structured knowledge from plain text, with [ATT](https://aclanthology.org/P16-1200.pdf) as key features to consider relation-associated text information.
+OpenNRE is a sub-project of OpenSKL, providing an **Open**-source **N**eural **R**elation **E**xtraction toolkit for extracting structured knowledge from plain text, with [ATT](https://aclanthology.org/P16-1200.pdf) as key features to consider relation-associated text information.
 
 ## Overview
 
