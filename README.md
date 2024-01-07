@@ -106,7 +106,8 @@ You can go into the `benchmark` folder and download datasets using our scripts. 
 
 ## Training
 
-You can train your own models on your own data with OpenNRE. In `example` folder we give example training codes for supervised RE models and bag-level RE models. You can either use our provided datasets or your own datasets. For example, you can use the following script to train a PCNN-ATT bag-level model on the NYT10 dataset with manual test set:
+You can train your own models on your own data with OpenNRE. In `example` folder we give example training codes for supervised RE models and bag-level RE models. You can either use our provided datasets or your own datasets. For example, you can use the following script to train a PCNN-ATT bag-level model on the NYT10 dataset with manual test set. The ATT algorithm is a typical method to combine a bag of sentences for extracting relations between entities.
+
 ```bash
 python example/train_bag_cnn.py \
     --metric auc \
