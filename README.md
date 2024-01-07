@@ -4,14 +4,9 @@ OpenNRE is a sub-project of OpenSKL, providing an **Open**-source **N**eural **R
 
 ## Overview
 
-OpenNRE is an open-source and extensible toolkit that provides a unified framework to implement relation extraction models. This package is designed for the following groups:
+OpenNRE is an open-source and extensible toolkit that provides a unified framework to implement relation extraction models. We unify the input and output interfaces of different relation extraction models and provide scalable options for each model. The toolkit covers both supervised and distant supervised settings, and is compatible with both conventional neural networks and pre-trained language models.
 
-* **New to relation extraction**: We have hand-by-hand tutorials and detailed documents that can not only enable you to use relation extraction tools, but also help you better understand the research progress in this field.
-* **Developers**: Our easy-to-use interface and high-performance implementation can acclerate your deployment in the real-world applications. Besides, we provide several pretrained models which can be put into production without any training.
-* **Researchers**: With our modular design, various task settings and metric tools, you can easily carry out experiments on your own models with only minor modification. We have also provided several most-used benchmarks for different settings of relation extraction.
-* **Anyone who need to submit an NLP homework to impress their professors**: With state-of-the-art models, our package can definitely help you stand out among your classmates!
-
-## What is Relation Extraction
+### What is Relation Extraction
 
 Relation extraction is a natural language processing (NLP) task aiming at extracting relations (e.g., *founder of*) between entities (e.g., **Bill Gates** and **Microsoft**). For example, from the sentence *Bill Gates founded Microsoft*, we can extract the relation triple (**Bill Gates**, *founder of*, **Microsoft**). 
 
@@ -19,19 +14,34 @@ Relation extraction is a crucial technique in automatic knowledge graph construc
 
 It's our honor to help you better explore relation extraction with our OpenNRE toolkit!
 
-## Papers and Document
+### Target Group
+
+This package is designed for the following groups:
+
+* **New to relation extraction**: We have hand-by-hand tutorials and detailed documents that can not only enable you to use relation extraction tools, but also help you better understand the research progress in this field.
+* **Developers**: Our easy-to-use interface and high-performance implementation can acclerate your deployment in the real-world applications. Besides, we provide several pretrained models which can be put into production without any training.
+* **Researchers**: With our modular design, various task settings and metric tools, you can easily carry out experiments on your own models with only minor modification. We have also provided several most-used benchmarks for different settings of relation extraction.
+* **Anyone who need to submit an NLP homework to impress their professors**: With state-of-the-art models, our package can definitely help you stand out among your classmates!
+
+### Papers and Document
 
 If you want to learn more about neural relation extraction, visit another project of ours ([NREPapers](https://github.com/thunlp/NREPapers)).
 
 You can refer to our [document](https://opennre-docs.readthedocs.io/en/latest/) for more details about this project.
 
-## Install 
+## Data
 
-### Install as A Python Package
+You can go into the `benchmark` folder and download datasets using our scripts. We also list some of the information about the datasets in [this document](https://opennre-docs.readthedocs.io/en/latest/get_started/benchmark.html#bag-level-relation-extraction). We provide two distantly-supervised datasets with human-annotated test sets, **NYT10m** and **Wiki20m**. Check the [datasets](#datasets) section for details.
+
+## Usage
+
+### Install 
+
+#### Install as A Python Package
 
 We are now working on deploy OpenNRE as a Python package. Coming soon!
 
-### Using Git Repository
+#### Using Git Repository
 
 Clone the repository from our github page (don't forget to star us!)
 
@@ -68,7 +78,7 @@ Note that we have excluded all data and pretrain files for fast deployment. You 
 bash benchmark/download_fewrel.sh
 ```
 
-## Easy Start
+### Easy Start
 
 Make sure you have installed OpenNRE as instructed above. Then import our package and load pre-trained models.
 
@@ -100,11 +110,7 @@ For now, we have the following available models:
 * `tacred_bert_softmax`: trained on `TACRED` dataset with a BERT encoder.
 * `tacred_bertentity_softmax`: trained on `TACRED` dataset with a BERT encoder (using entity representation concatenation).
 
-## Datasets 
-
-You can go into the `benchmark` folder and download datasets using our scripts. We also list some of the information about the datasets in [this document](https://opennre-docs.readthedocs.io/en/latest/get_started/benchmark.html#bag-level-relation-extraction). We provide two distantly-supervised datasets with human-annotated test sets, **NYT10m** and **Wiki20m**. Check the [datasets](#datasets) section for details.
-
-## Training
+### Training
 
 You can train your own models on your own data with OpenNRE. In `example` folder we give example training codes for supervised RE models and bag-level RE models. You can either use our provided datasets or your own datasets. For example, you can use the following script to train a PCNN-ATT bag-level model on the NYT10 dataset with manual test set. The ATT algorithm is a typical method to combine a bag of sentences for extracting relations between entities.
 
@@ -133,7 +139,7 @@ We provide many options in the example training code and you can check them out 
 
 ## Citation
 
-A good research work is always accompanied by a thorough and faithful reference. If you use or extend our work, please cite the following paper:
+If you find OpenNRE is useful for your research, please consider citing the following papers:
 
 ```
 @inproceedings{han-etal-2019-opennre,
