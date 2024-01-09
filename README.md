@@ -6,14 +6,13 @@ OpenNRE is a sub-project of OpenSKL, providing an **Open**-source **N**eural **R
 
 OpenNRE is an open-source and extensible toolkit that provides a unified framework to implement relation extraction models. We unify the input and output interfaces of different relation extraction models and provide scalable options for each model. The toolkit covers both supervised and distant supervised settings, and is compatible with both conventional neural networks and pre-trained language models.
 
-### What is Relation Extraction
-
 Relation extraction is a natural language processing (NLP) task aiming at extracting relations (e.g., *founder of*) between entities (e.g., **Bill Gates** and **Microsoft**). For example, from the sentence *Bill Gates founded Microsoft*, we can extract the relation triple (**Bill Gates**, *founder of*, **Microsoft**). 
 
-Relation extraction is a crucial technique in automatic knowledge graph construction. By using relation extraction, we can accumulatively extract new relation facts and expand the knowledge graph, which, as a way for machines to understand the human world, has many downstream applications like question answering, recommender system and search engine. 
+Relation extraction is a crucial technique in automatic knowledge graph construction. By using relation extraction, we can accumulatively extract new relation facts and expand the knowledge graph, which, as a way for machines to understand the human world, has many downstream applications like question answering, recommender system and search engine. If you want to learn more about neural relation extraction, visit another project of ours ([NREPapers](https://github.com/thunlp/NREPapers)).
 
-It's our honor to help you better explore relation extraction with our OpenNRE toolkit!
+It's our honor to help you better explore relation extraction with our OpenNRE toolkit! You can refer to our [document](https://opennre-docs.readthedocs.io/en/latest/) for more details about this project.
 
+<!--### What is Relation Extraction
 ### Target Group
 
 This package is designed for the following groups:
@@ -21,21 +20,28 @@ This package is designed for the following groups:
 * **Beginner**: We have hand-by-hand tutorials and detailed documents that can not only enable you to use relation extraction tools, but also help you better understand the research progress in this field.
 * **Developers**: Our easy-to-use interface and high-performance implementation can acclerate your deployment in the real-world applications. Besides, we provide several pretrained models which can be put into production without any training.
 * **Researchers**: With our modular design, various task settings and metric tools, you can easily carry out experiments on your own models with only minor modification. We have also provided several most-used benchmarks for different settings of relation extraction.
-* **Anyone who need to submit an NLP homework to impress their professors**: With state-of-the-art models, our package can definitely help you stand out among your classmates!
+* **Anyone who need to submit an NLP homework to impress their professors**: With state-of-the-art models, our package can definitely help you stand out among your classmates!-->
 
-### Papers and Document
+## Evaluation
 
-If you want to learn more about neural relation extraction, visit another project of ours ([NREPapers](https://github.com/thunlp/NREPapers)).
+To validate the effectiveness of this toolkit, we employ the Bag-Level Relation Extraction task for evaluation.
 
-You can refer to our [document](https://opennre-docs.readthedocs.io/en/latest/) for more details about this project.
+### Settings
 
-## Data
+We utilize the NYT10 dataset, which is a distantly supervised collection derived from the New York Times corpus and FreeBase. We mainly experiment on CNN-ATT model, which employs instance-level attention and shows superior performance compared with vanilla CNN.
 
-You can go into the `benchmark` folder and download datasets using our scripts. We also list some of the information about the datasets in [this document](https://opennre-docs.readthedocs.io/en/latest/get_started/benchmark.html#bag-level-relation-extraction). We provide two distantly-supervised datasets with human-annotated test sets, **NYT10m** and **Wiki20m**. Check the [datasets](#datasets) section for details.
+### Results
+
+We report AUC and F1 scores of two models. The right two columns marked with (\*) indicates the results sourced from [Gao et al.(2021)](https://aclanthology.org/2021.findings-acl.112.pdf) and [Lin et al.(2016)](https://aclanthology.org/P16-1200v2.pdf). The results show that our implementation of CNN-ATT model is slighly better than the original paper, and also confirm the better performance of CNN-ATT over standard CNN model.
+
+| Model | AUC | F1 | AUC(\*) | F1(\*) |
+| :-: | :-: | :-: | :-: | :-: |
+| CNN | - | - | 0.212 | 0.318 | 
+| CNN-ATT | 0.333 | 0.397 | 0.318 | 0.380 |
 
 ## Usage
 
-### Install 
+### Installation
 
 #### Install as A Python Package
 
@@ -77,6 +83,9 @@ Note that we have excluded all data and pretrain files for fast deployment. You 
 ```bash
 bash benchmark/download_fewrel.sh
 ```
+### Data
+
+You can go into the `benchmark` folder and download datasets using our scripts. We also list some of the information about the datasets in [this document](https://opennre-docs.readthedocs.io/en/latest/get_started/benchmark.html#bag-level-relation-extraction). We provide two distantly-supervised datasets with human-annotated test sets, **NYT10m** and **Wiki20m**. Check the [datasets](#datasets) section for details.
 
 ### Easy Start
 
@@ -181,7 +190,7 @@ OpenSKL project aims to harness the power of both structured knowledge and natur
   - OpenKE-Wikidata
     - Wikidata is a free and collaborative database, collecting structured data to provide support for Wikipedia. The original Wikidata contains 20,982,733 entities, 594 relations and 68,904,773 triplets. In particular, Wikidata-5M is the core subgraph of Wikidata, containing  5,040,986 high-frequency entities from Wikidata with their corresponding 927 relations and 24,267,796 triplets.
     - TransE version: Knowledge embeddings of Wikidata pre-trained by OpenKE. 
-    - [TransR version](https://thunlp.oss-cn-qingdao.aliyuncs.com/zzy/transr.npy) of Wikidata-5M: Knowledge embeddings of Wikidata-5M pre-trained by OpenKE for the project [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin).
+    - [TransR version](https://thunlp.oss-cn-qingdao.aliyuncs.com/zzy/transr.npy) of Wikidata-5M: Knowledge embeddings of Wikidata-5M pre-trained by OpenKE.
   - OpenKE-Freebase
     - Freebase was a large collaborative knowledge base consisting of data composed mainly by its community members. It was an online collection of structured data harvested from many sources. Freebase contains 86,054,151 entities, 14,824 relations and 338,586,276 triplets.
     - TransE version: Knowledge embeddings of Freebase pre-trained by OpenKE. 
@@ -190,4 +199,4 @@ OpenSKL project aims to harness the power of both structured knowledge and natur
     - TransE version: Knowledge embeddings of XLORE pre-trained by OpenKE.
 - **Application**:   
     - [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin)
-      - An effective and efficient toolkit of plug-and-play knowledge injection for pre-trained language models. Knowledge-Plugin is general for all kinds of knowledge graph embeddings mentioned above. In the toolkit, we provide the example of plugging OpenKE-Wikidata embeddings into BERT.
+      - An effective and efficient toolkit of plug-and-play knowledge injection for pre-trained language models. Knowledge-Plugin is general for all kinds of knowledge graph embeddings mentioned above. In the toolkit, we plug the TransR version of Wikidata-5M into BERT as an example of applications. With the TransR embedding, we enhance the knowledge ability of BERT without fine-tuning the original model, e.g., up to 8% improvement on question answering.
