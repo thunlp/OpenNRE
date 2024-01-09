@@ -34,7 +34,7 @@ We utilize the NYT10 dataset, which is a distantly supervised collection derived
 
 We report AUC and F1 scores of two models. The right two columns marked with (\*) indicates the results sourced from [Gao et al.(2021)](https://aclanthology.org/2021.findings-acl.112.pdf) and [Lin et al.(2016)](https://aclanthology.org/P16-1200v2.pdf). The results show that our implementation of CNN-ATT model is slighly better than the original paper, and also confirm the better performance of CNN-ATT over standard CNN model.
 
-| Model | AUC | F1 | AUC(\*) | F1(\*) |
+| Model | AUC | F1 | AUC(Paper \*) | F1(Paper \*) |
 | :-: | :-: | :-: | :-: | :-: |
 | CNN | - | - | 0.212 | 0.318 | 
 | CNN-ATT | 0.333 | 0.397 | 0.318 | 0.380 |
