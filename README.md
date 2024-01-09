@@ -22,6 +22,9 @@ This package is designed for the following groups:
 * **Researchers**: With our modular design, various task settings and metric tools, you can easily carry out experiments on your own models with only minor modification. We have also provided several most-used benchmarks for different settings of relation extraction.
 * **Anyone who need to submit an NLP homework to impress their professors**: With state-of-the-art models, our package can definitely help you stand out among your classmates!-->
 
+## Models
+In this toolkit, we support CNN-based relation extraction models including standard CNN and our proposed [CNN+ATT](https://aclanthology.org/P16-1200v2.pdf). We also implement methods based on pre-trained language models (BERT).
+
 ## Evaluation
 
 To validate the effectiveness of this toolkit, we employ the Bag-Level Relation Extraction task for evaluation.
