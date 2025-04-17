@@ -196,7 +196,7 @@ OpenSKL project aims to harness the power of both structured knowledge and natur
     - [TransR version](http://139.129.163.161/download/wikidata) of Wikidata-5M: Knowledge embeddings of Wikidata-5M pre-trained by OpenKE.
   - OpenKE-Freebase
     - Freebase was a large collaborative knowledge base consisting of data composed mainly by its community members. It was an online collection of structured data harvested from many sources. Freebase contains 86,054,151 entities, 14,824 relations and 338,586,276 triplets.
-    - [TransE version](http://139.129.163.161/download/wikidata): Knowledge embeddings of Freebase pre-trained by OpenKE. 
+    - [TransE version](http://139.129.163.161/download/wikidata): Knowledge embeddings of Freebase pre-trained by OpenKE.
   - OpenKE-XLORE
     - XLORE is one of the most popular Chinese knowledge graphs developed by THUKEG. XLORE contains 10,572,209 entities, 138,581 relations and 35,954,249 triplets.
     - [TransE version](http://139.129.163.161/download/wikidata): Knowledge embeddings of XLORE pre-trained by OpenKE.
